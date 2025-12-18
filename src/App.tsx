@@ -18,10 +18,17 @@ function App() {
 
   // Auto-load Google Sheets on mount if no data exists
   useEffect(() => {
+    let cancelled = false;
+
     const autoLoad = async () => {
       console.log('=== 自動載入檢查 ===');
       console.log('目前資料數量:', data.length);
       console.log('Google Sheets 啟用:', GOOGLE_SHEET_CONFIG.enabled);
+      console.log('PRESET_VERSION:', (await import('./config/googleSheet')).PRESET_VERSION);
+
+      // Check localStorage version
+      const storedVersion = localStorage.getItem('mvp_vocab_preset_applied_v36');
+      console.log('localStorage 版本:', storedVersion);
 
       if (data.length > 0) {
         console.log('已有資料，跳過載入');
@@ -41,30 +48,45 @@ function App() {
         const results = await loadAllGoogleSheets();
         console.log('載入結果:', results);
 
+        if (cancelled) {
+          console.log('已取消載入');
+          return;
+        }
+
+        let isFirstSheet = true;
         for (const { rows, theme } of results) {
           console.log(`匯入 ${rows.length} 筆資料，主題:`, theme);
-          if (rows.length > 0) {
+          if (rows.length > 0 && !cancelled) {
             // Import with replace: true on first sheet, false on subsequent
-            const opts = results.indexOf({ rows, theme }) === 0
+            const opts = isFirstSheet
               ? { overrideExamples: false, replace: true }
               : { overrideExamples: false, replace: false };
             const stats = importRows(rows, opts);
             console.log('匯入統計:', stats);
+            isFirstSheet = false;
           }
         }
 
-        // Mark preset as successfully applied
-        markPresetApplied();
-        console.log('✅ Google Sheets 載入完成');
+        if (!cancelled) {
+          // Mark preset as successfully applied
+          markPresetApplied();
+          console.log('✅ Google Sheets 載入完成，總資料數:', data.length);
+        }
       } catch (error) {
         console.error('載入 Google Sheets 失敗:', error);
-        setLoadError('載入資料失敗，請檢查網路連線');
+        setLoadError(`載入資料失敗: ${error instanceof Error ? error.message : String(error)}`);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     autoLoad();
+
+    return () => {
+      cancelled = true;
+    };
   }, []); // Run only once on mount
 
   const goToHome = () => push('#/');
