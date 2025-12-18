@@ -18,6 +18,7 @@ import {
   getWordThemes
 } from '../utils/dataProcessing';
 import { exampleFor, translationFor } from '../utils/wordUtils';
+import { PRESET_VERSION } from '../config/googleSheet';
 
 const LS: typeof LSType = {
   favorites: 'mvp_vocab_favorites',
@@ -32,8 +33,6 @@ const LS: typeof LSType = {
   filters: 'wordgym_filters_v1',
   quickFilterPos: 'wordgym_quick_filter_pos_v1'
 };
-
-const PRESET_VERSION = 'v36';
 
 /**
  * Ensure word has properly formatted word_forms_detail and theme
@@ -415,10 +414,22 @@ export function useDataset(initialData: VocabularyWord[] = []) {
     setData(hydrateDataset([]));
   };
 
+  /**
+   * Mark preset as applied (after successful Google Sheet load)
+   */
+  const markPresetApplied = () => {
+    try {
+      localStorage.setItem(LS.presetApplied, PRESET_VERSION);
+    } catch (e) {
+      console.error('Failed to mark preset as applied:', e);
+    }
+  };
+
   return {
     data,
     setData,
     importRows,
-    reset
+    reset,
+    markPresetApplied
   };
 }

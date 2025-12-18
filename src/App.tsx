@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useHashRoute } from './hooks/useHashRoute';
 import { HomePage } from './components/pages/HomePage';
 import { FavoritesPage } from './components/pages/FavoritesPage';
@@ -6,10 +7,65 @@ import { QuizHistoryPage } from './components/pages/QuizHistoryPage';
 import { MultipleChoiceQuiz } from './components/quiz/MultipleChoiceQuiz';
 import { FlashcardQuiz } from './components/quiz/FlashcardQuiz';
 import { useDataset } from './hooks/useDataset';
+import { loadAllGoogleSheets } from './services/googleSheetLoader';
+import { GOOGLE_SHEET_CONFIG } from './config/googleSheet';
 
 function App() {
   const { hash, push } = useHashRoute();
-  const { data } = useDataset();
+  const { data, importRows, markPresetApplied } = useDataset();
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Auto-load Google Sheets on mount if no data exists
+  useEffect(() => {
+    const autoLoad = async () => {
+      console.log('=== 自動載入檢查 ===');
+      console.log('目前資料數量:', data.length);
+      console.log('Google Sheets 啟用:', GOOGLE_SHEET_CONFIG.enabled);
+
+      if (data.length > 0) {
+        console.log('已有資料，跳過載入');
+        return;
+      }
+
+      if (!GOOGLE_SHEET_CONFIG.enabled) {
+        console.log('Google Sheets 未啟用');
+        return;
+      }
+
+      console.log('開始載入 Google Sheets...');
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const results = await loadAllGoogleSheets();
+        console.log('載入結果:', results);
+
+        for (const { rows, theme } of results) {
+          console.log(`匯入 ${rows.length} 筆資料，主題:`, theme);
+          if (rows.length > 0) {
+            // Import with replace: true on first sheet, false on subsequent
+            const opts = results.indexOf({ rows, theme }) === 0
+              ? { overrideExamples: false, replace: true }
+              : { overrideExamples: false, replace: false };
+            const stats = importRows(rows, opts);
+            console.log('匯入統計:', stats);
+          }
+        }
+
+        // Mark preset as successfully applied
+        markPresetApplied();
+        console.log('✅ Google Sheets 載入完成');
+      } catch (error) {
+        console.error('載入 Google Sheets 失敗:', error);
+        setLoadError('載入資料失敗，請檢查網路連線');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    autoLoad();
+  }, []); // Run only once on mount
 
   const goToHome = () => push('#/');
   const goToAbout = () => push('#/about');
@@ -71,6 +127,20 @@ function App() {
         </h1>
         <p className="text-xl text-gray-600">學生版</p>
       </header>
+
+      {/* Loading Status */}
+      {isLoading && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-700">⏳ 正在從 Google Sheets 載入資料...</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {loadError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700">❌ {loadError}</p>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="mb-8 flex gap-4 flex-wrap">
