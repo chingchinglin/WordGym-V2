@@ -8,7 +8,7 @@ import { MultipleChoiceQuiz } from './components/quiz/MultipleChoiceQuiz';
 import { FlashcardQuiz } from './components/quiz/FlashcardQuiz';
 import { useDataset } from './hooks/useDataset';
 import { loadAllGoogleSheets } from './services/googleSheetLoader';
-import { GOOGLE_SHEET_CONFIG } from './config/googleSheet';
+import { GOOGLE_SHEET_CONFIG, PRESET_VERSION } from './config/googleSheet';
 
 function App() {
   const { hash, push } = useHashRoute();
@@ -24,7 +24,7 @@ function App() {
       console.log('=== 自動載入檢查 ===');
       console.log('目前資料數量:', data.length);
       console.log('Google Sheets 啟用:', GOOGLE_SHEET_CONFIG.enabled);
-      console.log('PRESET_VERSION:', (await import('./config/googleSheet')).PRESET_VERSION);
+      console.log('PRESET_VERSION:', PRESET_VERSION);
 
       // Check localStorage version
       const storedVersion = localStorage.getItem('mvp_vocab_preset_applied_v36');
