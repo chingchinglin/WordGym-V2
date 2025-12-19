@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LazyWordCard } from '../cards/LazyWordCard';
 import { useCurrentTab } from '../../hooks/useCurrentTab';
 import { useTabFilters } from '../../hooks/useTabFilters';
 import { useQuickFilterPos } from '../../hooks/useQuickFilterPos';
 import { useUserSettings } from '../../hooks/useUserSettings';
 import { filterWords } from '../../utils/filterWords';
-import type { VocabularyWord } from '../../types';
+import type { VocabularyWord, UserSettings } from '../../types';
 
 import { QuickPOSFilter } from '../filters/QuickPOSFilter';
 import { TextbookFilters } from '../filters/TextbookFilters';
@@ -20,18 +20,29 @@ const TABS = {
 
 interface HomePageProps {
   words: VocabularyWord[];
+  userSettings: UserSettings | null; // Added userSettings prop
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ words }) => {
-  const { userSettings } = useUserSettings();
+export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
+  // Removed local useUserSettings() call, now using userSettings prop directly
   const { currentTab, setCurrentTab } = useCurrentTab();
   const { filters, updateFilter } = useTabFilters(userSettings);
   const { quickFilterPos } = useQuickFilterPos();
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Show message if no user settings
-  if (!userSettings) {
+  // Enhanced debug logging
+  useEffect(() => {
+    console.log('🏠 HomePage userSettings:', {
+      value: userSettings,
+      stage: userSettings?.stage,
+      version: userSettings?.version
+    });
+  }, [userSettings]);
+
+  // Show message only if truly no settings
+  const isSettingsMissing = !userSettings?.stage || !userSettings?.version;
+  if (isSettingsMissing) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 mb-4">請先選擇您的學程和課本版本</p>
