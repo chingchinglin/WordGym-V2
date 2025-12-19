@@ -10,8 +10,10 @@ export function filterWords(
   searchTerm: string
 ): VocabularyWord[] {
   const filtered = words.filter(word => {
-    // Stage filter
-    if (word.stage !== userSettings.stage) return false;
+    // Stage filter - normalize both sides for comparison
+    const normalizedWordStage = VersionService.normalizeStage(word.stage || '');
+    const normalizedUserStage = VersionService.normalizeStage(userSettings.stage || '');
+    if (normalizedWordStage !== normalizedUserStage) return false;
 
     // Tab-specific filters
     switch (currentTab) {
@@ -44,7 +46,10 @@ export function filterWords(
         break;
 
       case 'theme':
-        if (userSettings.stage === 'junior') {
+        // Use normalized stage for comparison
+        const normalizedStageForTheme = VersionService.normalizeStage(userSettings.stage || '');
+
+        if (normalizedStageForTheme === 'junior') {
           // Junior: Use theme_index
           const themeMatch = word.theme_index?.some(
             item =>
@@ -55,13 +60,15 @@ export function filterWords(
         } else {
           // Senior: Use level and themes
           if (filters.theme?.range) {
-            // Check level match
-            if (String(word.level || '').trim() !== String(filters.theme.range).trim()) {
+            // Check level match - normalize both sides (Level 4 -> L4)
+            const normalizedFilterRange = String(filters.theme.range).replace('Level ', 'L').trim();
+            const normalizedWordLevel = String(word.level || '').trim();
+            if (normalizedWordLevel !== normalizedFilterRange) {
               return false;
             }
           }
-          if (filters.theme?.theme) {
-            // Check if word has this theme
+          // Only check theme if word has themes data AND filter has theme selected
+          if (filters.theme?.theme && filters.theme.theme !== '') {
             if (!word.themes || !word.themes.includes(filters.theme.theme)) {
               return false;
             }

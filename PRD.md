@@ -957,6 +957,104 @@ interface VocabularyWord {
   - 詞性標籤（小 chip）
   - 移除按鈕（右下角或卡片底部）
 
+##### 單字卡片視覺設計：左側 Accent 條顏色規則
+
+**設計原則：**
+- 使用裝飾性顏色輪換，非語意化設計
+- 基於單字 ID 自動分配顏色
+- 提供視覺多樣性，避免單調
+
+**顏色配置：**
+
+```typescript
+const accentColors = [
+  'bg-indigo-500',  // #6366f1 - 靛藍
+  'bg-blue-500',    // #3b82f6 - 天藍
+  'bg-purple-500',  // #a855f7 - 紫色
+  'bg-pink-500',    // #ec4899 - 粉紅
+  'bg-green-500'    // #22c55e - 綠色
+];
+```
+
+**分配邏輯：**
+
+```typescript
+// 根據單字 ID 模除 5 來決定顏色
+const accentColor = accentColors[word.id % 5] || 'bg-indigo-500';
+```
+
+**顏色對應表：**
+
+| 單字 ID % 5 | 顏色類別 | Tailwind Class | Hex Code | 視覺效果 |
+|------------|---------|----------------|----------|---------|
+| 0 | 靛藍 | bg-indigo-500 | #6366f1 | 深靛藍色 |
+| 1 | 天藍 | bg-blue-500 | #3b82f6 | 天空藍 |
+| 2 | 紫色 | bg-purple-500 | #a855f7 | 亮紫色 |
+| 3 | 粉紅 | bg-pink-500 | #ec4899 | 鮮粉紅 |
+| 4 | 綠色 | bg-green-500 | #22c55e | 青綠色 |
+
+**範例：**
+- Word ID = 1 → 1 % 5 = 1 → `bg-blue-500` (天藍)
+- Word ID = 7 → 7 % 5 = 2 → `bg-purple-500` (紫色)
+- Word ID = 10 → 10 % 5 = 0 → `bg-indigo-500` (靛藍)
+
+**UI 實作：**
+```tsx
+<div className="bg-white rounded-xl shadow-sm border border-gray-200">
+  <div className="flex">
+    {/* 左側 accent 條 (1px 寬) */}
+    <div className={`w-1 ${accentColor}`}></div>
+
+    {/* 卡片內容 */}
+    <div className="flex-1 p-2.5">
+      <h3>{word.english_word}</h3>
+      <p>{word.chinese_definition}</p>
+    </div>
+  </div>
+</div>
+```
+
+**設計考量：**
+
+| 考量項目 | 說明 |
+|---------|------|
+| 為何不使用語意化顏色？ | 簡化實作，避免使用者過度解讀顏色含義 |
+| 為何選這 5 種顏色？ | 符合品牌色系，對比度適中，視覺平衡 |
+| 如何確保一致性？ | 同一單字的 ID 固定，顏色永遠一致 |
+| 色盲友善嗎？ | 顏色僅為裝飾，不影響資訊閱讀 |
+
+**語意化顏色替代方案（未來可考慮）：**
+
+若未來需要語意化顏色，可考慮以下方案：
+
+1. **詞性導向：**
+   - 名詞 → 藍色
+   - 動詞 → 綠色
+   - 形容詞 → 紫色
+   - 副詞 → 粉紅色
+   - 其他 → 灰色
+
+2. **難度導向：**
+   - Level 1-2 → 綠色（簡單）
+   - Level 3-4 → 藍色（中等）
+   - Level 5-6 → 紫色（困難）
+   - Level 7+ → 紅色（進階）
+
+3. **混合方案：**
+   - 保留 ID 輪換，加上詞性小標記
+
+**功能需求：**
+
+| ID | 需求描述 | 優先級 |
+|----|---------|--------|
+| WC-COLOR-001 | 單字卡片左側顯示 1px 寬的 accent 條 | P0 |
+| WC-COLOR-002 | 根據 `word.id % 5` 分配顏色 | P0 |
+| WC-COLOR-003 | 使用 5 種固定顏色輪換 | P0 |
+| WC-COLOR-004 | Fallback 為 `bg-indigo-500` | P1 |
+| WC-COLOR-005 | 顏色在所有頁面保持一致（首頁、搜尋結果、重點訓練） | P1 |
+
+---
+
 **空狀態：**
 - Icon: 📚 或插圖
 - 標題：「尚未加入任何重點訓練單字」

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UserSettings } from '../types';
+import { VersionService } from '../services/VersionService';
 
 type TabType = 'textbook' | 'exam' | 'theme';
 type TabFilterValue = {
@@ -13,19 +14,24 @@ type TabFilterValue = {
 const LOCAL_STORAGE_KEY = 'wordgym_filters_v1';
 
 export const useTabFilters = (userSettings: UserSettings | null) => {
-  const getDefaultFilters = () => ({
-    textbook: {
-      vol: '1',
-      lesson: '1'
-    },
-    exam: {
-      year: '112'
-    },
-    theme: {
-      range: userSettings?.stage === 'junior' ? '1200' : '4',
-      theme: ''
-    }
-  });
+  const prevStageRef = useRef<string | undefined>();
+
+  const getDefaultFilters = () => {
+    const normalizedStage = VersionService.normalizeStage(userSettings?.stage || '');
+    return {
+      textbook: {
+        vol: '1',
+        lesson: '1'
+      },
+      exam: {
+        year: '112'
+      },
+      theme: {
+        range: normalizedStage === 'junior' ? '1200' : 'Level 4',
+        theme: ''
+      }
+    };
+  };
 
   const [filters, setFilters] = useState(() => {
     const storedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -33,6 +39,26 @@ export const useTabFilters = (userSettings: UserSettings | null) => {
       ? JSON.parse(storedFilters)
       : getDefaultFilters();
   });
+
+  // Reset theme filters when stage changes
+  useEffect(() => {
+    const currentStage = VersionService.normalizeStage(userSettings?.stage || '');
+    const prevStage = prevStageRef.current;
+
+    if (prevStage && prevStage !== currentStage) {
+      // Stage changed - reset theme filter to default for new stage
+      const newRange = currentStage === 'junior' ? '1200' : 'Level 4';
+      setFilters((prev: any) => ({
+        ...prev,
+        theme: {
+          range: newRange,
+          theme: ''
+        }
+      }));
+    }
+
+    prevStageRef.current = currentStage;
+  }, [userSettings?.stage]);
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));

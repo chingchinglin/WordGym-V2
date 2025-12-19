@@ -85,9 +85,14 @@ export function useDataset(initialData: VocabularyWord[] = []) {
    */
   const hydrateDataset = (items: any[], resetCounters = true): VocabularyWord[] => {
     const counters = resetCounters ? {} : { ...themeOrderRef.current };
-    const hydrated = (Array.isArray(items) ? items : []).map(item => {
+    const hydrated = (Array.isArray(items) ? items : []).map((item, index) => {
       const prepared = ensureWordFormsDetail(item);
       const clone: any = { ...prepared };
+
+      // Ensure id exists for color rotation and identification
+      if (!clone.id && clone.id !== 0) {
+        clone.id = index;
+      }
 
       if (clone.theme_order && typeof clone.theme_order === 'object') {
         Object.entries(clone.theme_order).forEach(([theme, order]) => {

@@ -58,7 +58,24 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
     window.location.hash = `#/word/${wordId}`;
   };
 
-  const accentColors = ['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-green-500'];
+  // Map POS to colors (more meaningful than random rotation)
+  const getPOSColor = (word: VocabularyWord): string => {
+    const def = word.chinese_definition || '';
+
+    // Extract POS from chinese_definition like "(n.)", "(v.)", "(adj.)", etc.
+    const posMatch = def.match(/\(([a-z]+\.?)\)/i);
+    const pos = posMatch ? posMatch[1].toLowerCase() : '';
+
+    if (pos.startsWith('n')) return 'bg-blue-500';      // 名詞 - 藍色
+    if (pos.startsWith('v')) return 'bg-green-500';     // 動詞 - 綠色
+    if (pos.startsWith('adj')) return 'bg-purple-500';  // 形容詞 - 紫色
+    if (pos.startsWith('adv')) return 'bg-pink-500';    // 副詞 - 粉色
+    if (pos.startsWith('prep')) return 'bg-indigo-500'; // 介係詞 - 靛色
+    if (pos.startsWith('conj')) return 'bg-yellow-500'; // 連接詞 - 黃色
+    if (pos.startsWith('pron')) return 'bg-red-500';    // 代名詞 - 紅色
+
+    return 'bg-gray-500'; // 其他/未知 - 灰色
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -183,7 +200,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filteredWords.map((word, index) => {
-              const accentColor = accentColors[word.id % accentColors.length] || 'bg-indigo-500';
+              const accentColor = getPOSColor(word);
               return (
                 <LazyWordCard
                   key={word.id}

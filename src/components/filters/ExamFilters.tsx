@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { VocabularyWord } from '../../types';
 import { useUserSettings } from '../../hooks/useUserSettings';
+import { VersionService } from '../../services/VersionService';
 
 interface ExamFiltersProps {
   filters: {
@@ -19,10 +20,11 @@ export const ExamFilters: React.FC<ExamFiltersProps> = ({
 
   const availableYears = useMemo(() => {
     if (!userSettings) return [];
+    const normalizedStage = VersionService.normalizeStage(userSettings.stage || '');
     const examTags = dataset.words.flatMap(word => word.exam_tags || []);
     const uniqueYears = Array.from(new Set(examTags))
       .filter(tag => {
-        const examType = userSettings.stage === 'junior'
+        const examType = normalizedStage === 'junior'
           ? tag.includes('會考')
           : tag.includes('學測');
         return examType;
