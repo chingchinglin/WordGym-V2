@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { QuizRecord } from '../types/quiz';
+import { QuizRecord, LS } from '../types';
 
-const LS_KEY = 'mvp_vocab_quiz_history_v1';
 const MAX_RECORDS = 30;
 
 export function useQuizHistory() {
   const [history, setHistory] = useState<QuizRecord[]>(() => {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      const raw = localStorage.getItem(LS.quizHistory);
       if (raw) {
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed.slice(0, MAX_RECORDS) : [];
@@ -22,32 +21,42 @@ export function useQuizHistory() {
   useEffect(() => {
     try {
       const recordsToSave = history.slice(0, MAX_RECORDS);
-      localStorage.setItem(LS_KEY, JSON.stringify(recordsToSave));
+      localStorage.setItem(LS.quizHistory, JSON.stringify(recordsToSave));
     } catch (e) {
       console.error('Failed to save quiz history:', e);
     }
   }, [history]);
 
-  const addQuizRecord = (record: Omit<QuizRecord, 'id'>) => {
+  const add = useCallback((record: Omit<QuizRecord, 'id' | 'date'>) => {
     const newRecord: QuizRecord = {
       ...record,
-      id: uuidv4()
+      id: uuidv4(),
+      date: new Date().toISOString()
     };
     setHistory(prev => [newRecord, ...prev].slice(0, MAX_RECORDS));
-  };
+  }, []);
 
-  const clearHistory = () => {
-    setHistory([]);
-  };
+  const getAll = useCallback(() => {
+    return history;
+  }, [history]);
 
-  const deleteRecord = (recordId: string) => {
+  const remove = useCallback((recordId: string) => {
     setHistory(prev => prev.filter(r => r.id !== recordId));
-  };
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setHistory([]);
+  }, []);
 
   return {
+    add,
+    getAll,
+    remove,
+    clearAll,
+    // Legacy support
     history,
-    addQuizRecord,
-    clearHistory,
-    deleteRecord
+    addQuizRecord: add,
+    clearHistory: clearAll,
+    deleteRecord: remove
   };
 }

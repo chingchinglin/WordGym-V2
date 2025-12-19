@@ -1,58 +1,121 @@
 import React from 'react';
-import { VocabularyWord } from '../../types';
+import { VocabularyWord, POS_LABEL, POSType } from '../../types';
 import { useFavorites } from '../../hooks/useFavorites';
-import { LazyWordCard } from '../cards/LazyWordCard';
 
 interface FavoritesPageProps {
   words: VocabularyWord[];
+  onStartQuiz?: (words: VocabularyWord[]) => void;
 }
 
-export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words }) => {
-  const { favorites, clearFavorites } = useFavorites();
+export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz }) => {
+  const { favorites, clearFavorites, removeFavorite } = useFavorites();
 
   const favoriteWords = words.filter(word => favorites.has(word.id));
 
-  const handleWordClick = (word: VocabularyWord) => {
-    // TODO: Navigate to word detail page or implement detailed view
-    console.log('Word clicked:', word);
+  const handleStartQuiz = () => {
+    if (onStartQuiz && favoriteWords.length > 0) {
+      onStartQuiz(favoriteWords);
+    } else {
+      // Default: navigate to quiz page with favorites
+      window.location.hash = '#/quiz';
+    }
+  };
+
+  const handleRemoveWord = (wordId: number) => {
+    removeFavorite(wordId);
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Favorite Words</h1>
-        {favoriteWords.length > 0 && (
-          <button
-            onClick={clearFavorites}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Clear All Favorites
-          </button>
+    <div className="min-h-screen bg-gray-50 pb-8">
+      <div className="max-w-7xl mx-auto px-4 pt-6">
+        {/* Top bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.history.back()}
+              className="px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 text-sm font-medium transition duration-150 min-h-[44px] flex items-center"
+            >
+              ← 返回
+            </button>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="text-sm text-gray-500 mb-2">
+            點擊重點訓練，可以在這邊複習單字，或是進行測驗
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">
+              重點訓練 ({favoriteWords.length})
+            </h1>
+            <div className="flex gap-2">
+              {favoriteWords.length > 0 && (
+                <>
+                  <button
+                    onClick={handleStartQuiz}
+                    className="px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium transition duration-150 min-h-[44px]"
+                  >
+                    開始測驗
+                  </button>
+                  <button
+                    onClick={clearFavorites}
+                    className="px-6 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition duration-150 min-h-[44px]"
+                  >
+                    全部清除
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Word cards */}
+        {favoriteWords.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <p className="text-gray-500">尚未加入任何重點訓練單字</p>
+            <p className="text-sm text-gray-400 mt-2">
+              在單字學習區，如果有不熟的單字，可以加入重點訓練
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {favoriteWords.map((word) => (
+              <div
+                key={word.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition"
+              >
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {word.english_word}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {word.posTags && word.posTags.length > 0 ? (
+                      word.posTags.map((pos, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600"
+                        >
+                          {POS_LABEL[pos as POSType] || pos}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        other
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleRemoveWord(word.id)}
+                    className="mt-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition"
+                  >
+                    移除
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
-      </div>
-
-      {favoriteWords.length === 0 ? (
-        <div className="text-center text-gray-500">
-          <p>No favorite words yet. Start adding words to your favorites!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {favoriteWords.map((word, index) => (
-            <LazyWordCard
-              key={word.id}
-              word={word}
-              index={index}
-              accentColor="red"
-              onClick={() => handleWordClick(word)}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="mt-6 text-center">
-        <p className="text-gray-600">
-          Total Favorite Words: {favorites.size}
-        </p>
       </div>
     </div>
   );

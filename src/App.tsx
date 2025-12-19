@@ -227,7 +227,7 @@ function App() {
       case '#/quiz-history':
         return <QuizHistoryPage />;
       default:
-        return <HomePage words={data} />;
+        return <HomePage words={data} userSettings={userSettings} />;
     }
   };
 

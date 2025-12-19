@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { QuizRecord } from '../../types/quiz';
+import { QuizRecord } from '../../types';
 import { useQuizHistory } from '../../hooks/useQuizHistory';
 
 import { formatDate } from '../../utils/dateUtils';
 
 const renderQuizType = (type: QuizRecord['quizType']) => {
-  const typeLabels = {
+  const typeLabels: Record<string, string> = {
     'multiple_choice': '選擇題',
     'flashcard': '閃卡',
     'writing': '寫作'
   };
-  return typeLabels[type];
+  return typeLabels[type || 'flashcard'] || '測驗';
 };
 
 const QuizHistoryPage: React.FC = () => {
@@ -57,7 +57,7 @@ const QuizHistoryPage: React.FC = () => {
                       {renderQuizType(session.quizType)}測驗
                     </span>
                     <span className="text-gray-500 text-sm">
-                      {formatDate(session.timestamp)}
+                      {formatDate(session.timestamp ?? 0)}
                     </span>
                   </div>
                   <div className="flex space-x-2">
@@ -85,7 +85,7 @@ const QuizHistoryPage: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold">正確答案</h4>
-                        <p>{session.correctAnswers}</p>
+                        <p>{session.correctAnswers ?? session.correct}</p>
                       </div>
                       <div>
                         <h4 className="font-semibold">學習中</h4>
@@ -93,7 +93,7 @@ const QuizHistoryPage: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold">已掌握</h4>
-                        <p>{session.mastered || 0}</p>
+                        <p>{session.mastered ?? session.correct ?? 0}</p>
                       </div>
                     </div>
                     <div className="mt-4">
@@ -101,11 +101,11 @@ const QuizHistoryPage: React.FC = () => {
                       <div className="w-full bg-gray-200 rounded-full h-2.5">
                         <div
                           className="bg-blue-600 h-2.5 rounded-full"
-                          style={{width: `${session.score}%`}}
+                          style={{width: `${session.score ?? ((session.correct / session.totalQuestions) * 100)}%`}}
                         ></div>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
-                        {session.score.toFixed(1)}%
+                        {(session.score ?? ((session.correct / session.totalQuestions) * 100)).toFixed(1)}%
                       </p>
                     </div>
                   </div>

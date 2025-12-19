@@ -1,5 +1,17 @@
 import { VocabularyWord } from '../types';
 
+// Utility function to escape special regex characters
+const escapeForRegex = (str: string): string => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+// Make cloze sentence by replacing the answer with blanks
+export const makeCloze = (sentence: string, answer: string): string => {
+  const esc = escapeForRegex(answer);
+  const rx = new RegExp(`(^|[^A-Za-z])(${esc})(?=[^A-Za-z]|$)`, 'i');
+  return String(sentence).replace(rx, (m) => m.replace(new RegExp(esc, 'i'), '_____ '));
+};
+
 export const generateDisractors = (
   correctWord: VocabularyWord,
   allWords: VocabularyWord[],

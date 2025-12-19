@@ -74,18 +74,36 @@ export type QuizDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface QuizRecord {
   id?: string;
-  quizType: 'multiple_choice' | 'flashcard';
+  type: 'multiple-choice' | 'flashcard';
+  quizType?: 'multiple_choice' | 'flashcard' | 'writing';  // Legacy field
   totalQuestions: number;
-  correctAnswers: number;
-  timestamp: number;
-  date?: number;
-  words: string[];
-  difficulty: QuizDifficulty;
-  score: number;
+  correct: number;
+  correctAnswers?: number;  // Legacy field - same as correct
   wrong: number;
   learning: number;
-  mastered: number;
-  correct?: number;
+  mastered?: number;  // Number of words mastered
+  score?: number;  // Score percentage
+  words?: string[];  // Word IDs as strings
+  difficulty?: 'easy' | 'medium' | 'hard';
+  wrongWords?: Array<{
+    wordId: number;
+    word: string;
+    correctAnswer?: string;
+    userAnswer?: string;
+    question?: string;
+    chinese_definition?: string;
+    sentenceTranslation?: string;
+    userAnswerDefinition?: string;
+  }>;
+  learningWords?: Array<{
+    wordId: number;
+    word: string;
+  }>;
+  correctWords?: number[];
+  duration?: number;
+  mode?: string | null;
+  date?: string;
+  timestamp?: number;
 }
 
 export interface QuizConfiguration {

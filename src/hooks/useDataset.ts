@@ -263,7 +263,21 @@ export function useDataset(initialData: VocabularyWord[] = []) {
 
         // Build incoming word object
         // Parse textbook_index - format: "龍騰-B1-U4" or "龍騰-B1-U4; 翰林-B2-L3" (semicolon separated)
-        const textbookIndexRaw = (raw.textbook_index || raw.textbookIndex || raw['課本索引'] || '').trim();
+        // More robust textbook_index parsing with multiple sources
+        const textbookIndexRaw = (
+          raw.textbook_index ||
+          raw.textbookIndex ||
+          raw['課本索引'] ||
+          raw['課本版本索引'] ||
+          raw.textbook_version_index ||
+          ''
+        ).trim();
+
+        // Debug logging for version parsing
+        console.log('🔍 Textbook Index Debug:', {
+          textbookIndexRaw,
+          rawObj: JSON.parse(JSON.stringify(raw))
+        });
         const parsedTextbookIndex: any[] = [];
         if (textbookIndexRaw) {
           const items = textbookIndexRaw.split(';').map((s: string) => s.trim()).filter(Boolean);

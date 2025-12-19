@@ -33,7 +33,31 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
     console.log('  - Unique versions in data:', uniqueVersions);
 
     // Filter by version
-    const filtered = dataset.textbook_index.filter(item => item.version === userSettings.version);
+    // Comprehensive version comparison with fallback matching
+    const normalizeVersion = (version: string) => {
+      return version
+        .trim()
+        .replace(/版$/, '')   // Remove trailing "版"
+        .replace(/\s+/g, '')  // Remove all whitespaces
+        .toLowerCase();
+    };
+
+    const normalizedUserVersion = normalizeVersion(userSettings.version || '');
+
+    const filtered = dataset.textbook_index.filter(item => {
+      const normalizedItemVersion = normalizeVersion(item.version || '');
+      return (
+        normalizedItemVersion === normalizedUserVersion ||
+        normalizedUserVersion.includes(normalizedItemVersion) ||
+        normalizedItemVersion.includes(normalizedUserVersion)
+      );
+    });
+
+    console.log('🔍 Version Matching Debug:');
+    console.log('  - Raw User Version:', userSettings.version);
+    console.log('  - Normalized User Version:', normalizedUserVersion);
+    console.log('  - All Unique Versions:', Array.from(new Set(dataset.textbook_index.map(item => item.version))));
+    console.log('  - Matching Entries:', filtered);
     console.log('  - Items matching version:', filtered.length);
     console.log('  - Filtered sample (first 3):', filtered.slice(0, 3));
 

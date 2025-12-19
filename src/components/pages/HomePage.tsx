@@ -3,7 +3,6 @@ import { LazyWordCard } from '../cards/LazyWordCard';
 import { useCurrentTab } from '../../hooks/useCurrentTab';
 import { useTabFilters } from '../../hooks/useTabFilters';
 import { useQuickFilterPos } from '../../hooks/useQuickFilterPos';
-import { useUserSettings } from '../../hooks/useUserSettings';
 import { filterWords } from '../../utils/filterWords';
 import type { VocabularyWord, UserSettings } from '../../types';
 

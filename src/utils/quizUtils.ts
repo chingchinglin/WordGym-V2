@@ -10,10 +10,13 @@ export function createQuizRecord(
 ): Omit<QuizRecord, 'id'> {
   const correct = answers.filter(a => a.isCorrect).length;
   const wrong = answers.filter(a => !a.isCorrect).length;
+  const quizType = type === 'multiple_choice' ? 'multiple_choice' : 'flashcard';
 
   return {
-    quizType: type,
+    type: type === 'multiple_choice' ? 'multiple-choice' : 'flashcard',
+    quizType,
     totalQuestions: answers.length,
+    correct,
     correctAnswers: correct,
     timestamp: Date.now(),
     words: answers.map(a => String(a.wordId || 0)),
@@ -37,7 +40,7 @@ export function getQuizAccuracy(record: QuizRecord): number {
  * Get timestamp from QuizRecord
  */
 export function getQuizTimestamp(record: QuizRecord): number {
-  return record.timestamp;
+  return record.timestamp ?? 0;
 }
 
 /**
