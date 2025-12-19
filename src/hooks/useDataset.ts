@@ -4,8 +4,7 @@
  * Handles dataset loading, merging, and persistence
  */
 
-import { useState, useEffect, useRef } from 'react';
-import LZString from 'lz-string';
+import { useState, useRef } from 'react';
 import type { VocabularyWord, ImportStats, ImportOptions, LS as LSType } from '../types';
 import {
   normalizePOS,
@@ -186,7 +185,7 @@ export function useDataset(initialData: VocabularyWord[] = []) {
         }
       };
 
-      incomingList.forEach((raw: any) => {
+      incomingList.forEach((raw: any, idx: number) => {
         if (!raw) {
           skippedNoRaw++;
           return;
@@ -201,6 +200,15 @@ export function useDataset(initialData: VocabularyWord[] = []) {
         }
 
         processedCount++;
+
+        // Debug: Log first row to see column names AND check exam_tags specifically
+        if (idx === 0) {
+          console.log('🔍 DEBUG - First row keys:', Object.keys(raw));
+          console.log('🔍 DEBUG - exam_tags raw value:', raw.exam_tags);
+          console.log('🔍 DEBUG - 主題 raw value:', raw['主題']);
+          console.log('🔍 DEBUG - stage:', raw.stage);
+          console.log('🔍 DEBUG - textbook_index:', raw.textbook_index);
+        }
 
         // Parse POS tags
         const posSources = [
@@ -260,21 +268,63 @@ export function useDataset(initialData: VocabularyWord[] = []) {
         }
 
         // Parse exam_tags - format: "106學測" or "106學測; 107學測" (semicolon separated)
-        const examTagsRaw = (raw.exam_tags || '').trim();
+        // Support both English and Chinese column names, and handle potential column name variations
+        const examTagsRaw = (
+          raw.exam_tags ||
+          raw['exam_tags'] ||
+          raw['歷屆試題'] ||
+          raw.examTags ||
+          raw['Exam_Tags'] ||
+          ''
+        ).trim();
         const parsedExamTags: string[] = examTagsRaw
           ? examTagsRaw.split(';').map((s: string) => s.trim()).filter(Boolean)
           : [];
 
-        // Parse theme_index (could be JSON string, array, or empty)
+        // Debug: Log exam_tags parsing for first few rows
+        if (idx < 5 && (examTagsRaw || idx === 0)) {
+          console.log(`🎯 Row ${idx} (${english}):`, {
+            examTagsRaw,
+            parsedExamTags,
+            'raw.exam_tags': raw.exam_tags,
+            'raw["exam_tags"]': raw['exam_tags']
+          });
+        }
+
+        // Parse theme_index (ONLY for junior stage)
+        // Format: "1200-family | 800-family" (pipe or semicolon separated)
         let parsedThemeIndex: any[] = [];
-        if (Array.isArray(raw.theme_index)) {
-          parsedThemeIndex = raw.theme_index;
-        } else if (typeof raw.theme_index === 'string' && raw.theme_index.trim()) {
-          try {
-            const parsed = JSON.parse(raw.theme_index);
-            parsedThemeIndex = Array.isArray(parsed) ? parsed : [];
-          } catch {
-            // If not valid JSON, ignore
+        const stage = (raw.stage === '高中' || raw.stage === 'senior') ? 'senior'
+                    : (raw.stage === '國中' || raw.stage === 'junior') ? 'junior'
+                    : null;
+
+        if (stage === 'junior') {
+          const themeIndexRaw = (raw['主題'] || raw.theme_index || '').trim();
+          if (themeIndexRaw) {
+            // Support both ; and | separators
+            const items = themeIndexRaw.split(/[;|]/).map((s: string) => s.trim()).filter(Boolean);
+            items.forEach((item: string) => {
+              const parts = item.split('-').map((s: string) => s.trim());
+              if (parts.length >= 2) {
+                const range = parts[0];
+                const theme = parts.slice(1).join('-');
+                // Check range is a number (1200 or 800)
+                if (/^\d+$/.test(range) && theme) {
+                  parsedThemeIndex.push({
+                    range: range,
+                    theme: theme
+                  });
+                }
+              }
+            });
+          }
+
+          // Debug
+          if (idx < 5) {
+            console.log(`🎨 Row ${idx} (${english}) theme_index:`, {
+              themeIndexRaw,
+              parsedThemeIndex
+            });
           }
         }
 
@@ -323,6 +373,14 @@ export function useDataset(initialData: VocabularyWord[] = []) {
           theme_index: parsedThemeIndex,
           affix_info: affixSource
         });
+
+        // Debug: Verify exam_tags is preserved after ensureWordFormsDetail
+        if (idx < 3 && parsedExamTags.length > 0) {
+          console.log(`✅ After creating incoming (${english}):`, {
+            parsedExamTags,
+            'incoming.exam_tags': incoming.exam_tags
+          });
+        }
 
         const key = english.toLowerCase();
         const existing = byWord.get(key);
@@ -443,6 +501,40 @@ export function useDataset(initialData: VocabularyWord[] = []) {
       console.log('  - 跳過 (無英文單字):', skippedNoEnglish);
       console.log('  - 新增:', stats.added, '合併:', stats.merged);
       console.log('  - next.length (應新增到狀態):', next.length);
+
+      // CRITICAL DEBUG: Check exam_tags in final data
+      const wordsWithExamTags = next.filter(w => w.exam_tags && w.exam_tags.length > 0);
+      console.log(`🎯 CRITICAL - Words with exam_tags: ${wordsWithExamTags.length} / ${next.length}`);
+      if (wordsWithExamTags.length > 0) {
+        console.log('🎯 First 3 words with exam_tags:', wordsWithExamTags.slice(0, 3).map(w => ({
+          word: w.english_word,
+          exam_tags: w.exam_tags
+        })));
+      } else {
+        console.error('❌ NO WORDS HAVE exam_tags! Checking first 3 words:', next.slice(0, 3).map(w => ({
+          word: w.english_word,
+          exam_tags: w.exam_tags,
+          stage: w.stage,
+          textbook_index: w.textbook_index
+        })));
+      }
+
+      // DEBUG: Check theme_index in final data
+      const wordsWithThemeIndex = next.filter(w => w.theme_index && w.theme_index.length > 0);
+      console.log(`🎨 DEBUG - Words with theme_index: ${wordsWithThemeIndex.length} / ${next.length}`);
+      if (wordsWithThemeIndex.length > 0) {
+        wordsWithThemeIndex.slice(0, 3).forEach((w, i) => {
+          console.log(`🎨 Word ${i + 1} with theme_index:`, JSON.stringify({
+            word: w.english_word,
+            theme_index: w.theme_index,
+            themes: w.themes,
+            theme: w.theme
+          }, null, 2));
+        });
+      } else {
+        console.warn('⚠️ NO WORDS HAVE theme_index!');
+      }
+
       return next;
     });
 

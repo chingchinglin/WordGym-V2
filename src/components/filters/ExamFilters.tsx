@@ -32,6 +32,16 @@ export const ExamFilters: React.FC<ExamFiltersProps> = ({
     return uniqueYears;
   }, [dataset.words, userSettings]);
 
+  // Set default year to first available year
+  React.useEffect(() => {
+    if (availableYears.length > 0) {
+      // Always set to first available year if current filter doesn't match available years
+      if (!filters.year || !availableYears.includes(filters.year)) {
+        updateFilter('year', availableYears[0]);
+      }
+    }
+  }, [availableYears, filters.year, updateFilter]);
+
   return (
     <div className="mb-6">
       <label className="block text-sm font-medium text-gray-500 mb-2">

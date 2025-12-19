@@ -42,12 +42,29 @@ export function filterWords(
         break;
 
       case 'theme':
-        const themeMatch = word.theme_index.some(
-          item =>
-            item.range === filters.theme.range &&
-            (filters.theme.theme ? item.theme === filters.theme.theme : true)
-        );
-        if (!themeMatch) return false;
+        if (userSettings.stage === 'junior') {
+          // Junior: Use theme_index
+          const themeMatch = word.theme_index.some(
+            item =>
+              item.range === filters.theme.range &&
+              (filters.theme.theme ? item.theme === filters.theme.theme : true)
+          );
+          if (!themeMatch) return false;
+        } else {
+          // Senior: Use level and themes
+          if (filters.theme.range) {
+            // Check level match
+            if (String(word.level || '').trim() !== String(filters.theme.range).trim()) {
+              return false;
+            }
+          }
+          if (filters.theme.theme) {
+            // Check if word has this theme
+            if (!word.themes || !word.themes.includes(filters.theme.theme)) {
+              return false;
+            }
+          }
+        }
         break;
     }
 

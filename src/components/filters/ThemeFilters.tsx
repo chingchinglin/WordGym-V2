@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ThemeIndexItem } from '../../types';
+import { ThemeIndexItem, VocabularyWord } from '../../types';
 import { useUserSettings } from '../../hooks/useUserSettings';
 
 interface ThemeFiltersProps {
@@ -8,7 +8,10 @@ interface ThemeFiltersProps {
     theme?: string;
   };
   updateFilter: (key: 'range' | 'theme', value: string) => void;
-  dataset: { theme_index: ThemeIndexItem[] };
+  dataset: {
+    theme_index: ThemeIndexItem[];
+    words: VocabularyWord[];
+  };
 }
 
 export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
@@ -22,22 +25,55 @@ export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
     if (!userSettings) return [];
     const ranges = userSettings.stage === 'junior'
       ? ['1200', '800']
-      : ['4', '5', '6'];
+      : ['L4', 'L5', 'L6'];
     return ranges;
   }, [userSettings]);
 
   const availableThemes = useMemo(() => {
-    return Array.from(
-      new Set(
-        dataset.theme_index
-          .filter(item =>
-            item.range === filters.range ||
-            item.range === availableRanges[0]
-          )
-          .map(item => item.theme)
-      )
-    ).sort();
-  }, [dataset.theme_index, filters.range, availableRanges]);
+    if (!userSettings) return [];
+
+    if (userSettings.stage === 'junior') {
+      // Junior: Use theme_index
+      return Array.from(
+        new Set(
+          dataset.theme_index
+            .filter(item =>
+              item.range === filters.range ||
+              item.range === availableRanges[0]
+            )
+            .map(item => item.theme)
+        )
+      ).sort();
+    } else {
+      // Senior: Use word.themes
+      const filteredWords = filters.range
+        ? dataset.words.filter(w => String(w.level || '').trim() === String(filters.range).trim())
+        : dataset.words;
+
+      return Array.from(
+        new Set(
+          filteredWords.flatMap(w => w.themes || [])
+        )
+      ).filter(Boolean).sort();
+    }
+  }, [dataset.theme_index, dataset.words, filters.range, availableRanges, userSettings]);
+
+  // Auto-set default range and theme
+  React.useEffect(() => {
+    if (availableRanges.length > 0) {
+      if (!filters.range || !availableRanges.includes(filters.range)) {
+        updateFilter('range', availableRanges[0]);
+      }
+    }
+  }, [availableRanges, filters.range, updateFilter]);
+
+  React.useEffect(() => {
+    if (availableThemes.length > 0) {
+      if (!filters.theme || !availableThemes.includes(filters.theme)) {
+        updateFilter('theme', availableThemes[0]);
+      }
+    }
+  }, [availableThemes, filters.theme, updateFilter]);
 
   return (
     <div className="mb-6 grid gap-4 md:grid-cols-2">
@@ -52,9 +88,7 @@ export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
         >
           {availableRanges.map(range => (
             <option key={range} value={range}>
-              {userSettings?.stage === 'junior'
-                ? range
-                : `Level ${range}`}
+              {range}
             </option>
           ))}
         </select>

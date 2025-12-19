@@ -74,15 +74,35 @@ function App() {
               .filter(item => item.textbook_index && item.textbook_index.trim());
             console.log('📚 textbook_index 範例 (前10筆有資料的):', textbookIndexSamples);
 
-            // Check exam_tags data
-            const examTagsSamples = rows.slice(0, 10)
+            // Check exam_tags data - CRITICAL DEBUG
+            console.log('🔍 CRITICAL - Checking exam_tags in raw rows...');
+            const examTagsSamples = rows.slice(0, 20)
               .map((row, idx) => ({
                 idx,
                 word: row.english_word || row['英文單字'] || row.Word,
-                exam_tags: row.exam_tags
-              }))
-              .filter(item => item.exam_tags && item.exam_tags.trim());
-            console.log('🎯 exam_tags 範例 (前10筆有資料的):', examTagsSamples);
+                exam_tags_raw: row.exam_tags,
+                exam_tags_type: typeof row.exam_tags,
+                exam_tags_empty: row.exam_tags === '',
+                all_keys: Object.keys(row)
+              }));
+            console.log('🎯 exam_tags 範例 (前20筆，不論是否有資料):', examTagsSamples);
+            const rowsWithExamTags = examTagsSamples.filter(item => item.exam_tags_raw && item.exam_tags_raw.trim());
+            console.log(`🎯 前20筆中有 exam_tags 資料的: ${rowsWithExamTags.length} 筆`, rowsWithExamTags);
+
+            // Check theme_index data - DEBUG
+            console.log('🔍 DEBUG - Checking theme_index in raw rows...');
+            const themeIndexSamples = rows.slice(0, 20)
+              .map((row, idx) => ({
+                idx,
+                word: row.english_word || row['英文單字'] || row.Word,
+                theme_index_raw: row.theme_index,
+                theme_index_type: typeof row.theme_index,
+                theme_index_empty: row.theme_index === '',
+                theme_index_value: row.theme_index
+              }));
+            console.log('🎨 theme_index 範例 (前20筆，不論是否有資料):', themeIndexSamples);
+            const rowsWithThemeIndex = themeIndexSamples.filter(item => item.theme_index_raw && item.theme_index_raw.toString().trim());
+            console.log(`🎨 前20筆中有 theme_index 資料的: ${rowsWithThemeIndex.length} 筆`, rowsWithThemeIndex);
           }
           if (rows.length > 0 && !cancelled) {
             // Import with replace: true on first sheet, false on subsequent
@@ -93,6 +113,11 @@ function App() {
             console.log('匯入統計:', stats);
             finalStats = stats;
             isFirstSheet = false;
+
+            // CRITICAL DEBUG: Check if exam_tags survived import
+            console.log('🔍 CRITICAL - Checking data.exam_tags after import...');
+            // Note: data might not be updated yet due to async state, so we can't check it here
+            // The importRows function should have logged internally
           }
         }
 

@@ -105,7 +105,10 @@ export const HomePage: React.FC<HomePageProps> = ({ words }) => {
         <ThemeFilters
           filters={filters.theme}
           updateFilter={(key, value) => updateFilter('theme', key, value)}
-          dataset={{ theme_index: words.flatMap(word => word.theme_index) }}
+          dataset={{
+            theme_index: words.flatMap(word => word.theme_index || []),
+            words: words
+          }}
         />
       )}
 
