@@ -5,9 +5,10 @@ import { useFavorites } from '../../hooks/useFavorites';
 interface FavoritesPageProps {
   words: VocabularyWord[];
   onStartQuiz?: (words: VocabularyWord[]) => void;
+  isLoading?: boolean;
 }
 
-export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz }) => {
+export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz, isLoading = false }) => {
   const { favorites, clearFavorites, removeFavorite } = useFavorites();
 
   const favoriteWords = words.filter(word => favorites.has(word.id));
@@ -24,6 +25,38 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz
   const handleRemoveWord = (wordId: number) => {
     removeFavorite(wordId);
   };
+
+  // Show loading state if data is still loading and favorites exist
+  const showLoading = isLoading || (words.length === 0 && favorites.size > 0);
+
+  if (showLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-8">
+        <div className="max-w-7xl mx-auto px-4 pt-6">
+          {/* Top bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.history.back()}
+                className="px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 text-sm font-medium transition duration-150 min-h-[44px] flex items-center"
+              >
+                ← 返回
+              </button>
+            </div>
+          </div>
+
+          {/* Loading state */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <div className="animate-pulse">
+              <div className="inline-block h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-lg font-semibold text-gray-700">載入中...</p>
+              <p className="text-sm text-gray-500 mt-2">正在載入重點訓練單字</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">

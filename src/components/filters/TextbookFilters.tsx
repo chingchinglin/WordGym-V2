@@ -11,6 +11,15 @@ interface TextbookFiltersProps {
   dataset: { textbook_index: TextbookIndexItem[] };
 }
 
+const normalizeVersion = (version: string = ''): string => {
+    return version
+      .trim()
+      .replace(/版$/, '')   // Remove trailing "版"
+      .replace(/\s+/g, '')  // Remove all whitespaces
+      .replace(/國中/g, '')  // Remove "國中" if present
+      .toLowerCase();
+  };
+
 export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   filters,
   updateFilter,
@@ -21,68 +30,62 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   const availableVols = useMemo(() => {
     if (!userSettings) return [];
 
-    // Debug logs
-    console.log('🔍 TextbookFilters Debug:');
-    console.log('  - userSettings:', userSettings);
-    console.log('  - userSettings.version:', userSettings.version);
-    console.log('  - dataset.textbook_index length:', dataset.textbook_index.length);
-    console.log('  - dataset.textbook_index sample (first 3):', dataset.textbook_index.slice(0, 3));
+    const normalizedVersions = dataset.textbook_index
+      .map(item => normalizeVersion(item.version));
 
-    // Get unique versions in data
-    const uniqueVersions = Array.from(new Set(dataset.textbook_index.map(item => item.version)));
-    console.log('  - Unique versions in data:', uniqueVersions);
+    const uniqueNormalizedVersions = Array.from(new Set(normalizedVersions));
 
-    // Filter by version
-    // Comprehensive version comparison with fallback matching
-    const normalizeVersion = (version: string) => {
-      return version
-        .trim()
-        .replace(/版$/, '')   // Remove trailing "版"
-        .replace(/\s+/g, '')  // Remove all whitespaces
-        .toLowerCase();
-    };
+    const normalizedUserVersion = normalizeVersion(userSettings.version);
 
-    const normalizedUserVersion = normalizeVersion(userSettings.version || '');
+    // Matching logic with fallback
+    const matchedVersion = uniqueNormalizedVersions.find(
+      version =>
+        version === normalizedUserVersion ||
+        normalizedUserVersion.includes(version) ||
+        version.includes(normalizedUserVersion)
+    ) || uniqueNormalizedVersions[0];
 
     const filtered = dataset.textbook_index.filter(item => {
-      const normalizedItemVersion = normalizeVersion(item.version || '');
-      return (
-        normalizedItemVersion === normalizedUserVersion ||
-        normalizedUserVersion.includes(normalizedItemVersion) ||
-        normalizedItemVersion.includes(normalizedUserVersion)
-      );
+      const normalizedItemVersion = normalizeVersion(item.version);
+      return normalizedItemVersion === matchedVersion;
     });
 
-    console.log('🔍 Version Matching Debug:');
-    console.log('  - Raw User Version:', userSettings.version);
-    console.log('  - Normalized User Version:', normalizedUserVersion);
-    console.log('  - All Unique Versions:', Array.from(new Set(dataset.textbook_index.map(item => item.version))));
-    console.log('  - Matching Entries:', filtered);
-    console.log('  - Items matching version:', filtered.length);
-    console.log('  - Filtered sample (first 3):', filtered.slice(0, 3));
-
     const vols = Array.from(
-      new Set(filtered.map(item => item.vol))
+      new Set(filtered.map(item => item.vol).filter(Boolean))
     ).sort();
-    console.log('  - Available vols:', vols);
 
     return vols;
   }, [dataset.textbook_index, userSettings]);
 
   const availableLessons = useMemo(() => {
-    if (!userSettings) return [];
+    if (!userSettings || availableVols.length === 0) return [];
+
+    const normalizedUserVersion = normalizeVersion(userSettings.version);
+    const normalizedVersions = dataset.textbook_index
+      .map(item => normalizeVersion(item.version));
+
+    const uniqueNormalizedVersions = Array.from(new Set(normalizedVersions));
+
+    const chosenVersion = uniqueNormalizedVersions.find(
+      version =>
+        version === normalizedUserVersion ||
+        normalizedUserVersion.includes(version) ||
+        version.includes(normalizedUserVersion)
+    ) || uniqueNormalizedVersions[0];
+
     return Array.from(
       new Set(
         dataset.textbook_index
           .filter(
             item =>
-              item.version === userSettings.version &&
-              item.vol === filters.vol
+              normalizeVersion(item.version) === chosenVersion &&
+              item.vol === (filters.vol || availableVols[0])
           )
           .map(item => item.lesson)
+          .filter(Boolean)
       )
     ).sort();
-  }, [dataset.textbook_index, userSettings, filters.vol]);
+  }, [dataset.textbook_index, userSettings, filters.vol, availableVols]);
 
   // Show message if no data available
   if (availableVols.length === 0) {

@@ -217,7 +217,7 @@ function App() {
       case '':
         return <HomePage words={data} userSettings={userSettings} />;
       case '#/favorites':
-        return <FavoritesPage words={data} />;
+        return <FavoritesPage words={data} isLoading={isLoading} />;
       case '#/quiz':
         return <QuizPage words={data} />;
       case '#/multiple-choice-quiz':
