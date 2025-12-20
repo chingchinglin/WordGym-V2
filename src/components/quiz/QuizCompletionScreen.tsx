@@ -78,7 +78,7 @@ const QuizCompletionScreen: React.FC<QuizCompletionScreenProps> = ({
       {/* Score statistics */}
       {type === 'flashcard' ? (
         <div className="flex items-center justify-center gap-6 mt-3 mb-6">
-          <span className="text-gray-500">總題數：{totalQuestions} 題</span>
+          <span className="text-gray-500">總張數：{totalQuestions} 張</span>
           <span className="text-gray-400">|</span>
           <span className="text-green-600 font-medium">你已學會：{correct} 個</span>
           {learning > 0 && (
