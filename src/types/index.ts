@@ -99,7 +99,15 @@ export interface QuizRecord {
     wordId: number;
     word: string;
   }>;
-  correctWords?: number[];
+  correctWords?: Array<{
+    wordId: number;
+    word: string;
+    correctAnswer?: string;
+    userAnswer?: string;
+    question?: string;
+    chinese_definition?: string;
+    sentenceTranslation?: string;
+  }>;
   duration?: number;
   mode?: string | null;
   date?: string;

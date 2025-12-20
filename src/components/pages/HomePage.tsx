@@ -3,6 +3,7 @@ import { LazyWordCard } from '../cards/LazyWordCard';
 import { useCurrentTab } from '../../hooks/useCurrentTab';
 import { useTabFilters } from '../../hooks/useTabFilters';
 import { useQuickFilterPos } from '../../hooks/useQuickFilterPos';
+import { useFavorites } from '../../hooks/useFavorites';
 import { filterWords } from '../../utils/filterWords';
 import type { VocabularyWord, UserSettings } from '../../types';
 
@@ -27,8 +28,17 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   const { currentTab, setCurrentTab } = useCurrentTab();
   const { filters, updateFilter } = useTabFilters(userSettings);
   const { quickFilterPos } = useQuickFilterPos();
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleToggleFavorite = (wordId: number) => {
+    if (isFavorite(wordId)) {
+      removeFavorite(wordId);
+    } else {
+      addFavorite(wordId);
+    }
+  };
 
   // Show message only if truly no settings
   const isSettingsMissing = !userSettings?.stage || !userSettings?.version;
@@ -208,6 +218,8 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
                   index={index}
                   accentColor={accentColor}
                   onClick={() => handleWordClick(word.id)}
+                  isFavorite={isFavorite(word.id)}
+                  onToggleFavorite={handleToggleFavorite}
                 />
               );
             })}

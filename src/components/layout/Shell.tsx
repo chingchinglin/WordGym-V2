@@ -70,16 +70,51 @@ export const Shell: React.FC<ShellProps> = ({
               </a>
             </div>
 
-            {/* Desktop version identity toggle and navigation */}
-            <div className="hidden md:flex items-center space-x-3">
-              <button
-                onClick={handleIdentityClick}
-                className="group inline-flex items-center gap-2 rounded-full border border-[#5A4FCF] bg-[#F3F0FF] px-3 py-2 text-sm font-semibold text-[#5A4FCF] shadow-sm transition duration-150 hover:bg-[#E7E0FF] focus:outline-none focus:ring-2 focus:ring-[#5A4FCF]/40"
-                title="切換教材版本"
-              >
-                <span className="flex items-center justify-center rounded-full bg-white/70 p-1 text-[#5A4FCF]">
+            {/* Desktop navigation and controls */}
+            <div className="hidden md:flex items-center space-x-6">
+              {/* Main navigation */}
+              <nav className="flex space-x-1 items-center">
+                <a
+                  href="#/"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
+                    isActive('#/')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                  }`}
+                >
+                  首頁
+                </a>
+                <a
+                  href="#/favorites"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
+                    isActive('#/favorites')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                  }`}
+                >
+                  重點訓練
+                </a>
+                <a
+                  href="#/quiz"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
+                    isActive('#/quiz')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                  }`}
+                >
+                  實力驗收
+                </a>
+              </nav>
+
+              {/* Utility buttons */}
+              <div className="flex items-center space-x-2 border-l border-gray-200 pl-4">
+                <button
+                  onClick={() => setShowGuide(true)}
+                  className="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-indigo-600 transition duration-150 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                  title="查看系統使用指南"
+                >
                   <svg
-                    className="h-4 w-4"
+                    className="h-5 w-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -88,50 +123,42 @@ export const Shell: React.FC<ShellProps> = ({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M12 6v12m7-9H5m0 0 3-3m-3 3 3 3"
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                </span>
-                <span className="whitespace-nowrap">{identityLabel}</span>
-                <svg
-                  className="h-4 w-4 text-[#5A4FCF] transition-transform group-hover:translate-y-[1px]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <nav className="flex space-x-2 items-center">
-                <button
-                  onClick={() => setShowGuide(true)}
-                  className="px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 text-sm font-medium transition duration-150 min-h-[44px] flex items-center"
-                  title="查看系統使用指南"
-                >
-                  [?] 訓練秘笈
                 </button>
-                <a
-                  href="#/favorites"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
-                    isActive('#/favorites')
-                      ? 'text-indigo-600'
-                      : 'text-gray-600 hover:text-indigo-600'
-                  }`}
+                <button
+                  onClick={handleIdentityClick}
+                  className="group inline-flex items-center gap-2 rounded-full border border-[#5A4FCF] bg-[#F3F0FF] px-3 py-2 text-sm font-semibold text-[#5A4FCF] shadow-sm transition duration-150 hover:bg-[#E7E0FF] focus:outline-none focus:ring-2 focus:ring-[#5A4FCF]/40"
+                  title="切換教材版本"
                 >
-                  重點訓練
-                </a>
-                <a
-                  href="#/quiz"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
-                    isActive('#/quiz')
-                      ? 'text-indigo-600'
-                      : 'text-gray-600 hover:text-indigo-600'
-                  }`}
-                >
-                  實力驗收
-                </a>
-              </nav>
+                  <span className="flex items-center justify-center rounded-full bg-white/70 p-1 text-[#5A4FCF]">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  </span>
+                  <span className="whitespace-nowrap">{identityLabel}</span>
+                  <svg
+                    className="h-4 w-4 text-[#5A4FCF] transition-transform group-hover:translate-y-[1px]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Mobile hamburger menu button */}
@@ -176,6 +203,67 @@ export const Shell: React.FC<ShellProps> = ({
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-gray-200 py-4">
               <div className="flex flex-col space-y-2">
+                {/* Navigation links */}
+                <a
+                  href="#/"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
+                    isActive('#/')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  首頁
+                </a>
+                <a
+                  href="#/favorites"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
+                    isActive('#/favorites')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  重點訓練
+                </a>
+                <a
+                  href="#/quiz"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
+                    isActive('#/quiz')
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  實力驗收
+                </a>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200 my-2"></div>
+
+                {/* Utility buttons */}
+                <button
+                  onClick={() => {
+                    setShowGuide(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 text-sm font-medium transition text-left flex items-center gap-2"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  使用指南
+                </button>
                 <button
                   onClick={handleIdentityClick}
                   className="inline-flex items-center gap-2 rounded-full border border-[#5A4FCF] bg-[#F3F0FF] px-3 py-2 text-sm font-semibold text-[#5A4FCF] shadow-sm transition duration-150 hover:bg-[#E7E0FF] focus:outline-none focus:ring-2 focus:ring-[#5A4FCF]/40"
@@ -192,7 +280,7 @@ export const Shell: React.FC<ShellProps> = ({
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 6v12m7-9H5m0 0 3-3m-3 3 3 3"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253"
                       />
                     </svg>
                   </span>
@@ -207,32 +295,6 @@ export const Shell: React.FC<ShellProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                   </svg>
                 </button>
-                <button
-                  onClick={() => setShowGuide(true)}
-                  className="px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 text-sm font-medium transition text-left"
-                >
-                  [?] 訓練秘笈
-                </button>
-                <a
-                  href="#/favorites"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
-                    isActive('#/favorites')
-                      ? 'text-indigo-600'
-                      : 'text-gray-600 hover:text-indigo-600'
-                  }`}
-                >
-                  重點訓練
-                </a>
-                <a
-                  href="#/quiz"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
-                    isActive('#/quiz')
-                      ? 'text-indigo-600'
-                      : 'text-gray-600 hover:text-indigo-600'
-                  }`}
-                >
-                  實力驗收
-                </a>
               </div>
             </div>
           )}

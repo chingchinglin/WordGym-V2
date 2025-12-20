@@ -18,6 +18,15 @@ interface QuizCompletionScreenProps {
     sentenceTranslation?: string;
     userAnswerDefinition?: string;
   }>;
+  correctWords?: Array<{
+    wordId: number;
+    word: string;
+    correctAnswer?: string;
+    userAnswer?: string;
+    question?: string;
+    chinese_definition?: string;
+    sentenceTranslation?: string;
+  }>;
   learningWords: Array<{
     wordId: number;
     word: string;
@@ -37,12 +46,14 @@ const QuizCompletionScreen: React.FC<QuizCompletionScreenProps> = ({
   wrong,
   learning,
   wrongWords,
+  correctWords = [],
   learningWords,
   favoritesApi,
   onRestart,
   data
 }) => {
   const [showWrongList, setShowWrongList] = useState(true);
+  const [showCorrectList, setShowCorrectList] = useState(false);
   const [showLearningList, setShowLearningList] = useState(true);
   const [addedWrong, setAddedWrong] = useState(false);
   const [addedLearning, setAddedLearning] = useState(false);
@@ -181,6 +192,74 @@ const QuizCompletionScreen: React.FC<QuizCompletionScreenProps> = ({
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Correct words list */}
+      {correctWords.length > 0 && (
+        <div className="mb-6 text-left max-w-3xl mx-auto">
+          <button
+            onClick={() => setShowCorrectList(!showCorrectList)}
+            className="w-full flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition"
+          >
+            <span className="font-semibold text-green-700">
+              {showCorrectList ? '▼' : '▶'} 答對題目 ({correctWords.length}題)
+            </span>
+          </button>
+          {showCorrectList && (
+            <div className="mt-2 space-y-3">
+              {correctWords.map((w, idx) => (
+                <div key={idx} className="p-4 bg-white rounded-lg border border-green-200">
+                  <div className="font-semibold text-gray-800 mb-2">
+                    {idx + 1}. {w.wordId && data ? (
+                      <a
+                        href={`#/word/${w.wordId}`}
+                        onClick={() => {
+                          const currentHash = window.location.hash || '#/quiz';
+                          sessionStorage.setItem('quiz_return_path', JSON.stringify({
+                            path: currentHash,
+                            timestamp: Date.now()
+                          }));
+                        }}
+                        className="text-indigo-600 hover:underline"
+                      >
+                        {w.word}
+                      </a>
+                    ) : w.word}
+                    {(w.chinese_definition || w.wordId) && (
+                      <span className="text-gray-500 font-normal ml-2">
+                        ({w.chinese_definition})
+                      </span>
+                    )}
+                  </div>
+                  {w.question && (
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="shrink-0 font-medium text-gray-500">題目：</span>
+                      <div className="flex-1">
+                        <div className="text-gray-900 font-bold text-lg leading-relaxed">{w.question}</div>
+                        {w.sentenceTranslation && (
+                          <div className="text-sm text-gray-500 mt-0.5">
+                            {w.sentenceTranslation}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-start gap-2">
+                    <span className="shrink-0 font-medium text-green-600">正確答案：</span>
+                    <div className="flex flex-col flex-1">
+                      <span className="text-gray-900 font-bold text-lg">{w.correctAnswer}</span>
+                      {(w.chinese_definition) && (
+                        <span className="text-gray-500 text-sm">
+                          {w.chinese_definition}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

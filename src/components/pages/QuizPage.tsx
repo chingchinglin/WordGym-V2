@@ -42,9 +42,11 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
       return versionFilteredWords; // Use version-filtered words if no specific words selected
     }
 
+    // When specific word IDs are provided (e.g., from favorites), don't apply version filter
+    // because favorites can contain words from any version
     const wordIds = wordIdsParam.split(',').map(id => parseInt(id, 10));
-    return versionFilteredWords.filter(w => wordIds.includes(w.id));
-  }, [params, versionFilteredWords]);
+    return words.filter(w => wordIds.includes(w.id));
+  }, [params, words, versionFilteredWords]);
 
   const validQuizWords = useMemo(() => {
     // Filter words that have example sentences for multiple choice quiz

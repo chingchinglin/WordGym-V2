@@ -239,7 +239,15 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({ words, onRestar
           sentenceTranslation: a.sentenceTranslation,
           userAnswerDefinition: a.userAnswerDefinition
         })),
-        correctWords: correctWords.map(a => a.wordId),
+        correctWords: correctWords.map(a => ({
+          wordId: a.wordId,
+          word: a.word,
+          correctAnswer: a.correctAnswer,
+          userAnswer: a.userAnswer,
+          question: a.question,
+          chinese_definition: a.wordDefinition,
+          sentenceTranslation: a.sentenceTranslation
+        })),
         duration,
         mode: null
       });
@@ -267,6 +275,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({ words, onRestar
           wrong={latest.wrong}
           learning={0}
           wrongWords={latest.wrongWords || []}
+          correctWords={latest.correctWords || []}
           learningWords={[]}
           favoritesApi={favoritesApi}
           onRestart={handleRestartClick}
@@ -276,9 +285,10 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({ words, onRestar
     }
 
     // Fallback
-    const wrongWords = answers.filter(a => !a.isCorrect);
+    const wrongAnswers = answers.filter(a => !a.isCorrect);
+    const correctAnswers = answers.filter(a => a.isCorrect);
     const correctCount = score;
-    const wrongCount = wrongWords.length;
+    const wrongCount = wrongAnswers.length;
     const totalCount = shuffledPool.length;
 
     return (
@@ -288,7 +298,8 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({ words, onRestar
         correct={correctCount}
         wrong={wrongCount}
         learning={0}
-        wrongWords={wrongWords}
+        wrongWords={wrongAnswers}
+        correctWords={correctAnswers}
         learningWords={[]}
         favoritesApi={favoritesApi}
         onRestart={handleRestartClick}

@@ -16,9 +16,10 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz
   const handleStartQuiz = () => {
     if (onStartQuiz && favoriteWords.length > 0) {
       onStartQuiz(favoriteWords);
-    } else {
-      // Default: navigate to quiz page with favorites
-      window.location.hash = '#/quiz';
+    } else if (favoriteWords.length > 0) {
+      // Navigate to quiz page with favorite word IDs
+      const wordIds = favoriteWords.map(w => w.id).join(',');
+      window.location.hash = `#/quiz?words=${wordIds}`;
     }
   };
 
