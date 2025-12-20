@@ -1,14 +1,16 @@
 import React, { useMemo } from 'react';
-import { VocabularyWord } from '../../types';
+import { VocabularyWord, UserSettings } from '../../types';
 import { useHashRoute } from '../../hooks/useHashRoute';
+import { VersionService } from '../../services/VersionService';
 import MultipleChoiceQuiz from '../quiz/MultipleChoiceQuiz';
 import FlashcardQuiz from '../quiz/FlashcardQuiz';
 
 interface QuizPageProps {
   words: VocabularyWord[];
+  userSettings: UserSettings | null;
 }
 
-export const QuizPage: React.FC<QuizPageProps> = ({ words }) => {
+export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
   const { hash, push } = useHashRoute();
 
   // Parse URL params
@@ -19,17 +21,30 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words }) => {
   const quizType = params.get('type') || 'selection';
   const restartKey = `${quizType}-${params.get('_restart') || '0'}`;
 
+  // Filter words by version first
+  const versionFilteredWords = useMemo(() => {
+    if (!userSettings) return words;
+
+    const normalizedUserStage = VersionService.normalizeStage(userSettings.stage || '');
+
+    return words.filter(word => {
+      // Stage filter
+      const normalizedWordStage = VersionService.normalizeStage(word.stage || '');
+      return normalizedWordStage === normalizedUserStage;
+    });
+  }, [words, userSettings]);
+
   // Parse word IDs from URL params
   const quizWords = useMemo(() => {
     const wordIdsParam = params.get('words');
 
     if (!wordIdsParam) {
-      return words; // Use all words if no specific words selected
+      return versionFilteredWords; // Use version-filtered words if no specific words selected
     }
 
     const wordIds = wordIdsParam.split(',').map(id => parseInt(id, 10));
-    return words.filter(w => wordIds.includes(w.id));
-  }, [params, words]);
+    return versionFilteredWords.filter(w => wordIds.includes(w.id));
+  }, [params, versionFilteredWords]);
 
   const validQuizWords = useMemo(() => {
     // Filter words that have example sentences for multiple choice quiz

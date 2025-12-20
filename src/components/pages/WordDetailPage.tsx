@@ -19,6 +19,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({ word }) => {
   const [mdPreview, setMdPreview] = useState('');
   const [mdStatus, setMdStatus] = useState('');
   const [showMdPreview, setShowMdPreview] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const handleToggleFavorite = () => {
     // Removed logging);
@@ -122,6 +123,27 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({ word }) => {
     } else {
       setMdStatus('已產生 Markdown');
       setShowMdPreview(true);
+    }
+  };
+
+  const handleCopyMarkdown = async () => {
+    try {
+      await navigator.clipboard.writeText(mdPreview);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      // Fallback: select textarea
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        } catch (fallbackErr) {
+          console.error('Copy failed:', fallbackErr);
+        }
+      }
     }
   };
 
@@ -528,7 +550,23 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({ word }) => {
         </div>
 
         {/* Export status and preview */}
-        {mdStatus && <div className="text-sm text-gray-500 text-right mb-4">{mdStatus}</div>}
+        {mdStatus && (
+          <div className="flex items-center justify-end gap-2 mb-4">
+            <span className="text-sm text-gray-500">{mdStatus}</span>
+            {showMdPreview && (
+              <button
+                onClick={handleCopyMarkdown}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition duration-150 ${
+                  copySuccess
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+                }`}
+              >
+                {copySuccess ? '✓ 已複製!' : '複製'}
+              </button>
+            )}
+          </div>
+        )}
         {showMdPreview && (
           <div className="mt-3 mb-4">
             <textarea

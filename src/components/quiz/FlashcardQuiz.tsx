@@ -75,8 +75,8 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    // Removed logging;
-    return shuffled;
+    // Limit to 5 cards
+    return shuffled.slice(0, 5);
   }, [pool]);
 
   const [idx, setIdx] = useState(0);
@@ -259,9 +259,6 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm text-gray-600">
           第 {idx + 1} 張 / {shuffledPool.length} 張
-          <span className="text-xs text-gray-400 ml-2">
-            (idx: {idx}, pool: {pool.length}, shuffled: {shuffledPool.length}, flipped: {flipped ? 'true' : 'false'})
-          </span>
         </div>
         <div className="flex gap-4 text-sm">
           <span className="text-green-600">✓ 熟悉：{known}</span>

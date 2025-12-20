@@ -103,7 +103,7 @@ function App() {
       case '#/favorites':
         return <FavoritesPage words={data} />;
       case '#/quiz':
-        return <QuizPage words={data} />;
+        return <QuizPage words={data} userSettings={userSettings} />;
       case '#/quiz-history':
         return <QuizHistoryPage />;
       default:
