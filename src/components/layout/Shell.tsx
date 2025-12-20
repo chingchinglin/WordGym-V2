@@ -82,7 +82,7 @@ export const Shell: React.FC<ShellProps> = ({
                       : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
                   }`}
                 >
-                  首頁
+                  單字卡
                 </a>
                 <a
                   href="#/favorites"
@@ -213,7 +213,7 @@ export const Shell: React.FC<ShellProps> = ({
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  首頁
+                  單字卡
                 </a>
                 <a
                   href="#/favorites"
