@@ -28,7 +28,8 @@ Even if ALL of these are complete, DO NOT close the issue:
 - ✅ Tests passing
 - ✅ PR merged
 - ✅ Deployed to production
-- ✅ Browser AI-verified
+- ✅ Code reviewed by AI
+- ✅ Chrome verification completed (if applicable)
 
 **MUST WAIT FOR**: Case owner comment with approval keywords like:
 - "測試通過" / "测试通过"
@@ -327,7 +328,10 @@ gcloud run services list --region=asia-east1 | grep "preview-issue"  # Should be
 
    # Add completion labels
    gh issue edit <NUM> --add-label "ready-for-testing"
-   gh issue edit <NUM> --add-label "AI-verified"
+   gh issue edit <NUM> --add-label "code-reviewed"
+   gh issue edit <NUM> --add-label "needs-testing"
+   # Add chrome-verified only if actually verified via Chrome
+   # gh issue edit <NUM> --add-label "chrome-verified"
 
    # Add comment explaining status
    gh issue comment <NUM> --body "✅ **已部署並驗證完成**
