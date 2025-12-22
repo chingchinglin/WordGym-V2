@@ -51,9 +51,16 @@ Even if ALL of these are complete, DO NOT close the issue:
 gh issue edit <NUM> --remove-label "in-progress"
 gh issue edit <NUM> --remove-label "ready-for-review"
 
-# Add completion labels
+# Add completion labels - ALWAYS add both
 gh issue edit <NUM> --add-label "ready-for-testing"
-gh issue edit <NUM> --add-label "AI-verified"
+gh issue edit <NUM> --add-label "code-reviewed"
+
+# Add chrome-verified ONLY if you actually verified via Chrome automation
+# Do NOT add if you only reviewed code or ran local tests
+gh issue edit <NUM> --add-label "chrome-verified"  # Only if Chrome verified
+
+# Add needs-testing to highlight manual testing requirements
+gh issue edit <NUM> --add-label "needs-testing"
 
 # Keep issue OPEN - do NOT close!
 # Issue stays OPEN until case owner approves
@@ -62,9 +69,48 @@ gh issue edit <NUM> --add-label "AI-verified"
 **Label Meanings**:
 - `in-progress` (🟡 Yellow #FFA500): Development started
 - `ready-for-review` (🔵 Blue #0E8A16): PR created, awaiting review
-- `ready-for-testing` (🟢 Green #0E8A16): Deployed, awaiting case owner testing
-- `AI-verified` (🟣 Purple #8B5CF6): Automated verification passed
+- `ready-for-testing` (🟢 Green #0E8A16): Deployed to production, awaiting case owner testing
+- `code-reviewed` (🟣 Purple #8B5CF6): AI 已審查程式碼 (Code reviewed by AI)
+- `needs-testing` (🟠 Amber #F59E0B): 需要案主手動測試 (Needs manual testing by client)
+- `chrome-verified` (🟢 Green #10B981): AI 已透過 Chrome 自動化驗證 (Verified by AI via Chrome automation)
 - `approved` (🟢 Dark Green #006B75): Case owner approved
+
+**Label Usage Guidelines**:
+1. **code-reviewed**: ALWAYS add after code is written and reviewed
+2. **needs-testing**: ALWAYS add if feature requires manual testing to verify
+3. **chrome-verified**: ONLY add if you successfully verified the feature works in production via Chrome automation
+   - Must have screenshots or evidence of feature working
+   - Don't add if verification was incomplete or you only checked code
+
+**Completion Comment Template**:
+When posting completion comments, include unverified items if chrome-verified was NOT added:
+
+```markdown
+✅ 已完成 Issue #X 修復
+
+## 實現內容
+[What was implemented]
+
+## ⚠️ 未驗證項目（需案主手動測試）
+
+以下功能需要案主手動測試確認：
+
+- [ ] [Specific feature to test 1]
+- [ ] [Specific feature to test 2]
+- [ ] [Expected behavior]
+
+## 測試步驟
+1. [Step by step instructions]
+2. [What to look for]
+3. [Expected results]
+
+---
+
+**標籤說明：**
+- 🟣 `code-reviewed`：AI 已審查程式碼實作
+- 🟠 `needs-testing`：需要案主手動測試確認功能
+- 🟢 `chrome-verified`：AI 已透過 Chrome 驗證（如適用）
+```
 
 ### 📝 Correct PR Description Format
 
@@ -98,18 +144,26 @@ Resolves #5
    ↓
 3. Create PR (OPEN, add: ready-for-review, remove: in-progress)
    ↓
-4. Merge PR (OPEN, add: ready-for-testing + AI-verified)
+4. Merge PR (OPEN, add: ready-for-testing + code-reviewed + needs-testing)
    ↓
-5. Automated Verification (OPEN, labels stay)
+5. Chrome Verification (if applicable)
+   - Success → add: chrome-verified
+   - Incomplete → skip chrome-verified label
    ↓
-6. ⏸️ WAIT FOR CASE OWNER APPROVAL (OPEN)
+6. Post Completion Comment (OPEN, labels stay)
+   - Include "未驗證項目" if chrome-verified was NOT added
    ↓
-7. Case Owner Comments "測試通過" (OPEN, add: approved)
+7. ⏸️ WAIT FOR CASE OWNER APPROVAL (OPEN)
    ↓
-8. ONLY AFTER APPROVAL: Close Issue (CLOSED)
+8. Case Owner Comments "測試通過" (OPEN, add: approved)
+   ↓
+9. ONLY AFTER APPROVAL: Close Issue (CLOSED)
 ```
 
-**Key Point**: Issue stays OPEN at step 6 even if everything is deployed and AI-verified!
+**Key Points**:
+- Issue stays OPEN at step 7 even if everything is deployed and code-reviewed
+- `chrome-verified` is optional and only added if Chrome automation successfully verified
+- `needs-testing` reminds case owner that manual testing is required
 
 ---
 
