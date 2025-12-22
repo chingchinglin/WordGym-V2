@@ -43,6 +43,52 @@ Even if ALL of these are complete, DO NOT close the issue:
 - Final UX verification by actual user
 - Business acceptance > Technical completion
 
+### 📊 Client Feedback Tracking System
+
+**Purpose**: Track how many times the client has provided feedback on an issue. If feedback exceeds 2 times, it indicates the AI fix is not working and requires human intervention.
+
+**Labels**:
+- `client-feedback-1` (🟠 Orange #FFA500): 案主回饋 1 次 (Client feedback: 1 time)
+- `client-feedback-2` (🔴 Red #FF6B6B): 案主回饋 2 次 (Client feedback: 2 times)
+- `client-feedback-3+` (🔴 Dark Red #DC143C): 案主回饋 3 次以上，需人工接手 (Client feedback 3+ times, needs manual intervention)
+
+**When to Add Feedback Labels**:
+1. **After client comments with issues/problems** - NOT after approval
+2. Count only negative feedback (problems, bugs, requests for changes)
+3. Don't count positive feedback ("測試通過", "沒問題", "LGTM")
+
+**Workflow**:
+```bash
+# First time client reports a problem
+gh issue edit <NUM> --add-label "client-feedback-1"
+
+# Second time client reports still has problems
+gh issue edit <NUM> --remove-label "client-feedback-1"
+gh issue edit <NUM> --add-label "client-feedback-2"
+
+# Third time or more - escalate to human
+gh issue edit <NUM> --remove-label "client-feedback-2"
+gh issue edit <NUM> --add-label "client-feedback-3+"
+
+# Add comment explaining escalation
+gh issue comment <NUM> --body "⚠️ **此 Issue 已收到 3 次以上案主回饋，需要人工介入處理**
+
+AI 修復嘗試多次仍未解決問題，建議由開發者直接接手。
+
+**歷史修復嘗試**：
+1. [First attempt summary]
+2. [Second attempt summary]
+3. [Third attempt summary]
+
+@[human-developer] 請接手處理"
+```
+
+**Escalation Rule**:
+- 🔴 **When `client-feedback-3+` is added**: AI should STOP attempting fixes and wait for human developer to take over
+- The human developer will remove the label once they've addressed the issue
+
+---
+
 ### 🏷️ Label Management After PR Merge
 
 **MANDATORY**: After merging PR to main, update issue labels:
@@ -154,9 +200,18 @@ Resolves #5
 6. Post Completion Comment (OPEN, labels stay)
    - Include "未驗證項目" if chrome-verified was NOT added
    ↓
-7. ⏸️ WAIT FOR CASE OWNER APPROVAL (OPEN)
+7. ⏸️ WAIT FOR CASE OWNER FEEDBACK (OPEN)
    ↓
-8. Case Owner Comments "測試通過" (OPEN, add: approved)
+8a. Case Owner Reports Problem (OPEN, add: client-feedback-1)
+    ↓
+    Fix and redeploy → return to step 4
+    ↓
+    Second problem report? (OPEN, add: client-feedback-2, remove: client-feedback-1)
+    ↓
+    Third problem report? (OPEN, add: client-feedback-3+, remove: client-feedback-2)
+    → STOP: Escalate to human developer
+
+8b. Case Owner Comments "測試通過" (OPEN, add: approved)
    ↓
 9. ONLY AFTER APPROVAL: Close Issue (CLOSED)
 ```
@@ -165,6 +220,7 @@ Resolves #5
 - Issue stays OPEN at step 7 even if everything is deployed and code-reviewed
 - `chrome-verified` is optional and only added if Chrome automation successfully verified
 - `needs-testing` reminds case owner that manual testing is required
+- Track client feedback count: 1st time → `client-feedback-1`, 2nd time → `client-feedback-2`, 3+ times → `client-feedback-3+` and escalate to human
 
 ---
 
