@@ -67,7 +67,13 @@ export function getFilteredWords(
         return textbookIndex.some(item => {
           const matchVersion = item.version === userSettings.version;
           const matchVol = !vol || item.vol === vol;
-          const matchLesson = !lesson || item.lesson === lesson;
+
+          // Support both single lesson (backward compatibility) and multi-select lessons
+          const matchLesson = !lesson ||
+            (Array.isArray(lesson)
+              ? lesson.includes(item.lesson)
+              : item.lesson === lesson);
+
           return matchVersion && matchVol && matchLesson;
         });
       });

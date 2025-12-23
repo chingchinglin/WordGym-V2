@@ -6,9 +6,9 @@ import { VersionService } from '../../services/VersionService';
 interface TextbookFiltersProps {
   filters: {
     vol?: string;
-    lesson?: string;
+    lesson?: string[];
   };
-  updateFilter: (key: 'vol' | 'lesson', value: string) => void;
+  updateFilter: (key: 'vol' | 'lesson', value: string | string[]) => void;
   dataset: { textbook_index: TextbookIndexItem[] };
 }
 
@@ -68,6 +68,37 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
     );
   }
 
+  const selectedLessons: string[] = filters.lesson || (availableLessons.length > 0 && availableLessons[0] ? [availableLessons[0]] : []);
+
+  const handleLessonToggle = (lesson: string) => {
+    const currentSelection: string[] = Array.isArray(filters.lesson)
+      ? filters.lesson.filter((l): l is string => l !== undefined)
+      : (availableLessons.length > 0 && availableLessons[0] ? [availableLessons[0]] : []);
+
+    if (currentSelection.includes(lesson)) {
+      // Remove lesson if already selected (but keep at least one selected)
+      const newSelection = currentSelection.filter(l => l !== lesson);
+      if (newSelection.length > 0) {
+        updateFilter('lesson', newSelection);
+      }
+    } else {
+      // Add lesson to selection
+      updateFilter('lesson', [...currentSelection, lesson]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (availableLessons.length > 0) {
+      updateFilter('lesson', availableLessons.filter((l): l is string => l !== undefined));
+    }
+  };
+
+  const handleClearAll = () => {
+    if (availableLessons.length > 0 && availableLessons[0]) {
+      updateFilter('lesson', [availableLessons[0]]);
+    }
+  };
+
   return (
     <div className="mb-6 grid gap-4 md:grid-cols-2">
       <div>
@@ -86,18 +117,41 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-500 mb-2">
-          課次
-        </label>
-        <select
-          value={filters.lesson || availableLessons[0]}
-          onChange={(e) => updateFilter('lesson', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A4FCF] focus:border-transparent"
-        >
-          {availableLessons.map(lesson => (
-            <option key={lesson} value={lesson}>{lesson}</option>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-500">
+            課次（可複選）
+          </label>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSelectAll}
+              className="text-xs text-indigo-600 hover:text-indigo-800"
+            >
+              全選
+            </button>
+            <button
+              onClick={handleClearAll}
+              className="text-xs text-gray-600 hover:text-gray-800"
+            >
+              清除
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 p-3 border border-gray-300 rounded-lg max-h-40 overflow-y-auto">
+          {availableLessons.filter((l): l is string => l !== undefined).map(lesson => (
+            <label
+              key={lesson}
+              className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+            >
+              <input
+                type="checkbox"
+                checked={selectedLessons.includes(lesson)}
+                onChange={() => handleLessonToggle(lesson)}
+                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm">{lesson}</span>
+            </label>
           ))}
-        </select>
+        </div>
       </div>
     </div>
   );

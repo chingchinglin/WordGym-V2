@@ -188,7 +188,7 @@ export interface Filters {
   pos?: POSType[];
 
   // Nested objects for tab-specific filters
-  textbook?: { vol?: string; lesson?: string };
+  textbook?: { vol?: string; lesson?: string[] };
   exam?: { year?: string };
   theme?: { range?: string; theme?: string };
 

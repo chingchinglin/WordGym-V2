@@ -5,7 +5,7 @@ import { VersionService } from '../services/VersionService';
 type TabType = 'textbook' | 'exam' | 'theme';
 type TabFilterValue = {
   vol?: string;
-  lesson?: string;
+  lesson?: string | string[];
   year?: string;
   range?: string;
   theme?: string;
@@ -21,7 +21,7 @@ export const useTabFilters = (userSettings: UserSettings | null) => {
     return {
       textbook: {
         vol: '1',
-        lesson: '1'
+        lesson: ['1']
       },
       exam: {
         year: '112'
@@ -64,7 +64,7 @@ export const useTabFilters = (userSettings: UserSettings | null) => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
   }, [filters]);
 
-  const updateFilter = (tab: TabType, key: keyof TabFilterValue, value: string) => {
+  const updateFilter = (tab: TabType, key: keyof TabFilterValue, value: string | string[]) => {
     setFilters((prev: any) => ({
       ...prev,
       [tab]: {

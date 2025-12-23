@@ -34,7 +34,15 @@ export function filterWords(
             }
           }
           if (filters.textbook?.vol && item.vol !== filters.textbook.vol) match = false;
-          if (filters.textbook?.lesson && item.lesson !== filters.textbook.lesson) match = false;
+
+          // Support both single lesson (backward compatibility) and multi-select lessons
+          if (filters.textbook?.lesson) {
+            const selectedLessons = Array.isArray(filters.textbook.lesson)
+              ? filters.textbook.lesson
+              : [filters.textbook.lesson];
+            if (!selectedLessons.includes(item.lesson)) match = false;
+          }
+
           return match;
         });
         if (!textbookMatch) return false;
