@@ -1,0 +1,126 @@
+{
+  "skills": {
+    "requirements-clarification": {
+      "description": "Force requirements clarification BEFORE implementation using CARIO framework",
+      "keywords": [
+        "需求",
+        "requirement",
+        "客戶要",
+        "案主說",
+        "新功能",
+        "用戶想要",
+        "想加一個",
+        "客戶反饋",
+        "需要改成",
+        "應該要"
+      ],
+      "force_activation": true,
+      "priority": "critical",
+      "activation_message": "MANDATORY: Use requirements-clarification to apply CARIO framework before implementation"
+    },
+    "debugging": {
+      "description": "Systematic debugging workflow with 5-step checklist",
+      "keywords": [
+        "bug",
+        "error",
+        "debug",
+        "不work",
+        "壞掉",
+        "失敗",
+        "有問題",
+        "錯誤",
+        "修復",
+        "fix"
+      ],
+      "force_activation": true,
+      "priority": "critical",
+      "activation_message": "MANDATORY: Use debugging skill for systematic 5-step workflow"
+    }
+  },
+  "agents": {
+    "git-issue-pr-flow": {
+      "description": "Complete PDCA workflow for GitHub Issues",
+      "keywords": [
+        "#",
+        "issue",
+        "修復",
+        "fix #",
+        "close #",
+        "resolve #",
+        "PDCA",
+        "PR",
+        "pull request",
+        "commit",
+        "push"
+      ],
+      "force_activation": false,
+      "priority": "high",
+      "activation_message": "RECOMMENDED: Issue detected - use git-issue-pr-flow for complete PDCA workflow"
+    },
+    "tdd-validator-agent": {
+      "description": "Enforce TDD discipline and test coverage",
+      "keywords": [
+        "新功能",
+        "new feature",
+        "新組件",
+        "component",
+        "寫測試",
+        "write test",
+        "TDD",
+        "測試驅動",
+        "UI組件"
+      ],
+      "force_activation": false,
+      "priority": "high",
+      "activation_message": "RECOMMENDED: New feature/component detected - TDD workflow required"
+    },
+    "test-runner": {
+      "description": "Vite build testing and validation",
+      "keywords": [
+        "測試",
+        "test",
+        "build",
+        "構建",
+        "編譯",
+        "compile",
+        "preview",
+        "dist",
+        "vite",
+        "類型檢查",
+        "typecheck"
+      ],
+      "force_activation": false,
+      "priority": "medium",
+      "activation_message": "RECOMMENDED: Build/test detected - use test-runner for validation"
+    },
+    "code-reviewer": {
+      "description": "Security, performance, and best practices review",
+      "keywords": [
+        "review",
+        "審查",
+        "檢查",
+        "quality",
+        "security",
+        "安全",
+        "performance",
+        "優化",
+        "bundle size",
+        "文件大小"
+      ],
+      "force_activation": false,
+      "priority": "medium",
+      "activation_message": "RECOMMENDED: Code review keywords detected"
+    }
+  },
+  "project_info": {
+    "name": "WordGym Students",
+    "tech_stack": "React 18 + TypeScript 5.3 + Vite 5.0 + Single HTML",
+    "methodology": "TDD + git-issue-pr-flow",
+    "critical_constraints": [
+      "Single HTML output (bundle size matters)",
+      "TypeScript strict mode (no any types)",
+      "TDD required (tests before code)",
+      "Root cause analysis (5 Whys before fixing)"
+    ]
+  }
+}
