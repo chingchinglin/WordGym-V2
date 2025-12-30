@@ -2,12 +2,13 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": {},
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "./.claude/hooks/skill-activation-hook.sh",
-            "timeout": 5
+            "command": "bash ./.claude/hooks/skill-activation-hook.sh",
+            "timeout": 5,
+            "description": "Project: Auto-activate skills (requirements-parser, requirements-clarification, debugging, failed-fix-clarification)"
           }
         ]
       }
