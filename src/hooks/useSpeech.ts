@@ -1,8 +1,8 @@
-import { speak, stopSpeech } from '../utils/speechUtils';
+import { speak, stopSpeech } from "../utils/speechUtils";
 
 export function useSpeech() {
   return {
     speak,
-    stopSpeech
+    stopSpeech,
   };
 }

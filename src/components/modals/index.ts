@@ -1,2 +1,2 @@
-export { WelcomeModal } from './WelcomeModal';
-export type { WelcomeModalProps } from './WelcomeModal';
+export { WelcomeModal } from "./WelcomeModal";
+export type { WelcomeModalProps } from "./WelcomeModal";

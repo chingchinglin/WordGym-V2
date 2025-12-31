@@ -3,10 +3,10 @@
  * Migrated from index.html lines 1440-1462
  */
 
-import { useState, useEffect } from 'react';
-import type { UserExamplesStore, UserExample } from '../types';
+import { useState, useEffect } from "react";
+import type { UserExamplesStore, UserExample } from "../types";
 
-const LS_KEY = 'mvp_vocab_user_examples_v1';
+const LS_KEY = "mvp_vocab_user_examples_v1";
 
 export function useUserExamples() {
   const [userExamples, setUserExamples] = useState<UserExamplesStore>(() => {
@@ -14,7 +14,7 @@ export function useUserExamples() {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        return typeof parsed === 'object' ? parsed : {};
+        return typeof parsed === "object" ? parsed : {};
       }
     } catch {}
     return {};
@@ -24,25 +24,28 @@ export function useUserExamples() {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(userExamples));
     } catch (e) {
-      console.error('Failed to save user examples:', e);
+      console.error("Failed to save user examples:", e);
     }
   }, [userExamples]);
 
-  const addExample = (wordId: number, example: Omit<UserExample, 'createdAt' | 'source'>) => {
+  const addExample = (
+    wordId: number,
+    example: Omit<UserExample, "createdAt" | "source">,
+  ) => {
     const newExample: UserExample = {
       ...example,
-      source: 'user',
-      createdAt: new Date().toISOString()
+      source: "user",
+      createdAt: new Date().toISOString(),
     };
 
-    setUserExamples(prev => ({
+    setUserExamples((prev) => ({
       ...prev,
-      [wordId]: [...(prev[wordId] || []), newExample]
+      [wordId]: [...(prev[wordId] || []), newExample],
     }));
   };
 
   const deleteExample = (wordId: number, index: number) => {
-    setUserExamples(prev => {
+    setUserExamples((prev) => {
       const examples = prev[wordId] || [];
       const updated = examples.filter((_, i) => i !== index);
       if (updated.length === 0) {
@@ -61,6 +64,6 @@ export function useUserExamples() {
     userExamples,
     addExample,
     deleteExample,
-    getExamples
+    getExamples,
   };
 }

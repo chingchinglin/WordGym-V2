@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { VocabularyWord } from '../../types';
-import { speak } from '../../utils/speechUtils';
-import { Button } from '../ui/Button';
-import QuizCompletionScreen from './QuizCompletionScreen';
-import { useFavorites } from '../../hooks/useFavorites';
-import { useQuizHistory } from '../../hooks/useQuizHistory';
-import { useHashRoute } from '../../hooks/useHashRoute';
+import React, { useState, useMemo } from "react";
+import { VocabularyWord } from "../../types";
+import { speak } from "../../utils/speechUtils";
+import { Button } from "../ui/Button";
+import QuizCompletionScreen from "./QuizCompletionScreen";
+import { useFavorites } from "../../hooks/useFavorites";
+import { useQuizHistory } from "../../hooks/useQuizHistory";
+import { useHashRoute } from "../../hooks/useHashRoute";
 
 interface FlashcardQuizProps {
   words: VocabularyWord[];
@@ -27,20 +27,22 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       } else {
         addFavorite(id);
       }
-    }
+    },
   };
   const quizHistoryApi = {
     add: addRecord,
-    getAll: () => history
+    getAll: () => history,
   };
-  const handleRestartClick = onRestart || (() => {
-    window.location.hash = '#/quiz';
-  });
+  const handleRestartClick =
+    onRestart ||
+    (() => {
+      window.location.hash = "#/quiz";
+    });
   // Check if we should show completion screen directly
   // Only show completion if we're returning from word detail page, not when starting fresh
   const shouldShowCompletion = (() => {
-    const params = new URLSearchParams(hash.split('?')[1] || '');
-    const hasRestart = params.has('_restart');
+    const params = new URLSearchParams(hash.split("?")[1] || "");
+    const hasRestart = params.has("_restart");
 
     // If _restart parameter exists, never show completion (user wants to restart)
     if (hasRestart) {
@@ -49,19 +51,26 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
     // Otherwise check if we just completed and are returning
     try {
-      const completedState = JSON.parse(sessionStorage.getItem('quiz_completed_state') || 'null');
-      const returnPath = JSON.parse(sessionStorage.getItem('quiz_return_path') || 'null');
+      const completedState = JSON.parse(
+        sessionStorage.getItem("quiz_completed_state") || "null",
+      );
+      const returnPath = JSON.parse(
+        sessionStorage.getItem("quiz_return_path") || "null",
+      );
 
       // Only show completion if:
       // 1. We have a completion state for this quiz type
       // 2. It's recent (within 1 hour)
       // 3. We're returning from a word detail page
-      if (completedState &&
-          completedState.type === 'flashcard' &&
-          completedState.timestamp &&
-          Date.now() - completedState.timestamp < 3600000 &&
-          returnPath &&
-          Date.now() - returnPath.timestamp < 60000) { // Within 1 minute
+      if (
+        completedState &&
+        completedState.type === "flashcard" &&
+        completedState.timestamp &&
+        Date.now() - completedState.timestamp < 3600000 &&
+        returnPath &&
+        Date.now() - returnPath.timestamp < 60000
+      ) {
+        // Within 1 minute
         return true;
       }
     } catch {}
@@ -80,7 +89,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
   }, [pool]);
 
   const [idx, setIdx] = useState(0);
-  const [mode, setMode] = useState('en-to-zh');
+  const [mode, setMode] = useState("en-to-zh");
   const [flipped, setFlipped] = useState(false);
   const [known, setKnown] = useState(0);
   const [learning, setLearning] = useState(0);
@@ -94,7 +103,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
   const handleFlip = () => {
     if (!isFinishedCheck) {
       // Removed logging;
-      setFlipped(f => !f);
+      setFlipped((f) => !f);
     }
   };
 
@@ -102,26 +111,29 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
     // Removed logging;
     const currentWord = shuffledPool[idx];
     if (!currentWord) {
-      console.error('currentWord 為空', { idx, shuffledPoolLength: shuffledPool.length });
+      console.error("currentWord 為空", {
+        idx,
+        shuffledPoolLength: shuffledPool.length,
+      });
       return;
     }
-    const status = isKnown ? 'correct' : 'learning';
+    const status = isKnown ? "correct" : "learning";
 
     const currentAnswer = {
       wordId: currentWord.id,
       word: currentWord.english_word,
       status,
-      isCorrect: isKnown
+      isCorrect: isKnown,
     };
 
-    setAnswers(prev => [...prev, currentAnswer]);
+    setAnswers((prev) => [...prev, currentAnswer]);
 
     const newKnown = isKnown ? known + 1 : known;
     const newLearning = isKnown ? learning : learning + 1;
 
     if (idx < shuffledPool.length - 1) {
       // Removed unused nextIdx
-      setIdx(prevIdx => {
+      setIdx((prevIdx) => {
         const newIdx = prevIdx + 1;
         // Removed logging;
         return newIdx;
@@ -133,32 +145,35 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       const endTime = Date.now();
       const duration = Math.floor((endTime - startTime) / 1000);
       const allAnswers = [...answers, currentAnswer];
-      const learningWords = allAnswers.filter(a => a.status === 'learning');
-      const correctWords = allAnswers.filter(a => a.isCorrect);
+      const learningWords = allAnswers.filter((a) => a.status === "learning");
+      const correctWords = allAnswers.filter((a) => a.isCorrect);
 
       setKnown(newKnown);
       setLearning(newLearning);
 
       quizHistoryApi.add({
-        type: 'flashcard',
+        type: "flashcard",
         totalQuestions: shuffledPool.length,
         correct: newKnown,
         wrong: 0,
         learning: newLearning,
         wrongWords: [],
-        learningWords: learningWords.map(a => ({
+        learningWords: learningWords.map((a) => ({
           wordId: a.wordId,
-          word: a.word
+          word: a.word,
         })),
-        correctWords: correctWords.map(a => a.wordId),
+        correctWords: correctWords.map((a) => a.wordId),
         duration,
-        mode
+        mode,
       });
 
-      sessionStorage.setItem('quiz_completed_state', JSON.stringify({
-        type: 'flashcard',
-        timestamp: Date.now()
-      }));
+      sessionStorage.setItem(
+        "quiz_completed_state",
+        JSON.stringify({
+          type: "flashcard",
+          timestamp: Date.now(),
+        }),
+      );
 
       setIsFinished(true);
     }
@@ -166,7 +181,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
   const toggleMode = () => {
     if (!isFinished) {
-      setMode(m => m === 'en-to-zh' ? 'zh-to-en' : 'en-to-zh');
+      setMode((m) => (m === "en-to-zh" ? "zh-to-en" : "en-to-zh"));
       setFlipped(false);
     }
   };
@@ -183,7 +198,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
     const history = quizHistoryApi.getAll();
     const latest = history[0];
 
-    if (latest && latest.type === 'flashcard') {
+    if (latest && latest.type === "flashcard") {
       return (
         <QuizCompletionScreen
           type="flashcard"
@@ -201,7 +216,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
     }
 
     const allAnswers = answers;
-    const learningWords = allAnswers.filter(a => a.status === 'learning');
+    const learningWords = allAnswers.filter((a) => a.status === "learning");
     const correctCount = known;
     const learningCount = learning;
     const totalCount = shuffledPool.length;
@@ -224,9 +239,10 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
   if (!currentCard) return null;
 
-  const frontText = mode === 'en-to-zh'
-    ? currentCard.english_word
-    : currentCard.chinese_definition || '(無中文翻譯)';
+  const frontText =
+    mode === "en-to-zh"
+      ? currentCard.english_word
+      : currentCard.chinese_definition || "(無中文翻譯)";
 
   return (
     <div>
@@ -235,21 +251,19 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       <div className="mb-4 flex gap-3">
         <button
           onClick={() => {
-            const params = new URLSearchParams(hash.split('?')[1] || '');
-            params.set('type', 'multiple-choice');
+            const params = new URLSearchParams(hash.split("?")[1] || "");
+            params.set("type", "multiple-choice");
             window.location.hash = `#/quiz?${params.toString()}`;
           }}
           className="flex-1 px-8 py-3 rounded-xl bg-white border border-gray-300 text-gray-700 text-lg font-medium hover:bg-gray-50 transition"
         >
           選擇題
         </button>
-        <button
-          className="flex-1 px-8 py-3 rounded-xl bg-indigo-600 text-white text-lg font-medium transition"
-        >
+        <button className="flex-1 px-8 py-3 rounded-xl bg-indigo-600 text-white text-lg font-medium transition">
           閃卡
         </button>
         <button
-          onClick={() => window.location.hash = '#/quiz-history'}
+          onClick={() => (window.location.hash = "#/quiz-history")}
           className="flex-1 px-8 py-3 rounded-xl bg-gray-100 border border-gray-300 text-gray-700 text-lg font-medium hover:bg-gray-200 transition"
         >
           查看歷史記錄
@@ -265,12 +279,12 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
           <span className="text-orange-600">學習中：{learning}</span>
         </div>
         <Button variant="ghost" onClick={toggleMode} className="text-sm">
-          {mode === 'en-to-zh' ? '英→中' : '中→英'} (切換)
+          {mode === "en-to-zh" ? "英→中" : "中→英"} (切換)
         </Button>
       </div>
 
       <div
-        className={`flashcard ${flipped ? 'flipped' : ''} cursor-pointer`}
+        className={`flashcard ${flipped ? "flipped" : ""} cursor-pointer`}
         onClick={handleFlip}
       >
         <div className="flashcard-inner h-[300px] md:h-[320px]">
@@ -281,7 +295,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
                 <div className="text-3xl md:text-4xl font-bold text-center">
                   {frontText}
                 </div>
-                {mode === 'en-to-zh' && (
+                {mode === "en-to-zh" && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -290,7 +304,11 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
                     className="flex-shrink-0 h-6 w-6 rounded-full border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center"
                     title="播放發音"
                   >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-3 w-3"
+                    >
                       <path d="M4 9.25v5.5c0 .69.56 1.25 1.25 1.25H7l3.29 2.63c.83.66 2.04.07 2.04-1V6.62c0-1.07-1.21-1.66-2.04-1L7 8.25H5.25C4.56 8.25 4 8.81 4 9.25Zm11.21-2.46a.75.75 0 0 0-.97 1.14 4.5 4.5 0 0 1 0 7.14.75.75 0 0 0 .97 1.14 6 6 0 0 0 0-9.42Zm2.79-1.95a.75.75 0 0 0-.97 1.13 7.5 7.5 0 0 1 0 11.56.75.75 0 0 0 .97 1.13 9 9 0 0 0 0-13.82Z" />
                     </svg>
                   </button>
@@ -301,7 +319,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
           <div className="flashcard-back">
             <div className="rounded-2xl border-4 border-indigo-600 bg-white p-6 pt-8 shadow-xl h-full w-full flex flex-col justify-start items-start text-left relative">
-              {(mode === 'en-to-zh' || mode === 'zh-to-en') && (
+              {(mode === "en-to-zh" || mode === "zh-to-en") && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -310,7 +328,11 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
                   className="absolute top-5 right-5 w-10 h-10 rounded-full bg-gray-50 text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition"
                   title="播放發音"
                 >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-5 w-5"
+                  >
                     <path d="M4 9.25v5.5c0 .69.56 1.25 1.25 1.25H7l3.29 2.63c.83.66 2.04.07 2.04-1V6.62c0-1.07-1.21-1.66-2.04-1L7 8.25H5.25C4.56 8.25 4 8.81 4 9.25Zm11.21-2.46a.75.75 0 0 0-.97 1.14 4.5 4.5 0 0 1 0 7.14.75.75 0 0 0 .97 1.14 6 6 0 0 0 0-9.42Zm2.79-1.95a.75.75 0 0 0-.97 1.13 7.5 7.5 0 0 1 0 11.56.75.75 0 0 0 .97 1.13 9 9 0 0 0 0-13.82Z" />
                   </svg>
                 </button>
@@ -321,7 +343,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
                   {currentCard.english_word}
                 </div>
                 <div className="text-base text-gray-500 font-medium mt-2">
-                  {currentCard.chinese_definition || '(無中文翻譯)'}
+                  {currentCard.chinese_definition || "(無中文翻譯)"}
                 </div>
               </div>
 

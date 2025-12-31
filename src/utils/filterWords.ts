@@ -1,39 +1,47 @@
-import { VocabularyWord, UserSettings, POSType, Filters } from '../types';
-import { VersionService } from '../services/VersionService';
+import { VocabularyWord, UserSettings, POSType, Filters } from "../types";
+import { VersionService } from "../services/VersionService";
 
 export function filterWords(
   words: VocabularyWord[],
   userSettings: UserSettings,
-  currentTab: 'textbook' | 'exam' | 'theme',
+  currentTab: "textbook" | "exam" | "theme",
   filters: Filters,
-  quickFilterPos: POSType | 'all',
-  searchTerm: string
+  quickFilterPos: POSType | "all",
+  searchTerm: string,
 ): VocabularyWord[] {
-  const filtered = words.filter(word => {
+  const filtered = words.filter((word) => {
     // Stage filter - normalize both sides for comparison
-    const normalizedWordStage = VersionService.normalizeStage(word.stage || '');
-    const normalizedUserStage = VersionService.normalizeStage(userSettings.stage || '');
+    const normalizedWordStage = VersionService.normalizeStage(word.stage || "");
+    const normalizedUserStage = VersionService.normalizeStage(
+      userSettings.stage || "",
+    );
     if (normalizedWordStage !== normalizedUserStage) return false;
 
     // Tab-specific filters
     switch (currentTab) {
-      case 'textbook':
-        if (!word.textbook_index || word.textbook_index.length === 0) return false;
+      case "textbook":
+        if (!word.textbook_index || word.textbook_index.length === 0)
+          return false;
 
-        const textbookMatch = word.textbook_index?.some(item => {
+        const textbookMatch = word.textbook_index?.some((item) => {
           if (!item) return false;
           let match = true;
           // Only check if filter is set
           if (userSettings.version) {
-            const normalizedUserVersion = VersionService.normalize(userSettings.version);
-            const normalizedItemVersion = VersionService.normalize(item.version);
+            const normalizedUserVersion = VersionService.normalize(
+              userSettings.version,
+            );
+            const normalizedItemVersion = VersionService.normalize(
+              item.version,
+            );
 
             // Strict version matching after normalization
             if (normalizedItemVersion !== normalizedUserVersion) {
               match = false;
             }
           }
-          if (filters.textbook?.vol && item.vol !== filters.textbook.vol) match = false;
+          if (filters.textbook?.vol && item.vol !== filters.textbook.vol)
+            match = false;
 
           // Support both single lesson (backward compatibility) and multi-select lessons
           if (filters.textbook?.lesson) {
@@ -48,35 +56,42 @@ export function filterWords(
         if (!textbookMatch) return false;
         break;
 
-      case 'exam':
-        const examMatch = word.exam_tags?.includes(filters.exam?.year || '') || false;
+      case "exam":
+        const examMatch =
+          word.exam_tags?.includes(filters.exam?.year || "") || false;
         if (!examMatch) return false;
         break;
 
-      case 'theme':
+      case "theme":
         // Use normalized stage for comparison
-        const normalizedStageForTheme = VersionService.normalizeStage(userSettings.stage || '');
+        const normalizedStageForTheme = VersionService.normalizeStage(
+          userSettings.stage || "",
+        );
 
-        if (normalizedStageForTheme === 'junior') {
+        if (normalizedStageForTheme === "junior") {
           // Junior: Use theme_index
           const themeMatch = word.theme_index?.some(
-            item =>
+            (item) =>
               item.range === filters.theme?.range &&
-              (filters.theme?.theme ? item.theme === filters.theme.theme : true)
+              (filters.theme?.theme
+                ? item.theme === filters.theme.theme
+                : true),
           );
           if (!themeMatch) return false;
         } else {
           // Senior: Use level and themes
           if (filters.theme?.range) {
             // Check level match - normalize both sides (Level 4 -> L4)
-            const normalizedFilterRange = String(filters.theme.range).replace('Level ', 'L').trim();
-            const normalizedWordLevel = String(word.level || '').trim();
+            const normalizedFilterRange = String(filters.theme.range)
+              .replace("Level ", "L")
+              .trim();
+            const normalizedWordLevel = String(word.level || "").trim();
             if (normalizedWordLevel !== normalizedFilterRange) {
               return false;
             }
           }
           // Only check theme if word has themes data AND filter has theme selected
-          if (filters.theme?.theme && filters.theme.theme !== '') {
+          if (filters.theme?.theme && filters.theme.theme !== "") {
             if (!word.themes || !word.themes.includes(filters.theme.theme)) {
               return false;
             }
@@ -86,7 +101,7 @@ export function filterWords(
     }
 
     // POS filter
-    if (quickFilterPos !== 'all') {
+    if (quickFilterPos !== "all") {
       const posMatch = word.posTags?.includes(quickFilterPos) || false;
       if (!posMatch) return false;
     }

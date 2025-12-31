@@ -1,7 +1,7 @@
-import { useReducer, useEffect, useState } from 'react';
-import type { UserSettings } from '../types';
-import { VersionService } from '../services/VersionService';
-import { LS } from '../types';
+import { useReducer, useEffect, useState } from "react";
+import type { UserSettings } from "../types";
+import { VersionService } from "../services/VersionService";
+import { LS } from "../types";
 
 type UserSettingsState = {
   userSettings: UserSettings | null;
@@ -9,18 +9,21 @@ type UserSettingsState = {
 };
 
 type UserSettingsAction =
-  | { type: 'SET_STAGE'; stage: string }
-  | { type: 'SET_VERSION'; version: string }
-  | { type: 'UPDATE_SETTINGS'; updates: Partial<UserSettings> }
-  | { type: 'RESET_SETTINGS' };
+  | { type: "SET_STAGE"; stage: string }
+  | { type: "SET_VERSION"; version: string }
+  | { type: "UPDATE_SETTINGS"; updates: Partial<UserSettings> }
+  | { type: "RESET_SETTINGS" };
 
-function userSettingsReducer(state: UserSettingsState, action: UserSettingsAction): UserSettingsState {
+function userSettingsReducer(
+  state: UserSettingsState,
+  action: UserSettingsAction,
+): UserSettingsState {
   switch (action.type) {
-    case 'SET_STAGE': {
+    case "SET_STAGE": {
       // Attempt to keep existing settings if they are compatible
       const newSettings: Partial<UserSettings> = {
         stage: action.stage,
-        version: undefined
+        version: undefined,
       };
 
       // If existing settings have a version for this stage, keep it
@@ -31,70 +34,73 @@ function userSettingsReducer(state: UserSettingsState, action: UserSettingsActio
       return {
         userSettings: {
           ...(state.userSettings || {}),
-          ...newSettings
+          ...newSettings,
         } as UserSettings,
-        error: null
+        error: null,
       };
     }
-    case 'SET_VERSION': {
+    case "SET_VERSION": {
       if (!state.userSettings?.stage) {
         return {
           ...state,
-          error: 'Stage must be set before setting version'
+          error: "Stage must be set before setting version",
         };
       }
 
-      const validation = VersionService.validateWithErrors(action.version, state.userSettings.stage);
+      const validation = VersionService.validateWithErrors(
+        action.version,
+        state.userSettings.stage,
+      );
 
       if (!validation.isValid) {
         return {
           userSettings: state.userSettings,
-          error: validation.errors[0]
+          error: validation.errors[0],
         };
       }
 
       return {
         userSettings: {
           ...state.userSettings,
-          version: action.version
+          version: action.version,
         },
-        error: null
+        error: null,
       };
     }
-    case 'UPDATE_SETTINGS': {
+    case "UPDATE_SETTINGS": {
       const updates = action.updates;
 
       // If no existing settings, just set the updates
       if (!state.userSettings) {
         return {
           userSettings: updates as UserSettings,
-          error: null
+          error: null,
         };
       }
 
       const settingsToValidate: UserSettings = {
         ...state.userSettings,
-        ...updates
+        ...updates,
       };
 
       const validation = VersionService.validateWithErrors(
         settingsToValidate.version,
-        settingsToValidate.stage
+        settingsToValidate.stage,
       );
 
       if (!validation.isValid) {
         return {
           userSettings: state.userSettings,
-          error: validation.errors[0]
+          error: validation.errors[0],
         };
       }
 
       return {
         userSettings: settingsToValidate,
-        error: null
+        error: null,
       };
     }
-    case 'RESET_SETTINGS': {
+    case "RESET_SETTINGS": {
       return { userSettings: null, error: null };
     }
     default:
@@ -103,34 +109,39 @@ function userSettingsReducer(state: UserSettingsState, action: UserSettingsActio
 }
 
 export function useUserSettings() {
-  const [state, dispatch] = useReducer(userSettingsReducer,
-    {
-      userSettings: (() => {
-        try {
-          const raw = localStorage.getItem(LS.userSettings);
-          if (raw) {
-            return JSON.parse(raw);
-          }
-        } catch {}
-        return null;
-      })(),
-      error: null
-    }
-  );
+  const [state, dispatch] = useReducer(userSettingsReducer, {
+    userSettings: (() => {
+      try {
+        const raw = localStorage.getItem(LS.userSettings);
+        if (raw) {
+          return JSON.parse(raw);
+        }
+      } catch {}
+      return null;
+    })(),
+    error: null,
+  });
 
   // Track previous version to detect changes
   const [previousVersion, setPreviousVersion] = useState<string | undefined>(
-    state.userSettings?.version
+    state.userSettings?.version,
   );
 
   useEffect(() => {
     try {
       if (state.userSettings) {
-        localStorage.setItem(LS.userSettings, JSON.stringify(state.userSettings));
+        localStorage.setItem(
+          LS.userSettings,
+          JSON.stringify(state.userSettings),
+        );
 
         // Check if version changed (and both old and new versions exist)
         const currentVersion = state.userSettings.version;
-        if (previousVersion && currentVersion && previousVersion !== currentVersion) {
+        if (
+          previousVersion &&
+          currentVersion &&
+          previousVersion !== currentVersion
+        ) {
           // Version changed - reload the page to ensure all data is refreshed
           window.location.reload();
         } else {
@@ -142,24 +153,24 @@ export function useUserSettings() {
         setPreviousVersion(undefined);
       }
     } catch (e) {
-      console.error('Failed to save user settings:', e);
+      console.error("Failed to save user settings:", e);
     }
   }, [state.userSettings, previousVersion]);
 
   const setStage = (stage: string) => {
-    dispatch({ type: 'SET_STAGE', stage });
+    dispatch({ type: "SET_STAGE", stage });
   };
 
   const setVersion = (version: string) => {
-    dispatch({ type: 'SET_VERSION', version });
+    dispatch({ type: "SET_VERSION", version });
   };
 
   const updateSettings = (updates: Partial<UserSettings>) => {
-    dispatch({ type: 'UPDATE_SETTINGS', updates });
+    dispatch({ type: "UPDATE_SETTINGS", updates });
   };
 
   const resetSettings = () => {
-    dispatch({ type: 'RESET_SETTINGS' });
+    dispatch({ type: "RESET_SETTINGS" });
   };
 
   return {
@@ -169,6 +180,6 @@ export function useUserSettings() {
     setVersion,
     updateSettings,
     resetSettings,
-    setUserSettings: updateSettings
+    setUserSettings: updateSettings,
   };
 }

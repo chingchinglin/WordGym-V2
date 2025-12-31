@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import type { UserSettings } from '../../types';
+import React, { useState, useEffect } from "react";
+import type { UserSettings } from "../../types";
 
 export interface ShellProps {
   children: React.ReactNode;
@@ -12,31 +12,33 @@ export const Shell: React.FC<ShellProps> = ({
   children,
   route,
   userSettings,
-  onUserSettingsChange
+  onUserSettingsChange,
 }) => {
   const [showGuide, setShowGuide] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Get current route
-  const [currentHash, setCurrentHash] = useState(() => window.location.hash || '#/');
+  const [currentHash, setCurrentHash] = useState(
+    () => window.location.hash || "#/",
+  );
 
   useEffect(() => {
-    const onHashChange = () => setCurrentHash(window.location.hash || '#/');
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    const onHashChange = () => setCurrentHash(window.location.hash || "#/");
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
   // Check if current page is active
   const isActive = (path: string): boolean => {
-    if (path === '#/') {
-      return currentHash === '#/' || currentHash === '';
+    if (path === "#/") {
+      return currentHash === "#/" || currentHash === "";
     }
     return currentHash.startsWith(path);
   };
 
   const identityLabel = userSettings
-    ? `${userSettings.stage === 'senior' ? '高中' : '國中'}・${userSettings.version}版`
-    : '選擇教材版本';
+    ? `${userSettings.stage === "senior" ? "高中" : "國中"}・${userSettings.version}版`
+    : "選擇教材版本";
 
   const handleIdentityClick = () => {
     onUserSettingsChange(null);
@@ -77,9 +79,9 @@ export const Shell: React.FC<ShellProps> = ({
                 <a
                   href="#/"
                   className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
-                    isActive('#/')
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    isActive("#/")
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                   }`}
                 >
                   單字卡
@@ -87,9 +89,9 @@ export const Shell: React.FC<ShellProps> = ({
                 <a
                   href="#/favorites"
                   className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
-                    isActive('#/favorites')
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    isActive("#/favorites")
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                   }`}
                 >
                   重點訓練
@@ -97,9 +99,9 @@ export const Shell: React.FC<ShellProps> = ({
                 <a
                   href="#/quiz"
                   className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 min-h-[44px] flex items-center ${
-                    isActive('#/quiz')
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    isActive("#/quiz")
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                   }`}
                 >
                   實力驗收
@@ -155,7 +157,11 @@ export const Shell: React.FC<ShellProps> = ({
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m6 9 6 6 6-6"
+                    />
                   </svg>
                 </button>
               </div>
@@ -207,9 +213,9 @@ export const Shell: React.FC<ShellProps> = ({
                 <a
                   href="#/"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
-                    isActive('#/')
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    isActive("#/")
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -218,9 +224,9 @@ export const Shell: React.FC<ShellProps> = ({
                 <a
                   href="#/favorites"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
-                    isActive('#/favorites')
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    isActive("#/favorites")
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -229,9 +235,9 @@ export const Shell: React.FC<ShellProps> = ({
                 <a
                   href="#/quiz"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition text-left ${
-                    isActive('#/quiz')
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50'
+                    isActive("#/quiz")
+                      ? "text-indigo-600 bg-indigo-50"
+                      : "text-gray-600 hover:text-indigo-600 hover:bg-gray-50"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -292,7 +298,11 @@ export const Shell: React.FC<ShellProps> = ({
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m6 9 6 6 6-6"
+                    />
                   </svg>
                 </button>
               </div>
@@ -335,7 +345,9 @@ export const Shell: React.FC<ShellProps> = ({
                   </section>
 
                   <section>
-                    <h4 className="text-lg font-semibold text-indigo-700 mb-3">探索單字庫</h4>
+                    <h4 className="text-lg font-semibold text-indigo-700 mb-3">
+                      探索單字庫
+                    </h4>
                     <div className="text-gray-700 leading-relaxed space-y-2">
                       <p>
                         在單字清單中，點選任何一個單字，即可進入詳細學習頁面。這裡不僅包含單字、音標、英文例句和中文翻譯等基礎內容，若該單字曾於學測出現，我們也會提供相關例句。
@@ -353,11 +365,11 @@ export const Shell: React.FC<ShellProps> = ({
                     <div className="text-gray-700 leading-relaxed">
                       <ul className="list-disc pl-5 space-y-2">
                         <li>
-                          <strong>單字收錄：</strong>{' '}
+                          <strong>單字收錄：</strong>{" "}
                           如果遇到容易遺忘的單字，請點擊「重點訓練」，將其收錄以加強練習。
                         </li>
                         <li>
-                          <strong>單字移除：</strong>{' '}
+                          <strong>單字移除：</strong>{" "}
                           若您確認已完全掌握該單字，點擊「移除」即可將其從清單中隱藏。
                         </li>
                       </ul>
@@ -365,18 +377,20 @@ export const Shell: React.FC<ShellProps> = ({
                   </section>
 
                   <section>
-                    <h4 className="text-lg font-semibold text-indigo-700 mb-3">實力驗收</h4>
+                    <h4 className="text-lg font-semibold text-indigo-700 mb-3">
+                      實力驗收
+                    </h4>
                     <div className="text-gray-700 leading-relaxed space-y-2">
                       <p>
                         「實力驗收」提供兩種測驗方式：選擇題和閃卡（中翻英、英翻中），幫助您即時檢視學習成果。
                       </p>
                       <ul className="list-disc pl-5 space-y-2">
                         <li>
-                          <strong>測驗回饋：</strong>{' '}
+                          <strong>測驗回饋：</strong>{" "}
                           您可以從測驗結果了解答題狀況，並能直接從錯題記錄點回單字頁面，進行強化複習！
                         </li>
                         <li>
-                          <strong>歷程記錄：</strong>{' '}
+                          <strong>歷程記錄：</strong>{" "}
                           每一次的測驗結果都會被自動記錄，系統最多保留50筆測驗紀錄。
                         </li>
                       </ul>
@@ -384,7 +398,9 @@ export const Shell: React.FC<ShellProps> = ({
                   </section>
 
                   <section className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded">
-                    <h4 className="text-lg font-semibold text-amber-800 mb-2">特別提醒</h4>
+                    <h4 className="text-lg font-semibold text-amber-800 mb-2">
+                      特別提醒
+                    </h4>
                     <p className="text-gray-700 leading-relaxed">
                       請留意，所有的測驗紀錄是儲存在您
                       <strong>當前使用的載具（裝置）</strong>
@@ -393,9 +409,13 @@ export const Shell: React.FC<ShellProps> = ({
                   </section>
 
                   <section className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-                    <h4 className="text-lg font-semibold text-blue-800 mb-2">遇到問題？</h4>
+                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                      遇到問題？
+                    </h4>
                     <div className="text-gray-700 leading-relaxed space-y-2">
-                      <p>如果遇到下拉選單沒有選項、資料顯示不正確等問題，可能是快取資料導致的。</p>
+                      <p>
+                        如果遇到下拉選單沒有選項、資料顯示不正確等問題，可能是快取資料導致的。
+                      </p>
                       <a
                         href="/clear-cache.html"
                         className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
@@ -431,10 +451,12 @@ export const Shell: React.FC<ShellProps> = ({
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
-        {route !== 'quiz' && (
+        {route !== "quiz" && (
           <footer className="mt-12 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-8">
             <div className="max-w-3xl mx-auto">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">WordGym 單字健身坊</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                WordGym 單字健身坊
+              </h3>
               <p className="text-base text-gray-700 font-medium mb-4">
                 將學習變成一場互動式的學習旅程！
               </p>
@@ -443,7 +465,7 @@ export const Shell: React.FC<ShellProps> = ({
               </p>
               <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
                 <p>
-                  ©{' '}
+                  ©{" "}
                   <a
                     href="https://www.junyiacademy.org/"
                     target="_blank"

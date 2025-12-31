@@ -4,15 +4,15 @@ export interface VocabularyWord {
   chinese_definition: string;
   english: string;
   level?: string;
-  stage?: string;  // Learning stage
-  cefr?: string;  // Common European Framework Reference
+  stage?: string; // Learning stage
+  cefr?: string; // Common European Framework Reference
 
   // Optional fields commonly used across the app
   languageExamples?: string[];
   textbook_index?: Array<{ version: string; vol: string; lesson: string }>;
   exam_tags?: string[];
   theme_index?: Array<{ range: string; theme: string }>;
-  theme?: string;  // Primary theme
+  theme?: string; // Primary theme
   themes?: string[];
   version?: string;
   vol?: string;
@@ -28,12 +28,15 @@ export interface VocabularyWord {
   grammar_sub_category?: string;
   grammar_function?: string;
   applicable_sentence_pattern?: string;
-  word_forms?: string | Array<{ pos: string; details: string }> | {
-    base: string[];
-    idiom: string[];
-    compound: string[];
-    derivation: string[];
-  };
+  word_forms?:
+    | string
+    | Array<{ pos: string; details: string }>
+    | {
+        base: string[];
+        idiom: string[];
+        compound: string[];
+        derivation: string[];
+      };
   pos?: POSType;
 
   // Example and context information
@@ -49,45 +52,56 @@ export interface VocabularyWord {
   synonyms?: string[];
   antonyms?: string[];
   confusables?: string[];
-  affix_info?: string | {
-    prefix?: string;
-    root?: string;
-    suffix?: string;
-    meaningChange?: string;
-    meaning?: string;
-    example?: string;
-  };
+  affix_info?:
+    | string
+    | {
+        prefix?: string;
+        root?: string;
+        suffix?: string;
+        meaningChange?: string;
+        meaning?: string;
+        example?: string;
+      };
 }
 
-export type POSType = 'noun' | 'verb' | 'adjective' | 'adverb' | 'preposition' | 'conjunction' | 'interjection' | 'pronoun' | 'other';
+export type POSType =
+  | "noun"
+  | "verb"
+  | "adjective"
+  | "adverb"
+  | "preposition"
+  | "conjunction"
+  | "interjection"
+  | "pronoun"
+  | "other";
 
 export const POS_LABEL: Record<POSType, string> = {
-  noun: '名詞',
-  verb: '動詞',
-  adjective: '形容詞',
-  adverb: '副詞',
-  preposition: '介係詞',
-  conjunction: '連接詞',
-  interjection: '感嘆詞',
-  pronoun: '代名詞',
-  other: '其他'
+  noun: "名詞",
+  verb: "動詞",
+  adjective: "形容詞",
+  adverb: "副詞",
+  preposition: "介係詞",
+  conjunction: "連接詞",
+  interjection: "感嘆詞",
+  pronoun: "代名詞",
+  other: "其他",
 };
 
-export type QuizDifficulty = 'easy' | 'medium' | 'hard';
+export type QuizDifficulty = "easy" | "medium" | "hard";
 
 export interface QuizRecord {
   id?: string;
-  type: 'multiple-choice' | 'flashcard';
-  quizType?: 'multiple_choice' | 'flashcard' | 'writing';  // Legacy field
+  type: "multiple-choice" | "flashcard";
+  quizType?: "multiple_choice" | "flashcard" | "writing"; // Legacy field
   totalQuestions: number;
   correct: number;
-  correctAnswers?: number;  // Legacy field - same as correct
+  correctAnswers?: number; // Legacy field - same as correct
   wrong: number;
   learning: number;
-  mastered?: number;  // Number of words mastered
-  score?: number;  // Score percentage
-  words?: string[];  // Word IDs as strings
-  difficulty?: 'easy' | 'medium' | 'hard';
+  mastered?: number; // Number of words mastered
+  score?: number; // Score percentage
+  words?: string[]; // Word IDs as strings
+  difficulty?: "easy" | "medium" | "hard";
   wrongWords?: Array<{
     wordId: number;
     word: string;
@@ -118,9 +132,9 @@ export interface QuizRecord {
 }
 
 export interface QuizConfiguration {
-  type: 'multiple_choice' | 'flashcard';
+  type: "multiple_choice" | "flashcard";
   difficulty: QuizDifficulty;
-  category?: 'textbook' | 'theme' | 'all';
+  category?: "textbook" | "theme" | "all";
 }
 
 export interface TextbookIndexItem {
@@ -176,9 +190,9 @@ export interface AffixInfo {
   example?: string;
 }
 
-export type NavigationRoute = 'home' | 'favorites' | 'quiz' | 'word' | '404';
+export type NavigationRoute = "home" | "favorites" | "quiz" | "word" | "404";
 
-export type CurrentTab = 'exam' | 'theme' | 'textbook';
+export type CurrentTab = "exam" | "theme" | "textbook";
 
 export interface Filters {
   exam_tags?: string[];
@@ -227,7 +241,7 @@ export interface UserExample {
   id: string;
   sentence: string;
   translation?: string;
-  source: 'user' | 'ai' | 'imported';
+  source: "user" | "ai" | "imported";
   createdAt: string;
 }
 
@@ -250,15 +264,15 @@ export interface ImportOptions {
 }
 
 export const LS = {
-  favorites: 'mvp_vocab_favorites',
-  dataset: 'mvp_vocab_dataset_v36',
-  presetApplied: 'mvp_vocab_preset_applied_v36',
-  homeFilters: 'mvp_home_filters_v1',
-  userExamples: 'mvp_vocab_user_examples_v1',
-  quizHistory: 'mvp_vocab_quiz_history_v1',
-  userName: 'mvp_vocab_user_name_v1',
-  userSettings: 'wordgym_user_settings_v1',
-  currentTab: 'wordgym_current_tab_v1',
-  filters: 'wordgym_filters_v1',
-  quickFilterPos: 'wordgym_quick_filter_pos_v1'
+  favorites: "mvp_vocab_favorites",
+  dataset: "mvp_vocab_dataset_v36",
+  presetApplied: "mvp_vocab_preset_applied_v36",
+  homeFilters: "mvp_home_filters_v1",
+  userExamples: "mvp_vocab_user_examples_v1",
+  quizHistory: "mvp_vocab_quiz_history_v1",
+  userName: "mvp_vocab_user_name_v1",
+  userSettings: "wordgym_user_settings_v1",
+  currentTab: "wordgym_current_tab_v1",
+  filters: "wordgym_filters_v1",
+  quickFilterPos: "wordgym_quick_filter_pos_v1",
 } as const;

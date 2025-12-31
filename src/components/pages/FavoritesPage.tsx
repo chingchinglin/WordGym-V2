@@ -1,6 +1,6 @@
-import React from 'react';
-import { VocabularyWord, POS_LABEL, POSType } from '../../types';
-import { useFavorites } from '../../hooks/useFavorites';
+import React from "react";
+import { VocabularyWord, POS_LABEL, POSType } from "../../types";
+import { useFavorites } from "../../hooks/useFavorites";
 
 interface FavoritesPageProps {
   words: VocabularyWord[];
@@ -8,17 +8,21 @@ interface FavoritesPageProps {
   isLoading?: boolean;
 }
 
-export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz, isLoading = false }) => {
+export const FavoritesPage: React.FC<FavoritesPageProps> = ({
+  words,
+  onStartQuiz,
+  isLoading = false,
+}) => {
   const { favorites, clearFavorites, removeFavorite } = useFavorites();
 
-  const favoriteWords = words.filter(word => favorites.has(word.id));
+  const favoriteWords = words.filter((word) => favorites.has(word.id));
 
   const handleStartQuiz = () => {
     if (onStartQuiz && favoriteWords.length > 0) {
       onStartQuiz(favoriteWords);
     } else if (favoriteWords.length > 0) {
       // Navigate to quiz page with favorite word IDs
-      const wordIds = favoriteWords.map(w => w.id).join(',');
+      const wordIds = favoriteWords.map((w) => w.id).join(",");
       window.location.hash = `#/quiz?words=${wordIds}`;
     }
   };
@@ -91,8 +95,8 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz
                     disabled={favoriteWords.length < 5}
                     className={`px-6 py-2 rounded-lg font-medium transition duration-150 min-h-[44px] ${
                       favoriteWords.length < 5
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-indigo-600 text-white hover:bg-indigo-700"
                     }`}
                   >
                     開始測驗
@@ -110,7 +114,9 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz
           {favoriteWords.length > 0 && favoriteWords.length < 5 && (
             <div className="mt-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
               <p className="text-sm text-amber-800">
-                <span className="font-semibold">提醒：</span>建議累積至少 5 題再進行測驗，以確保測驗選項充足（目前 {favoriteWords.length} 題）
+                <span className="font-semibold">提醒：</span>建議累積至少 5
+                題再進行測驗，以確保測驗選項充足（目前 {favoriteWords.length}{" "}
+                題）
               </p>
             </div>
           )}
@@ -119,13 +125,16 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ words, onStartQuiz
         {/* Word cards */}
         {favoriteWords.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">重點訓練（0）</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              重點訓練（0）
+            </h2>
             <p className="text-gray-600 mb-6">
-              目前沒有加入重點訓練的單字喔！<br />
+              目前沒有加入重點訓練的單字喔！
+              <br />
               請在「單字卡區」收藏不熟的單字，我們就會為你自動匯入，幫助你精準複習！
             </p>
             <button
-              onClick={() => window.location.hash = '#/'}
+              onClick={() => (window.location.hash = "#/")}
               className="mb-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition duration-150"
             >
               立即前往單字卡

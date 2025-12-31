@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Button } from '../ui';
-import { parseCSV } from '../../utils/csvParser';
-import { POS_LABEL } from '../../types';
-import type { POSType } from '../../types';
+import React, { useState, useRef } from "react";
+import { Button } from "../ui";
+import { parseCSV } from "../../utils/csvParser";
+import { POS_LABEL } from "../../types";
+import type { POSType } from "../../types";
 
 export interface ImportStats {
   added: number;
@@ -20,9 +20,12 @@ export interface ImporterProps {
   className?: string;
 }
 
-export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) => {
-  const [msg, setMsg] = useState('');
-  const [paste, setPaste] = useState('');
+export const Importer: React.FC<ImporterProps> = ({
+  onImport,
+  className = "",
+}) => {
+  const [msg, setMsg] = useState("");
+  const [paste, setPaste] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [override, setOverride] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,14 +33,17 @@ export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) 
   const posSummary = (stats: ImportStats): string =>
     Object.entries(stats.tagsAdded || {})
       .map(([k, v]) => `${POS_LABEL[k as POSType] || k}:${v}`)
-      .join('、');
+      .join("、");
 
-  const importText = async (rawText: string | ArrayBuffer | null, hint: string) => {
-    const text = String(rawText || '')
-      .replace(/^\uFEFF/, '')
+  const importText = async (
+    rawText: string | ArrayBuffer | null,
+    hint: string,
+  ) => {
+    const text = String(rawText || "")
+      .replace(/^\uFEFF/, "")
       .trim();
     if (!text) {
-      setMsg('匯入失敗：內容為空');
+      setMsg("匯入失敗：內容為空");
       return;
     }
 
@@ -45,12 +51,15 @@ export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) 
       try {
         const parsed = JSON.parse(text);
         if (Array.isArray(parsed)) {
-          const stats = onImport(parsed, { overrideExamples: override, replace: false });
+          const stats = onImport(parsed, {
+            overrideExamples: override,
+            replace: false,
+          });
           const summary = posSummary(stats);
           setMsg(
             `已匯入 ${stats.added + stats.merged} 筆（${hint}JSON），新增單字 ${stats.added}，合併 ${stats.merged}${
-              summary ? `，新增標籤 ${summary}` : ''
-            }。`
+              summary ? `，新增標籤 ${summary}` : ""
+            }。`,
           );
           return true;
         }
@@ -61,15 +70,18 @@ export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) 
     if (tryJson()) return;
     const rows = parseCSV(text);
     if (!rows.length) {
-      setMsg('匯入失敗：內容不是有效的 JSON 或 CSV');
+      setMsg("匯入失敗：內容不是有效的 JSON 或 CSV");
       return;
     }
-    const stats = onImport(rows, { overrideExamples: override, replace: false });
+    const stats = onImport(rows, {
+      overrideExamples: override,
+      replace: false,
+    });
     const summary = posSummary(stats);
     setMsg(
       `已匯入 ${stats.added + stats.merged} 筆（${hint}CSV），新增單字 ${stats.added}，合併 ${stats.merged}${
-        summary ? `，新增標籤 ${summary}` : ''
-      }。`
+        summary ? `，新增標籤 ${summary}` : ""
+      }。`,
     );
   };
 
@@ -84,7 +96,7 @@ export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) 
       setMsg(`匯入失敗：無法讀取檔案 ${file.name}`);
     };
     reader.readAsText(file);
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -105,7 +117,7 @@ export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) 
   return (
     <div
       className={`rounded-2xl border p-4 bg-white/60 ${
-        dragOver ? 'ring-2 ring-indigo-400' : ''
+        dragOver ? "ring-2 ring-indigo-400" : ""
       } ${className}`}
       onDragOver={(e) => {
         e.preventDefault();
@@ -150,7 +162,7 @@ export const Importer: React.FC<ImporterProps> = ({ onImport, className = '' }) 
           className="w-full h-28 px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <div className="mt-2">
-          <Button variant="ghost" onClick={() => importText(paste, '貼上/')}>
+          <Button variant="ghost" onClick={() => importText(paste, "貼上/")}>
             匯入貼上的內容
           </Button>
         </div>

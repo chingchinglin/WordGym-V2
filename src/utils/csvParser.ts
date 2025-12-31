@@ -21,15 +21,18 @@ export function parseTSV(text: string): ParsedRow[] {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const headers = line
-      .split('\t')
-      .map(h => String(h || '').replace(/^\uFEFF/, '').trim().toLowerCase());
+    const headers = line.split("\t").map((h) =>
+      String(h || "")
+        .replace(/^\uFEFF/, "")
+        .trim()
+        .toLowerCase(),
+    );
 
     if (
-      headers.includes('english_word') ||
-      headers.includes('word') ||
-      headers.includes('英文') ||
-      headers.includes('英文單字')
+      headers.includes("english_word") ||
+      headers.includes("word") ||
+      headers.includes("英文") ||
+      headers.includes("英文單字")
     ) {
       headerRowIndex = i;
       break;
@@ -39,12 +42,16 @@ export function parseTSV(text: string): ParsedRow[] {
   // Fallback to first line if no header found
   if (headerRowIndex === -1) {
     headerRowIndex = 0;
-    console.warn('Warning: No header row found with english_word/word field. Using first line as header.');
+    console.warn(
+      "Warning: No header row found with english_word/word field. Using first line as header.",
+    );
   }
 
-  const headers = lines[headerRowIndex]
-    .split('\t')
-    .map(h => String(h || '').replace(/^\uFEFF/, '').trim());
+  const headers = lines[headerRowIndex].split("\t").map((h) =>
+    String(h || "")
+      .replace(/^\uFEFF/, "")
+      .trim(),
+  );
   const rows: ParsedRow[] = [];
 
   // Parse data rows starting from header + 1
@@ -52,10 +59,10 @@ export function parseTSV(text: string): ParsedRow[] {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const values = line.split('\t');
+    const values = line.split("\t");
     const row: ParsedRow = {};
     headers.forEach((header, idx) => {
-      row[header] = String(values[idx] || '').trim();
+      row[header] = String(values[idx] || "").trim();
     });
     rows.push(row);
   }
@@ -71,13 +78,13 @@ export function parseTSV(text: string): ParsedRow[] {
 export function parseCSV(text: string): ParsedRow[] {
   const rows: string[][] = [];
   let i = 0;
-  let cur = '';
+  let cur = "";
   let inQ = false;
   let row: string[] = [];
 
   const pushCell = () => {
     row.push(cur);
-    cur = '';
+    cur = "";
   };
   const pushRow = () => {
     rows.push(row);
@@ -97,18 +104,18 @@ export function parseCSV(text: string): ParsedRow[] {
       i++;
       continue;
     }
-    if (!inQ && ch === ',') {
+    if (!inQ && ch === ",") {
       pushCell();
       i++;
       continue;
     }
-    if (!inQ && ch === '\n') {
+    if (!inQ && ch === "\n") {
       pushCell();
       pushRow();
       i++;
       continue;
     }
-    if (!inQ && ch === '\r' && text[i + 1] === '\n') {
+    if (!inQ && ch === "\r" && text[i + 1] === "\n") {
       pushCell();
       pushRow();
       i += 2;
@@ -128,16 +135,24 @@ export function parseCSV(text: string): ParsedRow[] {
   let headers: string[] = [];
 
   for (let r = 0; r < Math.min(rows.length, 8000); r++) {
-    const potentialHeaders = rows[r]
-      .map(h => String(h || '').replace(/^\uFEFF/, '').trim().toLowerCase());
+    const potentialHeaders = rows[r].map((h) =>
+      String(h || "")
+        .replace(/^\uFEFF/, "")
+        .trim()
+        .toLowerCase(),
+    );
 
     if (
-      potentialHeaders.includes('english_word') ||
-      potentialHeaders.includes('word') ||
-      potentialHeaders.includes('英文')
+      potentialHeaders.includes("english_word") ||
+      potentialHeaders.includes("word") ||
+      potentialHeaders.includes("英文")
     ) {
       headerIndex = r;
-      headers = rows[r].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
+      headers = rows[r].map((h) =>
+        String(h || "")
+          .replace(/^\uFEFF/, "")
+          .trim(),
+      );
       break;
     }
   }
@@ -145,8 +160,12 @@ export function parseCSV(text: string): ParsedRow[] {
   // Fallback to first row
   if (headerIndex === -1) {
     headerIndex = 0;
-    headers = rows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
-    console.warn('Warning: No header row found. Using first row as headers.');
+    headers = rows[0].map((h) =>
+      String(h || "")
+        .replace(/^\uFEFF/, "")
+        .trim(),
+    );
+    console.warn("Warning: No header row found. Using first row as headers.");
   }
 
   // Convert to objects
@@ -155,7 +174,7 @@ export function parseCSV(text: string): ParsedRow[] {
     const values = rows[r];
     const obj: ParsedRow = {};
     headers.forEach((header, idx) => {
-      obj[header] = String(values[idx] || '').trim();
+      obj[header] = String(values[idx] || "").trim();
     });
     result.push(obj);
   }

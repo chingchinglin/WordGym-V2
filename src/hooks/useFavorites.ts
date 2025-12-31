@@ -3,9 +3,9 @@
  * Migrated from index.html lines 1419-1437
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-const LS_KEY = 'mvp_vocab_favorites';
+const LS_KEY = "mvp_vocab_favorites";
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<Set<number>>(() => {
@@ -17,7 +17,7 @@ export function useFavorites() {
         return set;
       }
     } catch (e) {
-      console.error('Failed to load favorites:', e);
+      console.error("Failed to load favorites:", e);
     }
     return new Set();
   });
@@ -27,12 +27,12 @@ export function useFavorites() {
       const arr = Array.from(favorites);
       localStorage.setItem(LS_KEY, JSON.stringify(arr));
     } catch (e) {
-      console.error('Failed to save favorites:', e);
+      console.error("Failed to save favorites:", e);
     }
   }, [favorites]);
 
   const addFavorite = (wordId: number) => {
-    setFavorites(prev => {
+    setFavorites((prev) => {
       const next = new Set(prev);
       next.add(wordId);
       return next;
@@ -40,7 +40,7 @@ export function useFavorites() {
   };
 
   const removeFavorite = (wordId: number) => {
-    setFavorites(prev => {
+    setFavorites((prev) => {
       const next = new Set(prev);
       next.delete(wordId);
       return next;
@@ -60,6 +60,6 @@ export function useFavorites() {
     addFavorite,
     removeFavorite,
     clearFavorites,
-    isFavorite
+    isFavorite,
   };
 }

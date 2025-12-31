@@ -1,19 +1,19 @@
 export class VersionService {
   private static stageMapping: Record<string, string> = {
-    '高中': 'high',
-    '國中': 'junior',
-    '國小': 'beginner',
-    'senior': 'high',
-    'junior': 'junior',
-    'beginner': 'beginner'
+    高中: "high",
+    國中: "junior",
+    國小: "beginner",
+    senior: "high",
+    junior: "junior",
+    beginner: "beginner",
   };
 
-  private static stages: string[] = ['high', 'junior', 'beginner'];
+  private static stages: string[] = ["high", "junior", "beginner"];
 
   private static versions: Record<string, string[]> = {
-    high: ['龍騰', '三民'],
-    junior: ['康軒', '翰林', '南一'],
-    beginner: ['1.0']
+    high: ["龍騰", "三民"],
+    junior: ["康軒", "翰林", "南一"],
+    beginner: ["1.0"],
   };
 
   static normalizeStage(stage: string): string {
@@ -23,7 +23,7 @@ export class VersionService {
 
   static updateAvailableVersions(versions: Record<string, string[]>): void {
     // Validate the input matches our schema
-    this.stages.forEach(stage => {
+    this.stages.forEach((stage) => {
       if (stage in versions && Array.isArray(versions[stage])) {
         const stageVersions = versions[stage as keyof typeof versions];
         this.versions[stage] = Array.from(new Set(stageVersions)).sort();
@@ -31,15 +31,18 @@ export class VersionService {
     });
   }
 
-  static validateWithErrors(version: string | undefined, stage: string | undefined): {
+  static validateWithErrors(
+    version: string | undefined,
+    stage: string | undefined,
+  ): {
     isValid: boolean;
-    errors: string[]
+    errors: string[];
   } {
     const errors: string[] = [];
 
     // Stage validation first
     if (!stage) {
-      errors.push('Stage is required');
+      errors.push("Stage is required");
       return { isValid: false, errors };
     }
 
@@ -52,7 +55,7 @@ export class VersionService {
 
     // Version validation
     if (!version) {
-      errors.push('Version is required');
+      errors.push("Version is required");
       return { isValid: false, errors };
     }
 
@@ -63,28 +66,37 @@ export class VersionService {
 
     return {
       isValid: true,
-      errors: []
+      errors: [],
     };
   }
 
   static normalize(version: string): string {
-    return version.trim().replace('版', '');
+    return version.trim().replace("版", "");
   }
 
   static getAvailableVersions(stage?: string): string[] {
     return stage && this.versions[stage] ? this.versions[stage] : [];
   }
 
-  static validate(version: string | undefined, stage: string | undefined): boolean {
+  static validate(
+    version: string | undefined,
+    stage: string | undefined,
+  ): boolean {
     if (!version || !stage) return false;
     return this.versions[stage]?.includes(version) || false;
   }
 
-  static normalizeWithGuard(version: string | undefined, fallback: string = ''): string {
+  static normalizeWithGuard(
+    version: string | undefined,
+    fallback: string = "",
+  ): string {
     return version ? this.normalize(version) : fallback;
   }
 
-  static isValidSelection(version: string | undefined, stage: string | undefined): boolean {
+  static isValidSelection(
+    version: string | undefined,
+    stage: string | undefined,
+  ): boolean {
     if (!version || !stage) return false;
     return this.validate(version, stage);
   }

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-const LOCAL_STORAGE_KEY = 'wordgym_filtered_word_ids_v1';
-const CUSTOM_EVENT_NAME = 'filteredWordIdsChange';
+const LOCAL_STORAGE_KEY = "wordgym_filtered_word_ids_v1";
+const CUSTOM_EVENT_NAME = "filteredWordIdsChange";
 
 /**
  * Global state for currently filtered word IDs
@@ -21,7 +21,7 @@ export const useFilteredWordIds = () => {
 
     // Dispatch custom event to notify other components
     const event = new CustomEvent(CUSTOM_EVENT_NAME, {
-      detail: { wordIds: filteredWordIds }
+      detail: { wordIds: filteredWordIds },
     });
     window.dispatchEvent(event);
   }, [filteredWordIds]);
@@ -42,7 +42,8 @@ export const useFilteredWordIds = () => {
     };
 
     window.addEventListener(CUSTOM_EVENT_NAME, handleFilterChange);
-    return () => window.removeEventListener(CUSTOM_EVENT_NAME, handleFilterChange);
+    return () =>
+      window.removeEventListener(CUSTOM_EVENT_NAME, handleFilterChange);
   }, []);
 
   return { filteredWordIds, setFilteredWordIds };

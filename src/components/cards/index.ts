@@ -1,2 +1,2 @@
-export { LazyWordCard } from './LazyWordCard';
-export type { LazyWordCardProps } from './LazyWordCard';
+export { LazyWordCard } from "./LazyWordCard";
+export type { LazyWordCardProps } from "./LazyWordCard";

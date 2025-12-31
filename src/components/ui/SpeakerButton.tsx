@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface SpeakerButtonProps {
   onClick: () => void;
@@ -8,8 +8,8 @@ export interface SpeakerButtonProps {
 
 export const SpeakerButton: React.FC<SpeakerButtonProps> = ({
   onClick,
-  label = 'Speak word',
-  className = ''
+  label = "Speak word",
+  className = "",
 }) => (
   <button
     type="button"

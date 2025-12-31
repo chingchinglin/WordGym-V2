@@ -1,8 +1,8 @@
-import { VocabularyWord, QuizDifficulty } from './index';
+import { VocabularyWord, QuizDifficulty } from "./index";
 
 export interface QuizRecord {
   id?: string;
-  quizType: 'multiple_choice' | 'flashcard';
+  quizType: "multiple_choice" | "flashcard";
   totalQuestions: number;
   correctAnswers: number;
   timestamp: number;
@@ -17,9 +17,9 @@ export interface QuizRecord {
 }
 
 export interface QuizConfiguration {
-  type: 'multiple_choice' | 'flashcard';
+  type: "multiple_choice" | "flashcard";
   difficulty: QuizDifficulty;
-  category?: 'textbook' | 'theme' | 'all';
+  category?: "textbook" | "theme" | "all";
 }
 
 export interface QuizCompletionStats {
@@ -31,7 +31,7 @@ export interface QuizCompletionStats {
 }
 
 export interface QuizCompletionProps {
-  type: 'multiple_choice' | 'flashcard';
+  type: "multiple_choice" | "flashcard";
   stats: QuizCompletionStats;
   words: VocabularyWord[];
   onRestart: () => void;
@@ -39,7 +39,7 @@ export interface QuizCompletionProps {
 }
 
 export const QuizTypes = {
-  multiple_choice: '選擇題測驗',
-  flashcard: '閃卡測驗',
-  writing: '寫作測驗'
+  multiple_choice: "選擇題測驗",
+  flashcard: "閃卡測驗",
+  writing: "寫作測驗",
 };

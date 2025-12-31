@@ -1,43 +1,45 @@
-import { VocabularyWord } from '../types';
+import { VocabularyWord } from "../types";
 
 // Utility function to escape special regex characters
 const escapeForRegex = (str: string): string => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
 // Make cloze sentence by replacing the answer with blanks
 export const makeCloze = (sentence: string, answer: string): string => {
   const esc = escapeForRegex(answer);
-  const rx = new RegExp(`(^|[^A-Za-z])(${esc})(?=[^A-Za-z]|$)`, 'i');
-  return String(sentence).replace(rx, (m) => m.replace(new RegExp(esc, 'i'), '_____ '));
+  const rx = new RegExp(`(^|[^A-Za-z])(${esc})(?=[^A-Za-z]|$)`, "i");
+  return String(sentence).replace(rx, (m) =>
+    m.replace(new RegExp(esc, "i"), "_____ "),
+  );
 };
 
 export const generateDisractors = (
   correctWord: VocabularyWord,
   allWords: VocabularyWord[],
-  numOptions: number = 3
+  numOptions: number = 3,
 ): string[] => {
   // Filter words with the same part of speech
   const samePosWords = allWords
-    .filter(word =>
-      word.pos === correctWord.pos &&
-      word.id !== correctWord.id
+    .filter(
+      (word) => word.pos === correctWord.pos && word.id !== correctWord.id,
     )
     .sort(() => 0.5 - Math.random());
 
   // If not enough words with same POS, use any words
   const fallbackWords = allWords
-    .filter(word => word.id !== correctWord.id)
+    .filter((word) => word.id !== correctWord.id)
     .sort(() => 0.5 - Math.random());
 
-  const candidates = samePosWords.length >= numOptions
-    ? samePosWords
-    : [...samePosWords, ...fallbackWords];
+  const candidates =
+    samePosWords.length >= numOptions
+      ? samePosWords
+      : [...samePosWords, ...fallbackWords];
 
   // Generate distractors, preferring similar words
   const distractors = candidates
     .slice(0, numOptions)
-    .map(word => word.chinese_definition);
+    .map((word) => word.chinese_definition);
 
   // Shuffle options and ensure no duplicates
   return [...new Set(distractors)];
@@ -52,10 +54,7 @@ export const generateSentenceCloze = (word: VocabularyWord): string => {
   }
 
   const example = examples[0];
-  const clozeExample = example.replace(
-    new RegExp(word.english, 'gi'),
-    '_____'
-  );
+  const clozeExample = example.replace(new RegExp(word.english, "gi"), "_____");
 
   return clozeExample;
 };
