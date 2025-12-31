@@ -34,6 +34,13 @@ MUST wait for explicit user command before any git commit or push operations.
 - ⚠️ **TDD Required**: Tests before code
 - ⚠️ **TypeScript Strict**: No `any` types
 
+### Token Economy
+- **Model**: Haiku (fast, cost-effective routing)
+- **Typical Context**: 1,000-2,000 tokens (routing decision)
+- **Estimated Cost**: ~$0.01-0.02 per routing decision
+- **ROI**: Ensures correct agent selection, preventing costly rework
+- **Performance**: < 2 second response time
+
 ## Security Iron Rules
 
 **NEVER hardcode secrets!**

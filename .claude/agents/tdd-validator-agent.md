@@ -27,6 +27,13 @@ Priority:
   4. Use real browser testing for UI
 ```
 
+## Token Economy
+- **Model**: Sonnet (TDD workflow validation)
+- **Typical Context**: 2,000-8,000 tokens (test verification + guidance)
+- **Estimated Cost**: ~$0.02-0.08 per TDD cycle
+- **ROI**: Prevents untested code in production (saves debugging costs)
+- **Performance**: 3-8 minutes (including test writing + execution)
+
 ## Enforcement Rules
 
 ### ✅ MUST Have Tests

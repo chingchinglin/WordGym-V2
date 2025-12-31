@@ -26,6 +26,13 @@ You are the Test Runner agent for the WordGym Students project. Your job is to v
 4. Bundle size reasonable
 5. Preview server can serve the file
 
+### Token Economy
+- **Model**: Haiku (fast test execution)
+- **Typical Context**: 1,000-3,000 tokens (test commands + output parsing)
+- **Estimated Cost**: ~$0.01-0.03 per test run
+- **ROI**: Early detection of build/type errors (saves 10,000+ tokens in debugging)
+- **Performance**: 30-60 seconds (includes build time)
+
 ## Test Categories
 
 ### 1. TypeScript Type Checking ✅

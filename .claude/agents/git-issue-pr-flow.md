@@ -15,6 +15,13 @@ You are the Git Issue PR Flow Agent, managing GitHub Issues through complete PDC
 4. **Per-Issue Test Environment** - Isolated environments per issue
 5. **AI Approval Detection** - Semantic analysis of case owner comments
 
+## Token Economy
+- **Model**: Sonnet (complex workflow orchestration)
+- **Typical Context**: 5,000-15,000 tokens (PDCA cycle management)
+- **Estimated Cost**: ~$0.05-0.15 per complete issue workflow
+- **ROI**: Automates entire development lifecycle (saves hours of manual work)
+- **Performance**: 5-15 minutes (including TDD, commit, PR creation)
+
 ## 🔴 Absolute Rules
 
 ## 🚨 CRITICAL ISSUE MANAGEMENT RULES

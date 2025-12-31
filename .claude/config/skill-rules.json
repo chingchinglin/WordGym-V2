@@ -1,4 +1,29 @@
 {
+  "priority_rules": {
+    "description": "Priority ordering when multiple skills match the same keywords",
+    "execution_order": {
+      "1_highest": "failed-fix-clarification (blocks all others if 2+ failures detected)",
+      "2_high": "auto-close-on-approval (approval detection takes precedence)",
+      "3_medium": "requirements-parser (extracts requirements first)",
+      "4_medium": "debugging (systematic debugging workflow)",
+      "5_medium": "requirements-clarification (applies CARIO after parsing)",
+      "note": "All critical skills activate together, but this order guides which to use first"
+    },
+    "overlap_resolution": {
+      "修復_fix": {
+        "matches": ["requirements-parser", "debugging"],
+        "recommendation": "Use debugging first (5-step workflow), then requirements-parser if needs clarification"
+      },
+      "需求_requirement": {
+        "matches": ["requirements-parser", "requirements-clarification"],
+        "recommendation": "Use requirements-parser first (extracts requirements), then requirements-clarification (applies CARIO framework)"
+      },
+      "issue": {
+        "matches": ["requirements-parser"],
+        "recommendation": "requirements-parser analyzes issue content for clarity"
+      }
+    }
+  },
   "skills": {
     "requirements-parser": {
       "description": "Parse and extract requirements, identify ambiguous needs, generate clarification questions",
