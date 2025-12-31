@@ -157,28 +157,49 @@ npm run preview
 
 ## Universal Skills & Agents
 
-### Global Skills (Available Across All Projects)
+### Project-Specific Skills (AMP-Style)
 
-These skills are defined globally in `~/.claude/skills/` and auto-activate based on keywords:
+Following Sourcegraph AMP philosophy and Claude Code official best practices, our skills are structured as:
+- **Concise SKILL.md** (< 2KB) - Guidance and workflow
+- **Executable scripts/** - Small, focused tools (< 50 lines each)
+- **Token-efficient** - Scripts run without loading into context
 
-| Skill | Purpose | Trigger Keywords | How to Use |
-|-------|---------|------------------|------------|
-| **requirements-clarification** | Force requirements clarification BEFORE implementation using CARIO framework | "需求", "requirement", "客戶要", "新功能" | Auto-activates when you mention trigger keywords. Uses structured CARIO format to clarify ambiguous requirements. |
-| **debugging** | Systematic debugging workflow (5-step checklist) | "bug", "error", "debug", "不work", "壞掉" | Auto-activates when debugging. Provides 5-step process: Reproduce → Logs → Root Cause → Fix → Test |
+**Location:** `.claude/skills/`
 
-**How Global Skills Work:**
-- ✅ Auto-activate when you use trigger keywords
-- ✅ Work across all projects
-- ✅ No manual activation needed
-- ⚠️ Can be overridden by project-specific skills
+| Skill | Purpose | Bundled Scripts | Auto-Activation |
+|-------|---------|-----------------|-----------------|
+| **debugging/** | 5-step systematic debugging workflow | `check-typescript.sh`<br>`check-bundle-size.sh`<br>`analyze-build.py`<br>`test-ui-playwright.cjs` | bug, error, debug, 不work, 壞掉 |
+| **requirements/** | CARIO framework for requirement clarification | `check-clarity.cjs`<br>`generate-questions.cjs` | 需求, requirement, 客戶要, 新功能 |
+
+**AMP Philosophy Applied:**
+- Each script < 50 lines (most < 20)
+- Single, clear purpose per script
+- Executable, not documentation
+- Saves ~16KB markdown → ~400 lines executable code
 
 **Example Usage:**
+```bash
+# Check TypeScript types (debugging skill)
+./.claude/skills/debugging/scripts/check-typescript.sh
+
+# Check bundle size (debugging skill)
+./.claude/skills/debugging/scripts/check-bundle-size.sh
+
+# Analyze build breakdown (debugging skill)
+./.claude/skills/debugging/scripts/analyze-build.py
+
+# Check requirement clarity (requirements skill)
+./.claude/skills/requirements/scripts/check-clarity.cjs "客戶要加篩選功能"
+
+# Generate clarification questions (requirements skill)
+./.claude/skills/requirements/scripts/generate-questions.cjs "客戶要加篩選功能"
 ```
-User: "客戶要加一個篩選功能"
-→ requirements-clarification auto-activates
-→ Uses CARIO framework to clarify requirements
-→ Gets user confirmation before implementation
-```
+
+**Skills Auto-Activation:**
+- ✅ Auto-activate when you use trigger keywords
+- ✅ Scripts execute without loading into context (saves tokens)
+- ✅ SKILL.md provides concise guidance
+- ⚠️ Archived verbose versions in `.claude/skills/archive/`
 
 ### Project-Specific Agents
 
