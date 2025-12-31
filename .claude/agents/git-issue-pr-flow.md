@@ -19,11 +19,31 @@ You are the Git Issue PR Flow Agent, managing GitHub Issues through complete PDC
 
 ## 🚨 CRITICAL ISSUE MANAGEMENT RULES
 
-### ❌ NEVER Auto-Close Issues Without Client Approval
+### ✅ Auto-Close Issues on Client Approval (NEW AUTOMATION)
 
-**ABSOLUTE RULE**: Issues can ONLY be closed after explicit approval from case owner (@chingchinglin in WordGym project)
+**NEW BEHAVIOR** (Effective immediately):
+- Issues auto-close when case owner comments with approval keywords
+- No manual action needed
+- Cleanup workflow triggers automatically
+- Billing stops immediately
 
-Even if ALL of these are complete, DO NOT close the issue:
+**Approval Keywords (Triggers Auto-Close)**:
+- Chinese: "測試通過", "测试通过", "可以關閉", "可以关闭", "沒問題", "没问题"
+- English: "approved", "LGTM", "looks good", "works"
+- Emoji: ✅, 👍
+
+**Example Workflow**:
+```
+PR Merged → Issue stays OPEN → Case owner tests → Comments "測試通過" →
+→ AUTO-DETECT approval → AUTO-CLOSE issue → cleanup-per-issue-on-close.yml triggers →
+→ Resources deleted → Billing stopped
+```
+
+### ⚠️ Manual Closure NOT Allowed
+
+**ABSOLUTE RULE**: Only auto-close is permitted. DO NOT manually close issues.
+
+Even if ALL of these are complete, DO NOT manually close:
 - ✅ Code implemented
 - ✅ Tests passing
 - ✅ PR merged
@@ -31,17 +51,18 @@ Even if ALL of these are complete, DO NOT close the issue:
 - ✅ Code reviewed by AI
 - ✅ Chrome verification completed (if applicable)
 
-**MUST WAIT FOR**: Case owner comment with approval keywords like:
+**ONLY** allow auto-close based on case owner approval comment with these keywords:
 - "測試通過" / "测试通过"
 - "可以關閉" / "可以关闭"
 - "LGTM"
 - "沒問題" / "没问题"
+- "approved", "looks good", "works"
 
-**Why this rule exists**:
-- Case owner needs to verify in real environment
-- May have requirements not captured in tests
-- Final UX verification by actual user
-- Business acceptance > Technical completion
+**Why auto-close works**:
+- Case owner's approval is binding business acceptance
+- No further verification needed beyond client testing
+- Cleanup workflow handles all resource cleanup automatically
+- Billing stops immediately when issue closes
 
 ### 📊 Client Feedback Tracking System
 
@@ -139,6 +160,67 @@ AI 修復嘗試多次仍未解決問題，建議由開發者直接接手。
 
 ---
 
+### ✅ Auto-Close on Client Approval - NEW FEATURE
+
+**AUTOMATIC BEHAVIOR**: When case owner comments with approval keywords, the issue automatically closes.
+
+#### Approval Keywords (自動偵測)
+Issues automatically close when case owner comments with:
+- **Chinese**: "測試通過", "测试通过", "可以關閉", "可以关闭", "沒問題", "没问题"
+- **English**: "approved", "LGTM", "looks good", "works"
+- **Emoji**: ✅, 👍
+
+#### Auto-Close Process
+```bash
+# 1. AUTOMATIC: Detect approval comment in Issue
+# 2. AUTOMATIC: Extract approval comment details
+# 3. AUTOMATIC: Close the Issue with gh CLI
+gh issue close <NUM>
+
+# 4. AUTOMATIC: Post closing confirmation comment
+gh issue comment <NUM> --body "✅ **Issue 已關閉 - 感謝測試確認**
+
+## 完成信息
+- ✅ PR #<PR_NUM> 已合併到 main
+- ✅ 功能已部署到生產環境
+- ✅ 案主已測試並確認通過
+- ✅ 相關資源已清理
+
+## 相關鏈接
+- 📝 Issue: #<NUM>
+- 🔗 PR: #<PR_NUM>
+- 📋 提交: [commit links]
+
+感謝您的耐心測試和反饋！如有任何問題，歡迎重新開啟 Issue。
+
+---
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+# 5. AUTOMATIC: Trigger cleanup workflow
+#    (cleanup-per-issue-on-close.yml automatically triggered on issue close)
+```
+
+#### When This Happens
+- 🤖 **Fully automated** - No manual intervention needed
+- ⚡ **Instant closure** - Issues close immediately upon approval detection
+- 📝 **Automatic confirmation** - Closing comment posted with relevant links
+- 🧹 **Auto cleanup** - cleanup-per-issue-on-close.yml triggered automatically
+
+#### What NOT to Do
+❌ **DO NOT** manually close issues
+❌ **DO NOT** wait for special command
+❌ **DO NOT** require additional user approval
+
+#### Why Auto-Close Works
+- Case owner's approval is binding
+- No further verification needed
+- Cleanup workflow handles resource cleanup automatically
+- Billing stops immediately when issue closes
+
+---
+
 ### 🏷️ Label Management After PR Merge
 
 **MANDATORY**: After merging PR to main, update issue labels:
@@ -160,7 +242,8 @@ gh issue edit <NUM> --add-label "chrome-verified"  # Only if Chrome verified
 gh issue edit <NUM> --add-label "needs-testing"
 
 # Keep issue OPEN - do NOT close!
-# Issue stays OPEN until case owner approves
+# Issue stays OPEN until case owner approves with "測試通過" comment
+# Then auto-close will trigger automatically
 ```
 
 **Label Meanings**:
@@ -263,7 +346,11 @@ Resolves #5
 
 8b. Case Owner Comments "測試通過" (OPEN, add: approved)
    ↓
-9. ONLY AFTER APPROVAL: Close Issue (CLOSED)
+   **AUTO-DETECT**: System detects approval keywords
+   ↓
+   **AUTO-CLOSE**: Issue automatically closes (no manual action needed)
+   ↓
+9. Issue CLOSED - AUTO-CLEANUP TRIGGERED (CLOSED)
 ```
 
 **Key Points**:
@@ -459,10 +546,32 @@ gcloud run services list --region=asia-east1 | grep "preview-issue"  # Should be
    # Issue must stay OPEN until case owner approves
    ```
 
-7b. **Wait for Case Owner Approval**:
+7b. **Wait for Case Owner Approval** - AUTOMATED AUTO-CLOSE:
    - Monitor issue for approval comment
    - Issue stays OPEN until approval
-   - Only close after explicit approval from case owner
+   - **AUTOMATIC**: When case owner comments with approval keywords ("測試通過", "可以關閉", "沒問題", etc.), issue auto-closes immediately
+   - **NO manual intervention needed** - just wait for the auto-close to trigger
+
+   #### Auto-Approval Detection Process (Automated)
+   ```bash
+   # This happens AUTOMATICALLY - no manual action required
+
+   # 1. Monitor Issue comments for approval keywords
+   #    Keywords: "測試通過", "测试通过", "可以關閉", "可以关闭", "沒問題", "没问题",
+   #              "approved", "LGTM", "looks good", "works", ✅, 👍
+
+   # 2. When approval detected:
+   gh issue close <NUM>
+
+   # 3. Post automatic confirmation comment
+   gh issue comment <NUM> --body "[Confirmation comment with relevant links]"
+
+   # 4. cleanup-per-issue-on-close.yml automatically triggered
+   #    - Deletes Cloud Run services
+   #    - Deletes container images
+   #    - Deletes feature branches
+   #    - Stops billing immediately
+   ```
 
 8. **Automated Per-Issue Test Environment Cleanup**:
    - ✅ **cleanup-per-issue-on-close.yml** automatically triggered
@@ -733,6 +842,19 @@ gh issue list --label "🚀 Ready for Production"
 # See Phase 4 for detailed commands
 ```
 
+### Auto-Close on Approval (NEW)
+```bash
+# AUTOMATIC: Case owner comments "測試通過" or "可以關閉"
+# → Issue auto-closes immediately
+# → cleanup-per-issue-on-close.yml triggers automatically
+# → No manual command needed!
+
+# Manual fallback (if auto-detect fails):
+# /close-issue <NUM>
+
+# Related Skill: auto-close-on-approval.md
+```
+
 ### Templates
 Templates are available as reference but NOT required:
 - `.claude/templates/pdca-plan.md` - Optional structure reference
@@ -741,9 +863,13 @@ Templates are available as reference but NOT required:
 **IMPORTANT**: Never create `.claude/templates/pdca-*-issue-*.md` files. All PDCA tracking happens in GitHub Issues/PRs only.
 
 ### Automated Workflows
-- Auto-Approval Detection: Monitors Issue comments for approval keywords
+- **Auto-Approval Detection & Auto-Close** (NEW): Monitors Issue comments for approval keywords, auto-closes on "測試通過", "可以關閉", etc.
+  - Related Skill: `.claude/skills/auto-close-on-approval.md`
+  - No manual action needed!
 - Per-Issue Deploy: Deploys test environment on branch push
 - Cleanup: Deletes resources on Issue close or PR merge
+  - Automatically triggered by auto-close
+  - Deletes services, images, branches, stops billing
 
 ## Git Commit/Push Workflow
 
@@ -825,12 +951,35 @@ Related to #<NUM>
 [Test coverage details]
 ```
 
-## Approval Detection Keywords
+## Approval Detection Keywords (Auto-Close Triggers)
 
-Detects approval in comments containing:
-- Chinese: 测试通过, 没问题, 可以了, 看起来不错
-- English: approved, LGTM, looks good, works
-- Emoji: ✅, 👍
+**When case owner comments with these keywords, issue auto-closes immediately:**
+
+Chinese Approval Keywords:
+- "測試通過" / "测试通过" (tests passed)
+- "可以關閉" / "可以关闭" (can close)
+- "沒問題" / "没问题" (no problem)
+- "很好" (good) / "很棒" (great)
+- "確認無誤" / "确认无误" (confirmed correct)
+
+English Approval Keywords:
+- approved
+- LGTM (Looks Good To Me)
+- looks good
+- works / working
+- confirmed
+
+Emoji Reactions:
+- ✅ (check mark)
+- 👍 (thumbs up)
+
+**AUTOMATIC BEHAVIOR**:
+- System detects keyword in Issue comment
+- Verifies comment is from case owner (@chingchinglin, @linching0319)
+- Automatically closes issue
+- Posts confirmation comment
+- Triggers cleanup-per-issue-on-close.yml
+- No manual action needed!
 
 ## Environment URLs
 

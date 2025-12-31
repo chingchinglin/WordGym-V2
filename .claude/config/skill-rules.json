@@ -77,6 +77,32 @@
       "force_activation": true,
       "priority": "critical",
       "activation_message": "🛑 CRITICAL: 2 failed attempts detected. STOP and ASK client for clarification using failed-fix-clarification skill"
+    },
+    "auto-close-on-approval": {
+      "description": "Automatically close GitHub Issues when case owner approves with 測試通過 or similar keywords",
+      "keywords": [
+        "測試通過",
+        "测试通过",
+        "可以關閉",
+        "可以关闭",
+        "沒問題",
+        "没问题",
+        "很好",
+        "很棒",
+        "確認無誤",
+        "确认无误",
+        "approved",
+        "LGTM",
+        "looks good",
+        "works",
+        "working",
+        "confirmed",
+        "✅",
+        "👍"
+      ],
+      "force_activation": true,
+      "priority": "critical",
+      "activation_message": "✅ AUTO-CLOSE DETECTED: Case owner approval found. Auto-closing issue and triggering cleanup workflow..."
     }
   },
   "agents": {
