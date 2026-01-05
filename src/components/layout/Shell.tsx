@@ -451,34 +451,41 @@ export const Shell: React.FC<ShellProps> = ({
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
-        {route !== "quiz" && (
-          <footer className="mt-12 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-8">
-            <div className="max-w-3xl mx-auto">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
-                WordGym 單字健身坊
-              </h3>
-              <p className="text-base text-gray-700 font-medium mb-4">
-                將學習變成一場互動式的學習旅程！
+        <footer className="mt-16 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-8">
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              WordGym 單字健身坊
+            </h3>
+            <p className="text-base text-gray-700 font-medium mb-4">
+              將學習變成一場互動式的學習旅程！
+            </p>
+            <p className="text-sm text-gray-700 leading-relaxed mb-6">
+              我們提供個人化的單字庫與遊戲化的練習模式，讓您隨時隨地都能高效複習。透過清晰的學習路徑，讓您清楚掌握弱點、看見進步，輕鬆累積單字實力，自信迎接大考。
+            </p>
+            <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
+              <p>
+                ©{" "}
+                <a
+                  href="https://www.junyiacademy.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:underline"
+                >
+                  均一教育平台
+                </a>
+                {" "}|{" "}
+                <a
+                  href="https://forms.gle/dM8VbrzUDd5pr1y49"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:underline"
+                >
+                  💬 意見回饋
+                </a>
               </p>
-              <p className="text-sm text-gray-700 leading-relaxed mb-6">
-                我們提供個人化的單字庫與遊戲化的練習模式，讓您隨時隨地都能高效複習。透過清晰的學習路徑，讓您清楚掌握弱點、看見進步，輕鬆累積單字實力，自信迎接大考。
-              </p>
-              <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
-                <p>
-                  ©{" "}
-                  <a
-                    href="https://www.junyiacademy.org/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-600 hover:underline"
-                  >
-                    均一教育平台
-                  </a>
-                </p>
-              </div>
             </div>
-          </footer>
-        )}
+          </div>
+        </footer>
       </div>
     </div>
   );
