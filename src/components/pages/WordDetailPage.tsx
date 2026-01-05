@@ -544,7 +544,9 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     <p className="text-gray-900 mb-2">{example.sentence}</p>
                   )}
                   {example.translation && (
-                    <p className="text-gray-600 text-sm">{example.translation}</p>
+                    <p className="text-gray-600 text-sm">
+                      {example.translation}
+                    </p>
                   )}
                 </div>
                 <div className="mt-2 text-xs text-purple-500">自訂例句</div>
