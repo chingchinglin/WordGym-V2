@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { VocabularyWord, POS_LABEL, POSType, UserSettings } from "../../types";
 import { useSpeech } from "../../hooks/useSpeech";
 import { useFavorites } from "../../hooks/useFavorites";
+import { useUserExamples } from "../../hooks/useUserExamples";
 import { VersionService } from "../../services/VersionService";
 import SpeakerButton from "../ui/SpeakerButton";
 
@@ -16,6 +17,45 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
 }) => {
   const { speak } = useSpeech();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { getExamples, addExample, deleteExample } = useUserExamples();
+
+  // User examples state
+  const [showAddExample, setShowAddExample] = useState(false);
+  const [newExampleEn, setNewExampleEn] = useState("");
+  const [newExampleZh, setNewExampleZh] = useState("");
+
+  // Get user-added examples for this word
+  const userExamples = getExamples(word.id);
+
+  // Count original examples
+  const originalExampleCount =
+    (word.example_sentence ? 1 : 0) + (word.example_sentence_2 ? 1 : 0);
+
+  // Max 5 total examples
+  const canAddMore = originalExampleCount + userExamples.length < 5;
+
+  // Handle adding a new example
+  const handleAddExample = () => {
+    if (!newExampleEn.trim() && !newExampleZh.trim()) {
+      alert("請至少輸入英文或中文例句");
+      return;
+    }
+    addExample(word.id, {
+      id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      sentence: newExampleEn.trim(),
+      translation: newExampleZh.trim(),
+    });
+    setNewExampleEn("");
+    setNewExampleZh("");
+    setShowAddExample(false);
+  };
+
+  // Handle deleting a user example
+  const handleDeleteExample = (index: number) => {
+    if (confirm("確定要刪除這個例句嗎？")) {
+      deleteExample(word.id, index);
+    }
+  };
 
   // Filter textbook_index and theme_index based on user's stage
   const normalizedUserStage = useMemo(
@@ -386,35 +426,141 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
         )}
 
         {/* Example sentences section */}
-        {(word.example_sentence || word.example_sentence_2) && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">例句</h2>
-            <div className="space-y-4">
-              {word.example_sentence && (
-                <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                  <p className="text-gray-900 mb-2">{word.example_sentence}</p>
-                  {word.example_translation && (
-                    <p className="text-gray-600 text-sm">
-                      {word.example_translation}
-                    </p>
-                  )}
-                </div>
-              )}
-              {word.example_sentence_2 && (
-                <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                  <p className="text-gray-900 mb-2">
-                    {word.example_sentence_2}
-                  </p>
-                  {word.example_translation_2 && (
-                    <p className="text-gray-600 text-sm">
-                      {word.example_translation_2}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
+          {/* Header with add button */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              例句（{originalExampleCount + userExamples.length}）
+            </h2>
+            {canAddMore && (
+              <button
+                onClick={() => setShowAddExample(!showAddExample)}
+                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition"
+              >
+                {showAddExample ? "取消" : "新增例句"}
+              </button>
+            )}
           </div>
-        )}
+
+          {/* Add example form */}
+          {showAddExample && (
+            <div className="mb-4 p-4 rounded-lg bg-purple-50 border border-purple-200">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    英文例句
+                  </label>
+                  <input
+                    type="text"
+                    value={newExampleEn}
+                    onChange={(e) => setNewExampleEn(e.target.value)}
+                    placeholder="輸入英文例句..."
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    中文翻譯
+                  </label>
+                  <input
+                    type="text"
+                    value={newExampleZh}
+                    onChange={(e) => setNewExampleZh(e.target.value)}
+                    placeholder="輸入中文翻譯..."
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowAddExample(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleAddExample}
+                    className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition"
+                  >
+                    儲存
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Examples list */}
+          <div className="space-y-4">
+            {/* Original example 1 */}
+            {word.example_sentence && (
+              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-gray-900 mb-2">{word.example_sentence}</p>
+                {word.example_translation && (
+                  <p className="text-gray-600 text-sm">
+                    {word.example_translation}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Original example 2 */}
+            {word.example_sentence_2 && (
+              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-gray-900 mb-2">{word.example_sentence_2}</p>
+                {word.example_translation_2 && (
+                  <p className="text-gray-600 text-sm">
+                    {word.example_translation_2}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* User-added examples */}
+            {userExamples.map((example, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-lg bg-purple-50 border border-purple-200 relative"
+              >
+                <button
+                  onClick={() => handleDeleteExample(idx)}
+                  className="absolute top-2 right-2 p-1 rounded-full hover:bg-purple-200 text-purple-600 transition"
+                  title="刪除例句"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <div className="pr-8">
+                  {example.sentence && (
+                    <p className="text-gray-900 mb-2">{example.sentence}</p>
+                  )}
+                  {example.translation && (
+                    <p className="text-gray-600 text-sm">{example.translation}</p>
+                  )}
+                </div>
+                <div className="mt-2 text-xs text-purple-500">自訂例句</div>
+              </div>
+            ))}
+
+            {/* Empty state */}
+            {!word.example_sentence &&
+              !word.example_sentence_2 &&
+              userExamples.length === 0 && (
+                <p className="text-gray-500 text-sm text-center py-4">
+                  尚無例句，點擊「新增例句」添加自訂例句
+                </p>
+              )}
+          </div>
+        </div>
 
         {/* Word forms and relations card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
