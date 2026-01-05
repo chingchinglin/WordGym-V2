@@ -24,7 +24,7 @@ export function filterWords(
 
     // Tab-specific filters
     switch (currentTab) {
-      case "textbook":
+      case "textbook": {
         if (!word.textbook_index || word.textbook_index.length === 0)
           return false;
 
@@ -60,14 +60,16 @@ export function filterWords(
         });
         if (!textbookMatch) return false;
         break;
+      }
 
-      case "exam":
+      case "exam": {
         const examMatch =
           word.exam_tags?.includes(filters.exam?.year || "") || false;
         if (!examMatch) return false;
         break;
+      }
 
-      case "theme":
+      case "theme": {
         // Use normalized stage for comparison
         const normalizedStageForTheme = VersionService.normalizeStage(
           userSettings.stage || "",
@@ -103,6 +105,7 @@ export function filterWords(
           }
         }
         break;
+      }
     }
 
     // POS filter

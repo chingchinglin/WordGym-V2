@@ -73,7 +73,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
         // Within 1 minute
         return true;
       }
-    } catch {}
+    } catch { /* ignore parse error */ }
     return false;
   })();
 

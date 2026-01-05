@@ -233,7 +233,7 @@ export function useDataset(initialData: VocabularyWord[] = []) {
         ).trim();
 
         // Clean up POS annotations in english_word field like "(adj.)", "(n.)", etc.
-        english = english.replace(/\s*\([a-z\.\/]+\)\s*/gi, " ").trim();
+        english = english.replace(/\s*\([a-z./]+\)\s*/gi, " ").trim();
 
         if (!english) {
           skippedNoEnglish++;
@@ -257,7 +257,7 @@ export function useDataset(initialData: VocabularyWord[] = []) {
         // Also try to extract POS from chinese_definition like "(adj.)" or "(adv.)"
         const chineseDef =
           raw.chinese_definition || raw["中譯"] || raw["中文"] || "";
-        const posInDef = chineseDef.match(/\(([a-z\.\/]+)\)/i);
+        const posInDef = chineseDef.match(/\(([a-z./]+)\)/i);
         if (posInDef) {
           posSources.push(posInDef[1]);
         }
@@ -730,7 +730,7 @@ export function useDataset(initialData: VocabularyWord[] = []) {
     try {
       localStorage.removeItem(LS.dataset);
       localStorage.removeItem(LS.presetApplied);
-    } catch {}
+    } catch { /* localStorage may be unavailable */ }
     setData(hydrateDataset([]));
   };
 

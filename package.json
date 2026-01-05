@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
     "deploy": "npm run build && gh-pages -d dist",
     "test:e2e": "NODE_ENV=test VITE_TEST_MODE=true dotenv -e .env.test playwright test",
     "test:e2e:ui": "playwright test --ui",

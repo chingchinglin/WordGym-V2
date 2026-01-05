@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { LazyWordCard } from "../cards/LazyWordCard";
 import { useCurrentTab } from "../../hooks/useCurrentTab";
 import { useTabFilters } from "../../hooks/useTabFilters";
@@ -59,6 +59,18 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
 
   // Show message only if truly no settings
   const isSettingsMissing = !userSettings?.stage || !userSettings?.version;
+
+  const filteredWords = useMemo(() => {
+    if (isSettingsMissing) return [];
+    return filterWords(words, userSettings, currentTab, filters, quickFilterPos, searchTerm);
+  }, [isSettingsMissing, words, userSettings, currentTab, filters, quickFilterPos, searchTerm]);
+
+  // Auto-sync filtered word IDs to global state whenever filters change
+  React.useEffect(() => {
+    const wordIds = filteredWords.map((word) => word.id);
+    setFilteredWordIds(wordIds);
+  }, [filteredWords, setFilteredWordIds]);
+
   if (isSettingsMissing) {
     return (
       <div className="text-center py-12">
@@ -66,21 +78,6 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
       </div>
     );
   }
-
-  const filteredWords = filterWords(
-    words,
-    userSettings,
-    currentTab,
-    filters,
-    quickFilterPos,
-    searchTerm,
-  );
-
-  // Auto-sync filtered word IDs to global state whenever filters change
-  React.useEffect(() => {
-    const wordIds = filteredWords.map((word) => word.id);
-    setFilteredWordIds(wordIds);
-  }, [filteredWords, setFilteredWordIds]);
 
   const handleTestRange = () => {
     const wordIds = filteredWords.map((word) => word.id).join(",");
