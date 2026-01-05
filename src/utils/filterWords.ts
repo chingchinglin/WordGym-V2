@@ -13,7 +13,9 @@ export function filterWords(
     // Stage filter - only apply for textbook and exam tabs
     // Level (theme tab for senior) data is independent of stage
     if (currentTab !== "theme") {
-      const normalizedWordStage = VersionService.normalizeStage(word.stage || "");
+      const normalizedWordStage = VersionService.normalizeStage(
+        word.stage || "",
+      );
       const normalizedUserStage = VersionService.normalizeStage(
         userSettings.stage || "",
       );
