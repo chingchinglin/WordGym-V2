@@ -10,12 +10,15 @@ export function filterWords(
   searchTerm: string,
 ): VocabularyWord[] {
   const filtered = words.filter((word) => {
-    // Stage filter - normalize both sides for comparison
-    const normalizedWordStage = VersionService.normalizeStage(word.stage || "");
-    const normalizedUserStage = VersionService.normalizeStage(
-      userSettings.stage || "",
-    );
-    if (normalizedWordStage !== normalizedUserStage) return false;
+    // Stage filter - only apply for textbook and exam tabs
+    // Level (theme tab for senior) data is independent of stage
+    if (currentTab !== "theme") {
+      const normalizedWordStage = VersionService.normalizeStage(word.stage || "");
+      const normalizedUserStage = VersionService.normalizeStage(
+        userSettings.stage || "",
+      );
+      if (normalizedWordStage !== normalizedUserStage) return false;
+    }
 
     // Tab-specific filters
     switch (currentTab) {

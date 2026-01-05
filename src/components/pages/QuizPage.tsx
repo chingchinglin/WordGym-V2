@@ -97,13 +97,14 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
       <div className="min-h-screen bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 pt-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Text content on left */}
-              <div className="flex-1 text-left">
+            {/* Vertical center aligned flex container */}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+              {/* Text content on left with increased padding */}
+              <div className="flex-1 text-left pl-4 md:pl-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                   實力驗收（0）
                 </h2>
-                <p className="text-gray-600 mb-6 leading-relaxed">
+                <p className="text-gray-600 mb-8 leading-relaxed">
                   你還沒有選擇挑戰範圍喔！
                   <br />
                   請先在「單字卡」熟悉內容，累積足夠實力後再來這裡進行挑戰！
@@ -116,12 +117,15 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
                 </button>
               </div>
 
-              {/* Image on right */}
+              {/* Image on right with eager loading */}
               <div className="flex-1">
                 <img
                   src="https://github.com/user-attachments/assets/e05d58f4-64fb-4fa7-89ea-65aaabdcc804"
                   alt="健身男孩插圖"
                   className="w-full max-w-md mx-auto"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                 />
               </div>
             </div>

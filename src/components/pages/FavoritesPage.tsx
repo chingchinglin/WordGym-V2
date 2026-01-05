@@ -57,13 +57,14 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
         {/* Word cards */}
         {favoriteWords.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Text content on left */}
-              <div className="flex-1 text-left">
+            {/* Vertical center aligned flex container */}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+              {/* Text content on left with increased padding */}
+              <div className="flex-1 text-left pl-4 md:pl-8">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                   重點訓練（0）
                 </h2>
-                <p className="text-gray-600 mb-6 leading-relaxed">
+                <p className="text-gray-600 mb-8 leading-relaxed">
                   目前沒有加入重點訓練的單字喔！
                   <br />
                   請在「單字卡區」收藏不熟的單字，我們就會為你自動匯入，幫助你精準複習！
@@ -76,12 +77,15 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                 </button>
               </div>
 
-              {/* Image on right */}
+              {/* Image on right with eager loading */}
               <div className="flex-1">
                 <img
                   src="https://github.com/user-attachments/assets/22a99160-2944-4600-b8c5-a1152624fb5c"
                   alt="背單字女孩插圖"
                   className="w-full max-w-md mx-auto"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                 />
               </div>
             </div>
