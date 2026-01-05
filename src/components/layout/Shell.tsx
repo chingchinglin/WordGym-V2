@@ -472,8 +472,8 @@ export const Shell: React.FC<ShellProps> = ({
                   className="text-indigo-600 hover:underline"
                 >
                   均一教育平台
-                </a>
-                {" "}|{" "}
+                </a>{" "}
+                |{" "}
                 <a
                   href="https://forms.gle/dM8VbrzUDd5pr1y49"
                   target="_blank"
