@@ -57,25 +57,32 @@ MUST wait for explicit user command before any git commit or push operations.
 5. **"Fixes #N" in feature branch** - Only use "Related to #N"
 6. **🚨 Close Issue without client confirmation** - NEVER close issues until client says "測試通過"
 
-## 🚨 Issue Closure Policy - CRITICAL (2026-01-06 Lesson)
+## 🚨 Issue Closure Policy - CRITICAL
 
-> **沒有案主說「測試通過」= Issue 不能關閉**
+> **AI 不能主動關閉 Issue。只有案主確認後，Issue 才能關閉。**
 
-**教訓記錄**:
-- 2026-01-06 錯誤關閉 14 個 Issue
-- 原因：AI 太急著完成，沒等案主確認
-- 後果：全部需要重新開啟
+### 關閉條件判斷表
 
-**絕對規則**:
-- ❌ AI 認為修好了 → 不能關閉
-- ❌ 代碼能編譯 → 不能關閉
-- ❌ Chrome 看起來正確 → 不能關閉
-- ✅ 案主說「測試通過」→ 才能關閉
+| 完成項目 | 可以關閉 Issue？ |
+|----------|------------------|
+| 代碼已實現 | ❌ |
+| 測試通過 | ❌ |
+| PR 已合併 | ❌ |
+| 已部署 | ❌ |
+| Chrome 驗證通過 | ❌ |
+| **案主說「測試通過」** | ✅ |
 
-**正確流程**:
+### 正確流程
+
 ```
-修復 → 推送 → 留言說明 → 標記 needs-testing → 【等待案主】→ 案主確認 → 關閉
+修復 → 推送 → 留言說明 → 標記 needs-testing → 【強制等待案主】→ 案主確認 → 關閉
 ```
+
+### 為什麼？
+
+- AI 無法代替案主判斷業務需求是否滿足
+- 案主是最終驗收者
+- 防止過早關閉導致案主困惑
 
 **寧可多等，不可錯關！**
 
