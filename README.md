@@ -1,6 +1,57 @@
 # WordGym-students-merge
 國高中英文單字學習網站
 
+## 部署方式
+
+### 自動部署
+
+每次 push 到 main 分支會自動觸發：
+
+| 部署目標 | 狀態 | 說明 |
+|----------|------|------|
+| GitHub Pages | ✅ 自動 | https://youngger9765.github.io/WordGym-students-merge/ |
+| GitHub Release | ✅ 自動 | 每次 push 更新 `latest` release |
+| dist 分支 | ✅ 自動 | 最新 build 檔案 |
+| GCS Bucket | ⏳ 需設定 | 需設定 `GCS_SA_KEY` secret |
+
+### 手動部署到 GCS
+
+#### Step 1: 下載 dist 檔案
+
+**方式 A - Release 下載 (推薦)**
+1. 到 [Releases 頁面](https://github.com/Youngger9765/WordGym-students-merge/releases/tag/latest)
+2. 下載 `wordgym-dist.zip`
+3. 解壓縮
+
+**方式 B - dist 分支下載**
+1. 到 [dist 分支](https://github.com/Youngger9765/WordGym-students-merge/tree/dist)
+2. 點 Code → Download ZIP
+3. 解壓縮
+
+#### Step 2: 上傳到 GCS
+
+1. 開啟 [GCS Console](https://console.cloud.google.com/storage/browser)
+2. 進入 bucket: `jutor-event-di1dzdgl64`
+3. 進入路徑: `event/wordgym/`
+4. 上傳解壓後的檔案 (index.html + images/)
+
+#### Step 3: 驗證
+
+訪問 GCS 上的網址確認更新成功
+
+### 啟用 GCS 自動部署
+
+如需每次 push 自動同步到 GCS：
+
+1. 建立 GCS Service Account Key（需有 `jutor-event-di1dzdgl64` bucket 寫入權限）
+2. 到 GitHub Repository → Settings → Secrets and variables → Actions
+3. 新增 Secret: `GCS_SA_KEY`
+4. 將 Service Account Key JSON 內容貼上
+
+設定完成後，每次 push 會自動部署到 GCS。
+
+---
+
 ## Quick Start
 
 ### Development
