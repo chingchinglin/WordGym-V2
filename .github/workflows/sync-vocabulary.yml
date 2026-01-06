@@ -1,0 +1,77 @@
+name: Sync Vocabulary from Google Sheets
+
+on:
+  # Manual trigger - click button in GitHub Actions
+  workflow_dispatch:
+
+  # Scheduled - runs daily at 3:00 AM Taiwan time (UTC+8 = 19:00 UTC previous day)
+  schedule:
+    - cron: '0 19 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download CSV from Google Sheets
+        run: |
+          echo "Downloading vocabulary CSV from Google Sheets..."
+          curl -L "${{ secrets.GOOGLE_SHEETS_CSV_URL }}" -o vocabulary.csv
+
+          # Verify download succeeded
+          if [ ! -s vocabulary.csv ]; then
+            echo "❌ Failed to download CSV or file is empty"
+            exit 1
+          fi
+
+          echo "✅ CSV downloaded successfully"
+          head -5 vocabulary.csv
+
+      - name: Convert CSV to JSON
+        run: |
+          echo "Converting CSV to JSON..."
+          python scripts/csv_to_json.py vocabulary.csv src/data/vocabulary.json
+
+          echo "✅ Conversion complete"
+          echo "📊 Word count: $(grep -c '"english_word"' src/data/vocabulary.json || echo 0)"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet src/data/vocabulary.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          git add src/data/vocabulary.json
+          git commit -m "chore: auto-sync vocabulary data from Google Sheets
+
+          🤖 Automated sync via GitHub Actions
+          Triggered: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+          git push
+
+      - name: No changes detected
+        if: steps.changes.outputs.changed != 'true'
+        run: |
+          echo "ℹ️ No changes detected in vocabulary data"
+          echo "Skipping commit and push"
+
+      - name: Cleanup
+        run: rm -f vocabulary.csv
