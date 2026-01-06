@@ -55,6 +55,29 @@ MUST wait for explicit user command before any git commit or push operations.
 3. **Hasty completion** - Must complete comprehensive testing
 4. **Direct main commits** - Must use feature branches
 5. **"Fixes #N" in feature branch** - Only use "Related to #N"
+6. **🚨 Close Issue without client confirmation** - NEVER close issues until client says "測試通過"
+
+## 🚨 Issue Closure Policy - CRITICAL (2026-01-06 Lesson)
+
+> **沒有案主說「測試通過」= Issue 不能關閉**
+
+**教訓記錄**:
+- 2026-01-06 錯誤關閉 14 個 Issue
+- 原因：AI 太急著完成，沒等案主確認
+- 後果：全部需要重新開啟
+
+**絕對規則**:
+- ❌ AI 認為修好了 → 不能關閉
+- ❌ 代碼能編譯 → 不能關閉
+- ❌ Chrome 看起來正確 → 不能關閉
+- ✅ 案主說「測試通過」→ 才能關閉
+
+**正確流程**:
+```
+修復 → 推送 → 留言說明 → 標記 needs-testing → 【等待案主】→ 案主確認 → 關閉
+```
+
+**寧可多等，不可錯關！**
 
 ## Operation Priority Rules
 
