@@ -1,0 +1,53 @@
+name: Auto Release Latest
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+
+      - name: Create ZIP
+        run: |
+          cd dist
+          zip -r ../wordgym-dist.zip .
+          cd ..
+
+      - name: Update Latest Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Build"
+          body: |
+            🚀 **自動更新的最新版本**
+
+            此 Release 會在每次 push 到 main 後自動更新。
+
+            📦 **下載方式：**
+            下載 `wordgym-dist.zip`，解壓後上傳到 GCS。
+
+            📅 **更新時間：** ${{ github.event.head_commit.timestamp }}
+            📝 **Commit：** ${{ github.sha }}
+          files: wordgym-dist.zip
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
