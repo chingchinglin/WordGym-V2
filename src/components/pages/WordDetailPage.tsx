@@ -432,19 +432,19 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             <h2 className="text-xl font-bold text-gray-900">
               例句（{originalExampleCount + userExamples.length}）
             </h2>
-            {canAddMore && (
+            {canAddMore && !showAddExample && (
               <button
-                onClick={() => setShowAddExample(!showAddExample)}
-                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition"
+                onClick={() => setShowAddExample(true)}
+                className="px-3 py-1 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center gap-1"
               >
-                {showAddExample ? "取消" : "新增例句"}
+                新增例句
               </button>
             )}
           </div>
 
           {/* Add example form */}
           {showAddExample && (
-            <div className="mb-4 p-4 rounded-lg bg-purple-50 border border-purple-200">
+            <div className="mb-4 p-4 rounded-lg bg-gray-50 border border-gray-200">
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -455,7 +455,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     value={newExampleEn}
                     onChange={(e) => setNewExampleEn(e.target.value)}
                     placeholder="輸入英文例句..."
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
@@ -467,7 +467,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     value={newExampleZh}
                     onChange={(e) => setNewExampleZh(e.target.value)}
                     placeholder="輸入中文翻譯..."
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -479,7 +479,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                   </button>
                   <button
                     onClick={handleAddExample}
-                    className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition"
+                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition"
                   >
                     儲存
                   </button>
@@ -492,24 +492,28 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
           <div className="space-y-4">
             {/* Original example 1 */}
             {word.example_sentence && (
-              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                <p className="text-gray-900 mb-2">{word.example_sentence}</p>
+              <div className="pl-4 border-l-4 border-indigo-400">
+                <div className="text-xl font-bold text-gray-800 leading-snug">
+                  {word.example_sentence}
+                </div>
                 {word.example_translation && (
-                  <p className="text-gray-600 text-sm">
+                  <div className="text-sm text-gray-400 mt-2">
                     {word.example_translation}
-                  </p>
+                  </div>
                 )}
               </div>
             )}
 
             {/* Original example 2 */}
             {word.example_sentence_2 && (
-              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                <p className="text-gray-900 mb-2">{word.example_sentence_2}</p>
+              <div className="pl-4 border-l-4 border-indigo-400">
+                <div className="text-xl font-bold text-gray-800 leading-snug">
+                  {word.example_sentence_2}
+                </div>
                 {word.example_translation_2 && (
-                  <p className="text-gray-600 text-sm">
+                  <div className="text-sm text-gray-400 mt-2">
                     {word.example_translation_2}
-                  </p>
+                  </div>
                 )}
               </div>
             )}
@@ -518,38 +522,42 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             {userExamples.map((example, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-lg bg-purple-50 border border-purple-200 relative"
+                className="pl-4 border-l-4 border-purple-400 relative"
               >
-                <button
-                  onClick={() => handleDeleteExample(idx)}
-                  className="absolute top-2 right-2 p-1 rounded-full hover:bg-purple-200 text-purple-600 transition"
-                  title="刪除例句"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="flex items-start gap-2">
+                  <div className="flex flex-col flex-1">
+                    {example.sentence && (
+                      <div className="text-xl font-bold text-gray-800 leading-snug">
+                        {example.sentence}
+                      </div>
+                    )}
+                    {example.translation && (
+                      <div className="text-sm text-gray-400 mt-2">
+                        {example.translation}
+                      </div>
+                    )}
+                    <div className="text-xs text-purple-500 mt-1">自訂例句</div>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteExample(idx)}
+                    className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition flex-shrink-0"
+                    title="刪除例句"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-                <div className="pr-8">
-                  {example.sentence && (
-                    <p className="text-gray-900 mb-2">{example.sentence}</p>
-                  )}
-                  {example.translation && (
-                    <p className="text-gray-600 text-sm">
-                      {example.translation}
-                    </p>
-                  )}
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                <div className="mt-2 text-xs text-purple-500">自訂例句</div>
               </div>
             ))}
 
