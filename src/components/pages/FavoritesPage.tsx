@@ -154,12 +154,27 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                         </span>
                       )}
                     </div>
-                    <button
-                      onClick={() => handleRemoveWord(word.id)}
-                      className="mt-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition"
-                    >
-                      移除
-                    </button>
+                    {/* Chinese translation - Issue #52 */}
+                    {word.chinese_definition && (
+                      <p className="text-sm text-gray-600">
+                        {word.chinese_definition}
+                      </p>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      {/* Link to word card - Issue #53 */}
+                      <button
+                        onClick={() => (window.location.hash = `#/word/${word.id}`)}
+                        className="flex-1 px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-sm font-medium transition"
+                      >
+                        查看單字卡
+                      </button>
+                      <button
+                        onClick={() => handleRemoveWord(word.id)}
+                        className="flex-1 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition"
+                      >
+                        移除
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

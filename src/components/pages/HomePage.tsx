@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { LazyWordCard } from "../cards/LazyWordCard";
 import { useCurrentTab } from "../../hooks/useCurrentTab";
 import { useTabFilters } from "../../hooks/useTabFilters";
@@ -40,11 +40,27 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Reset to '課本進度' tab when stage or version changes
+  // Track previous stage/version to detect actual changes (not just mounts)
+  const prevSettingsRef = useRef<{ stage?: string; version?: string }>({});
+
+  // Reset to '課本進度' tab ONLY when stage or version actually CHANGES
+  // This prevents resetting tab when navigating back from word detail page
   React.useEffect(() => {
-    if (userSettings?.stage && userSettings?.version) {
+    const prevStage = prevSettingsRef.current.stage;
+    const prevVersion = prevSettingsRef.current.version;
+    const currStage = userSettings?.stage;
+    const currVersion = userSettings?.version;
+
+    // Only reset if there's an actual change (not on initial mount or navigation back)
+    const stageChanged = prevStage !== undefined && prevStage !== currStage;
+    const versionChanged = prevVersion !== undefined && prevVersion !== currVersion;
+
+    if (stageChanged || versionChanged) {
       setCurrentTab("textbook");
     }
+
+    // Update the ref for next comparison
+    prevSettingsRef.current = { stage: currStage, version: currVersion };
   }, [userSettings?.stage, userSettings?.version, setCurrentTab]);
 
   // Clear search term and POS filter when switching tabs

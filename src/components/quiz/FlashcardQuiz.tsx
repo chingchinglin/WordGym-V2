@@ -84,8 +84,8 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    // Always limit to 5 cards, but randomly sampled from the pool
-    return shuffled.slice(0, Math.min(5, shuffled.length));
+    // Use all cards from the pool (no longer limited to 5)
+    return shuffled;
   }, [pool]);
 
   const [idx, setIdx] = useState(0);
