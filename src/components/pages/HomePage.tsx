@@ -19,6 +19,12 @@ const TABS = {
   theme: "主題探索",
 };
 
+const TAB_TOOLTIPS: Record<string, string> = {
+  textbook: "收錄各版本教科書單字，請選擇冊次與課次",
+  exam: "針對歷年會考、學測高頻核心單字進行特訓，請選擇練習目標",
+  theme: "依據 Level 程度 或 情境學習，請選擇感興趣的分類開始探索",
+};
+
 interface HomePageProps {
   words: VocabularyWord[];
   userSettings: UserSettings | null; // Added userSettings prop
@@ -125,6 +131,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
           <button
             key={key}
             onClick={() => setCurrentTab(key as "textbook" | "exam" | "theme")}
+            title={TAB_TOOLTIPS[key]}
             className={`flex-1 sm:flex-none text-lg font-bold px-6 py-3 rounded-full border transition-all duration-200 min-h-[52px] ${
               currentTab === key
                 ? "bg-[#5A4FCF] text-white border-transparent shadow-[0_4px_6px_rgba(90,79,207,0.3)]"

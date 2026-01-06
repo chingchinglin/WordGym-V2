@@ -289,7 +289,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
       >
         <div className="flashcard-inner h-[300px] md:h-[320px]">
           <div className="flashcard-front">
-            <div className="rounded-2xl border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-white p-8 shadow-lg h-full flex flex-col items-center justify-center">
+            <div className="rounded-2xl border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-white p-8 shadow-lg h-full w-full flex flex-col items-center justify-center">
               <div className="text-xs text-gray-500 mb-4">點擊卡片翻面</div>
               <div className="flex items-center justify-center gap-2 mb-4">
                 <div className="text-3xl md:text-4xl font-bold text-center">
