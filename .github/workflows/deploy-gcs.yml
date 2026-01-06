@@ -1,0 +1,65 @@
+name: Deploy to GCS Bucket
+
+on:
+  # Option C: 自動觸發 (push to main)
+  push:
+    branches: [main]
+  # Option C: 手動觸發
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '確認部署到 GCS'
+        required: true
+        default: 'yes'
+
+concurrency:
+  group: "gcs-deploy"
+  cancel-in-progress: false
+
+jobs:
+  deploy-to-gcs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCS_SA_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to GCS Bucket
+        run: |
+          # 上傳 dist 內容到 GCS
+          gsutil -m rsync -r -d ./dist gs://jutor-event-di1dzdgl64/event/wordgym
+
+          # 設定 Cache-Control（HTML 不快取，其他資源快取 1 天）
+          gsutil -m setmeta -h "Cache-Control:no-cache, no-store, must-revalidate" \
+            "gs://jutor-event-di1dzdgl64/event/wordgym/*.html"
+          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" \
+            "gs://jutor-event-di1dzdgl64/event/wordgym/assets/*"
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 GCS 部署完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bucket**: jutor-event-di1dzdgl64" >> $GITHUB_STEP_SUMMARY
+          echo "- **路徑**: event/wordgym" >> $GITHUB_STEP_SUMMARY
+          echo "- **觸發方式**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
