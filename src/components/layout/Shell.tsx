@@ -416,14 +416,18 @@ export const Shell: React.FC<ShellProps> = ({
                       <p>
                         如果遇到下拉選單沒有選項、資料顯示不正確等問題，可能是快取資料導致的。
                       </p>
-                      <a
-                        href="/clear-cache.html"
+                      <button
+                        onClick={() => {
+                          if (confirm("確定要清除快取並重新載入嗎？這會清除您的設定和歷史記錄。")) {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.reload();
+                          }
+                        }}
                         className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
-                        target="_blank"
-                        rel="noopener noreferrer"
                       >
                         清除快取重新載入
-                      </a>
+                      </button>
                     </div>
                   </section>
 
