@@ -31,23 +31,60 @@ jobs:
           zip -r ../wordgym-dist.zip .
           cd ..
 
+      - name: Get version info
+        id: version
+        run: |
+          echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: Create Versioned Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.date }}-${{ steps.version.outputs.short_sha }}
+          name: "Build ${{ steps.version.outputs.date }} (${{ steps.version.outputs.short_sha }})"
+          body: |
+            📦 **版本資訊**
+
+            - 📅 建立時間: ${{ steps.version.outputs.timestamp }}
+            - 📝 Commit: ${{ github.sha }}
+            - 💬 訊息: ${{ github.event.head_commit.message }}
+
+            **下載方式：**
+            下載 `wordgym-dist.zip`，解壓後上傳到 GCS。
+          files: wordgym-dist.zip
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Update Latest Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: "Latest Build"
           body: |
-            🚀 **自動更新的最新版本**
+            🚀 **最新版本** (自動更新)
 
-            此 Release 會在每次 push 到 main 後自動更新。
+            - 📅 更新時間: ${{ steps.version.outputs.timestamp }}
+            - 📝 Commit: ${{ github.sha }}
+            - 🏷️ 版本: v${{ steps.version.outputs.date }}-${{ steps.version.outputs.short_sha }}
 
-            📦 **下載方式：**
+            **下載方式：**
             下載 `wordgym-dist.zip`，解壓後上傳到 GCS。
 
-            📅 **更新時間：** ${{ github.event.head_commit.timestamp }}
-            📝 **Commit：** ${{ github.sha }}
+            ---
+            💡 如需下載舊版本，請到 [Releases 列表](https://github.com/Youngger9765/WordGym-students-merge/releases) 查看歷史版本。
           files: wordgym-dist.zip
           prerelease: false
           make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup old releases (keep latest 10)
+        uses: dev-drprasad/delete-older-releases@v0.3.4
+        with:
+          keep_latest: 10
+          delete_tags: true
+          delete_tag_pattern: "^v[0-9]"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
