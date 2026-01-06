@@ -36,7 +36,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
 
   if (showLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-8">
+      <div className="bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 pt-6">
           {/* Loading state */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
@@ -52,7 +52,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-8">
+    <div className="bg-gray-50 pb-8">
       <div className="max-w-7xl mx-auto px-4 pt-6">
         {/* Word cards */}
         {favoriteWords.length === 0 ? (

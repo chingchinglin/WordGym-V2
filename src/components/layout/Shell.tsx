@@ -455,7 +455,7 @@ export const Shell: React.FC<ShellProps> = ({
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
-        <footer className="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-8">
+        <footer className="mt-16 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-8">
           <div className="max-w-3xl mx-auto">
             <h3 className="text-xl font-bold text-gray-800 mb-2">
               WordGym 單字健身坊

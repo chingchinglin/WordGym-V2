@@ -279,7 +279,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
     typeof word.affix_info === "object" ? word.affix_info : null;
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-8">
+    <div className="bg-gray-50 pb-8">
       <div className="max-w-5xl mx-auto px-4 pt-6">
         {/* Top action bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">

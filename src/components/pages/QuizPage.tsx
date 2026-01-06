@@ -94,7 +94,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
 
   if (quizWords.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-8">
+      <div className="bg-gray-50 pb-8">
         <div className="max-w-7xl mx-auto px-4 pt-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             {/* Vertical center aligned flex container */}
