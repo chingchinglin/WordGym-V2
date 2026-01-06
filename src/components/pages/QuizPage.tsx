@@ -120,7 +120,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
               {/* Image on right with eager loading */}
               <div className="flex-1">
                 <img
-                  src="https://github.com/user-attachments/assets/e05d58f4-64fb-4fa7-89ea-65aaabdcc804"
+                  src="./images/quiz-boy.png"
                   alt="健身男孩插圖"
                   className="w-full max-w-md mx-auto"
                   loading="eager"

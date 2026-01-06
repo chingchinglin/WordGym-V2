@@ -80,7 +80,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
               {/* Image on right with eager loading */}
               <div className="flex-1">
                 <img
-                  src="https://github.com/user-attachments/assets/22a99160-2944-4600-b8c5-a1152624fb5c"
+                  src="./images/favorites-girl.png"
                   alt="背單字女孩插圖"
                   className="w-full max-w-md mx-auto"
                   loading="eager"
