@@ -8,6 +8,11 @@ import { useFavorites } from "../../hooks/useFavorites";
 import { useQuizHistory } from "../../hooks/useQuizHistory";
 import { useHashRoute } from "../../hooks/useHashRoute";
 
+// Clean word by removing brackets and extra info: "he (him; his)" -> "he"
+const cleanWord = (word: string): string => {
+  return word.split("(")[0].trim();
+};
+
 interface MultipleChoiceQuizProps {
   words: VocabularyWord[];
   onRestart?: () => void;
@@ -123,7 +128,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     if (shuffledPool.length === 0 || idx >= shuffledPool.length) return null;
 
     const currentWord = shuffledPool[idx];
-    const correctAnswer = currentWord.english_word;
+    const correctAnswer = cleanWord(currentWord.english_word);
     const correctPosition = correctAnswerPositions[idx];
 
     // Get current word's POS
@@ -149,15 +154,15 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     // Add random words from same POS in pool
     const shuffledSamePOS = [...samePOSInPool].sort(() => Math.random() - 0.5);
     for (let i = 0; i < Math.min(3, shuffledSamePOS.length); i++) {
-      allDistractors.push(shuffledSamePOS[i].english_word);
+      allDistractors.push(cleanWord(shuffledSamePOS[i].english_word));
     }
 
     // Step 2: If not enough, add random words from pool (any POS)
     if (allDistractors.length < 3) {
       const otherWords = pool.filter(
         (w) =>
-          w.english_word !== correctAnswer &&
-          !allDistractors.includes(w.english_word),
+          cleanWord(w.english_word) !== correctAnswer &&
+          !allDistractors.includes(cleanWord(w.english_word)),
       );
       const shuffledOthers = [...otherWords].sort(() => Math.random() - 0.5);
 
@@ -166,7 +171,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         i < Math.min(3 - allDistractors.length, shuffledOthers.length);
         i++
       ) {
-        allDistractors.push(shuffledOthers[i].english_word);
+        allDistractors.push(cleanWord(shuffledOthers[i].english_word));
       }
     }
 
