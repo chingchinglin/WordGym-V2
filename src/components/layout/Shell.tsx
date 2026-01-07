@@ -45,7 +45,7 @@ export const Shell: React.FC<ShellProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex flex-col">
       <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -418,9 +418,23 @@ export const Shell: React.FC<ShellProps> = ({
                       </p>
                       <button
                         onClick={() => {
-                          if (confirm("確定要清除快取並重新載入嗎？這會清除您的設定和歷史記錄。")) {
+                          if (confirm("確定要清除快取並重新載入嗎？這會清除歷史記錄，但會保留您的教材設定。")) {
+                            // Preserve user settings and current tab before clearing
+                            const savedSettings = localStorage.getItem("userSettings");
+                            const savedTab = localStorage.getItem("wordgym_current_tab_v1");
+
+                            // Clear all storage
                             localStorage.clear();
                             sessionStorage.clear();
+
+                            // Restore user settings and tab
+                            if (savedSettings) {
+                              localStorage.setItem("userSettings", savedSettings);
+                            }
+                            if (savedTab) {
+                              localStorage.setItem("wordgym_current_tab_v1", savedTab);
+                            }
+
                             window.location.reload();
                           }
                         }}
@@ -453,7 +467,7 @@ export const Shell: React.FC<ShellProps> = ({
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         {children}
         <footer className="mt-16 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-8">
           <div className="max-w-3xl mx-auto">

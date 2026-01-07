@@ -12,6 +12,11 @@ interface FlashcardQuizProps {
   onRestart?: () => void;
 }
 
+// Clean brackets from english_word (e.g., "he (him; his; himself)" → "he")
+const cleanWord = (word: string): string => {
+  return word.split("(")[0].trim();
+};
+
 const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
   const { favorites, addFavorite, removeFavorite } = useFavorites();
   const { add: addRecord, history } = useQuizHistory();
@@ -241,7 +246,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
   const frontText =
     mode === "en-to-zh"
-      ? currentCard.english_word
+      ? cleanWord(currentCard.english_word)
       : currentCard.chinese_definition || "(無中文翻譯)";
 
   return (
@@ -323,7 +328,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    speak(currentCard.english_word);
+                    speak(cleanWord(currentCard.english_word));
                   }}
                   className="absolute top-5 right-5 w-10 h-10 rounded-full bg-gray-50 text-indigo-600 hover:bg-indigo-50 flex items-center justify-center transition"
                   title="播放發音"
@@ -340,7 +345,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
               <div className="w-full">
                 <div className="text-3xl font-extrabold text-gray-900 tracking-tight leading-none">
-                  {currentCard.english_word}
+                  {cleanWord(currentCard.english_word)}
                 </div>
                 <div className="text-base text-gray-500 font-medium mt-2">
                   {currentCard.chinese_definition || "(無中文翻譯)"}
@@ -415,6 +420,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
           position: absolute;
           width: 100%;
           height: 100%;
+          box-sizing: border-box;
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }
