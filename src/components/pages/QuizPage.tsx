@@ -117,16 +117,19 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
                 </button>
               </div>
 
-              {/* Image on right with eager loading */}
+              {/* Image on right with eager loading - WebP for faster load */}
               <div className="flex-1">
-                <img
-                  src="./images/quiz-boy.png"
-                  alt="健身男孩插圖"
-                  className="w-full max-w-md mx-auto"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                />
+                <picture>
+                  <source srcSet="./images/quiz-boy.webp" type="image/webp" />
+                  <img
+                    src="./images/quiz-boy.png"
+                    alt="健身男孩插圖"
+                    className="w-full max-w-md mx-auto"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </picture>
               </div>
             </div>
           </div>

@@ -77,16 +77,19 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                 </button>
               </div>
 
-              {/* Image on right with eager loading */}
+              {/* Image on right with eager loading - WebP for faster load */}
               <div className="flex-1">
-                <img
-                  src="./images/favorites-girl.png"
-                  alt="背單字女孩插圖"
-                  className="w-full max-w-md mx-auto"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                />
+                <picture>
+                  <source srcSet="./images/favorites-girl.webp" type="image/webp" />
+                  <img
+                    src="./images/favorites-girl.png"
+                    alt="背單字女孩插圖"
+                    className="w-full max-w-md mx-auto"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </picture>
               </div>
             </div>
           </div>
