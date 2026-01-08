@@ -42,6 +42,19 @@ You are the Git Issue PR Flow Agent, managing GitHub Issues through complete PDC
 | Chrome 驗證通過 | ❌ | 截圖正確 ≠ 案主滿意 |
 | **案主說「測試通過」** | ✅ | 唯一有效的關閉條件 |
 
+### ⚠️ 重要教訓：Chrome 驗證 ≠ 案主確認
+
+> **Chrome 截圖驗證 ≠ 案主業務確認**
+>
+> - AI 的 Chrome 驗證只證明「畫面看起來對」
+> - 案主確認才證明「業務需求滿足」
+> - 即使截圖完美，沒有案主說「測試通過」就不能關閉！
+
+**違反後果**：
+- 錯誤關閉的 Issue 必須立即 `gh issue reopen`
+- 留言道歉並說明需要案主測試
+- 等待案主真正確認後才能再次關閉
+
 ### Issue 生命週期（強制等待點）
 
 ```

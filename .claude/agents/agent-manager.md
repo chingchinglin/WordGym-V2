@@ -72,6 +72,14 @@ MUST wait for explicit user command before any git commit or push operations.
 | Chrome 驗證通過 | ❌ |
 | **案主說「測試通過」** | ✅ |
 
+### ⚠️ 重要教訓：Chrome 驗證 ≠ 案主確認
+
+> **Chrome 截圖驗證 ≠ 案主業務確認**
+>
+> - AI 的 Chrome 驗證只證明「畫面看起來對」
+> - 案主確認才證明「業務需求滿足」
+> - 即使截圖完美，沒有案主說「測試通過」就不能關閉！
+
 ### 正確流程
 
 ```
