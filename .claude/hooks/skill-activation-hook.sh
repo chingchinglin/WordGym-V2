@@ -23,11 +23,12 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 0
 fi
 
-# Function to check if prompt contains keyword (case-insensitive)
+# Function to check if prompt contains keyword (case-insensitive, fixed-string for security)
 contains_keyword() {
     local prompt="$1"
     local keyword="$2"
-    echo "$prompt" | grep -iq "$keyword"
+    # Use -F for fixed-string matching (prevents regex injection)
+    echo "$prompt" | grep -Fiq "$keyword"
 }
 
 # Extract skill configurations and check for matches
