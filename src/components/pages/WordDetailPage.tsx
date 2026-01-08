@@ -72,17 +72,55 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
     if (!word.textbook_index || !normalizedUserStage)
       return word.textbook_index;
 
-    return word.textbook_index.filter((item) => {
-      if (normalizedUserStage === "junior") {
-        // Show only junior high textbook versions
-        return juniorVersions.includes(item.version);
-      } else if (normalizedUserStage === "senior") {
-        // Show only senior high textbook versions
-        return seniorVersions.includes(item.version);
+    // Read user's current filters from localStorage
+    let userFilters: any = null;
+    try {
+      const stored = localStorage.getItem("wordgym_filters_v1");
+      if (stored) {
+        userFilters = JSON.parse(stored);
       }
-      return true; // Show all if stage unknown
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    const selectedVol = userFilters?.textbook?.vol;
+    const selectedLessons: string[] = Array.isArray(userFilters?.textbook?.lesson)
+      ? userFilters.textbook.lesson
+      : [];
+
+    return word.textbook_index.filter((item) => {
+      // First filter by stage
+      let stageMatches = false;
+      if (normalizedUserStage === "junior") {
+        stageMatches = juniorVersions.includes(item.version);
+      } else if (normalizedUserStage === "senior") {
+        stageMatches = seniorVersions.includes(item.version);
+      } else {
+        stageMatches = true; // Show all if stage unknown
+      }
+
+      if (!stageMatches) return false;
+
+      // Then filter by user's selected textbook version
+      const normalizedItemVersion = VersionService.normalizeWithGuard(item.version);
+      const normalizedUserVersion = VersionService.normalizeWithGuard(userSettings?.version || "");
+
+      if (normalizedUserVersion && normalizedItemVersion !== normalizedUserVersion) {
+        return false; // Only show user's selected textbook version
+      }
+
+      // Finally filter by vol and lesson if selected
+      if (selectedVol && item.vol !== selectedVol) {
+        return false; // Only show selected vol
+      }
+
+      if (selectedLessons.length > 0 && !selectedLessons.includes(item.lesson)) {
+        return false; // Only show selected lessons
+      }
+
+      return true;
     });
-  }, [word.textbook_index, normalizedUserStage]);
+  }, [word.textbook_index, normalizedUserStage, userSettings?.version]);
 
   const shouldShowThemeIndex = normalizedUserStage === "junior";
   const shouldShowLevel = normalizedUserStage === "senior";
