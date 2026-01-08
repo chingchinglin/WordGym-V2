@@ -12,6 +12,19 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ./.claude/hooks/pre-issue-close-check.sh",
+            "timeout": 10,
+            "description": "Block gh issue close without client confirmation"
+          }
+        ]
+      }
     ]
   },
   "permissions": {
