@@ -39,6 +39,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   const { setFilteredWordIds } = useFilteredWordIds();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
   // Track previous stage/version to detect actual changes (not just mounts)
   const prevSettingsRef = useRef<{ stage?: string; version?: string }>({});
@@ -142,12 +143,13 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
       </div>
 
       {/* Tab Navigation - Updated styling to match original */}
-      <div className="mb-8 flex flex-wrap gap-4">
+      <div className="mb-4 flex flex-wrap gap-4">
         {Object.entries(TABS).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setCurrentTab(key as "textbook" | "exam" | "theme")}
-            title={TAB_TOOLTIPS[key]}
+            onMouseEnter={() => setHoveredTab(key)}
+            onMouseLeave={() => setHoveredTab(null)}
             className={`flex-1 sm:flex-none text-lg font-bold px-6 py-3 rounded-full border transition-all duration-200 min-h-[52px] ${
               currentTab === key
                 ? "bg-[#5A4FCF] text-white border-transparent shadow-[0_4px_6px_rgba(90,79,207,0.3)]"
@@ -157,6 +159,16 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             {label}
           </button>
         ))}
+      </div>
+
+      {/* Tooltip - shows based on hovered or active tab (Issue #55) */}
+      <div className="mb-6 h-8 flex items-center">
+        <p
+          className="text-sm text-gray-500 transition-opacity duration-150"
+          style={{ opacity: 1 }}
+        >
+          {TAB_TOOLTIPS[hoveredTab || currentTab]}
+        </p>
       </div>
 
       {/* Dynamic Filters */}
