@@ -92,6 +92,25 @@ export function getThemeDisplayLabels(word: VocabularyWord): string[] {
 }
 
 /**
+ * Format example source label for display
+ * Returns formatted string like "113 文意選填 Passage for 21-30"
+ * Returns null if no source information available
+ */
+export function formatExampleSource(word: VocabularyWord): string | null {
+  const { year_1, part_1, source_1 } = word;
+
+  // If all fields are empty, return null
+  if (!year_1 && !part_1 && !source_1) {
+    return null;
+  }
+
+  // Combine non-empty parts with spaces
+  const parts = [year_1, part_1, source_1].filter((part) => part && part.trim());
+
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
+/**
  * Convert word to Markdown format for export
  * Migrated from index.html lines 322-413
  */

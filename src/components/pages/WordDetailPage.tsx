@@ -4,6 +4,7 @@ import { useSpeech } from "../../hooks/useSpeech";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useUserExamples } from "../../hooks/useUserExamples";
 import { VersionService } from "../../services/VersionService";
+import { formatExampleSource } from "../../utils/wordUtils";
 import SpeakerButton from "../ui/SpeakerButton";
 
 interface WordDetailPageProps {
@@ -501,6 +502,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     {word.example_translation}
                   </div>
                 )}
+                <div className="text-xs text-indigo-600 mt-1">基礎例句</div>
               </div>
             )}
 
@@ -515,6 +517,12 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     {word.example_translation_2}
                   </div>
                 )}
+                {(() => {
+                  const source = formatExampleSource(word);
+                  return source ? (
+                    <div className="text-xs text-indigo-600 mt-1">{source}</div>
+                  ) : null;
+                })()}
               </div>
             )}
 
