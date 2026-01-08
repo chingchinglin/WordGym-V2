@@ -7,8 +7,8 @@ set -e
 # Read tool use data from stdin
 TOOL_DATA=$(cat)
 
-# Extract file path from tool output
-FILE_PATH=$(echo "$TOOL_DATA" | grep -oP '(?<=file_path["\s:]+)[^"]+\.(tsx?|jsx?|css)' | head -1 || true)
+# Extract file path from tool output (macOS compatible)
+FILE_PATH=$(echo "$TOOL_DATA" | grep -oE '[^"[:space:]]+\.(tsx?|jsx?|css)' | head -1 || true)
 
 # Skip if no matching file
 if [ -z "$FILE_PATH" ] || [ ! -f "$FILE_PATH" ]; then
