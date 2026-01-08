@@ -420,7 +420,7 @@ export const Shell: React.FC<ShellProps> = ({
                         onClick={() => {
                           if (confirm("確定要清除快取並重新載入嗎？這會清除歷史記錄，但會保留您的教材設定。")) {
                             // Preserve user settings and current tab before clearing
-                            const savedSettings = localStorage.getItem("userSettings");
+                            const savedSettings = localStorage.getItem("wordgym_user_settings_v1");
                             const savedTab = localStorage.getItem("wordgym_current_tab_v1");
 
                             // Clear all storage
@@ -429,7 +429,7 @@ export const Shell: React.FC<ShellProps> = ({
 
                             // Restore user settings and tab
                             if (savedSettings) {
-                              localStorage.setItem("userSettings", savedSettings);
+                              localStorage.setItem("wordgym_user_settings_v1", savedSettings);
                             }
                             if (savedTab) {
                               localStorage.setItem("wordgym_current_tab_v1", savedTab);
