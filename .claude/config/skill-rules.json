@@ -128,6 +128,26 @@
       "force_activation": true,
       "priority": "critical",
       "activation_message": "✅ AUTO-CLOSE DETECTED: Case owner approval found. Auto-closing issue and triggering cleanup workflow..."
+    },
+    "verification-before-completion": {
+      "description": "Force verification BEFORE claiming completion - no claims without evidence",
+      "keywords": [
+        "完成",
+        "done",
+        "fixed",
+        "修好了",
+        "已修復",
+        "commit",
+        "PR",
+        "關閉 issue",
+        "close issue",
+        "完工",
+        "搞定",
+        "成功"
+      ],
+      "force_activation": true,
+      "priority": "critical",
+      "activation_message": "🛑 VERIFICATION REQUIRED: Before claiming completion, you MUST provide evidence (build output, Chrome screenshot, test results)"
     }
   },
   "agents": {
