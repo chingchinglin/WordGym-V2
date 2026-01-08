@@ -166,25 +166,35 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           實力驗收
         </h1>
-        <p className="text-center text-gray-600 mb-8">
+        <p className="text-center text-gray-600 mb-4">
           你已選擇練習{" "}
           <span className="font-bold text-indigo-600">{quizWords.length}</span>{" "}
           題
         </p>
 
+        {/* Warning when less than 5 questions */}
+        {quizWords.length > 0 && quizWords.length < 5 && (
+          <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">提醒：</span>建議累積至少 5
+              題再進行測驗，以確保測驗選項充足（目前 {quizWords.length} 題）
+            </p>
+          </div>
+        )}
+
         <div className="space-y-4">
           {/* Multiple Choice Button */}
           <button
             onClick={handleStartMultipleChoice}
-            disabled={validQuizWords.length === 0}
+            disabled={validQuizWords.length === 0 || quizWords.length < 5}
             className={`w-full py-6 px-6 rounded-2xl text-white font-bold text-xl transition shadow-lg ${
-              validQuizWords.length === 0
+              validQuizWords.length === 0 || quizWords.length < 5
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-xl"
             }`}
           >
             選擇題
-            {validQuizWords.length === 0 && (
+            {validQuizWords.length === 0 && quizWords.length >= 5 && (
               <span className="block text-sm font-normal mt-1">
                 （需要有例句的單字）
               </span>
@@ -194,7 +204,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           {/* Flashcard Button */}
           <button
             onClick={handleStartFlashcard}
-            className="w-full py-6 px-6 rounded-2xl bg-white border-2 border-indigo-600 text-indigo-600 font-bold text-xl hover:bg-indigo-50 transition shadow-md hover:shadow-lg"
+            disabled={quizWords.length < 5}
+            className={`w-full py-6 px-6 rounded-2xl font-bold text-xl transition shadow-md hover:shadow-lg ${
+              quizWords.length < 5
+                ? "bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed"
+                : "bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+            }`}
           >
             閃卡
           </button>
