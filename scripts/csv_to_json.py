@@ -3,6 +3,39 @@ import json
 import sys
 import re
 
+# Publisher to education stage mapping
+# 出版商 → 教育階段映射
+PUBLISHER_TO_STAGE = {
+    '康軒': '國中',
+    '翰林': '國中',
+    '南一': '國中',
+    '龍騰': '高中',
+    '三民': '高中',
+    '遠東': '高中',
+}
+
+def normalize_stage(stage_value):
+    """
+    Normalize stage value to education level (國中/高中).
+    If the value is a publisher name, map it to the corresponding education level.
+    If already 國中/高中, return as-is.
+    """
+    if not stage_value or stage_value.strip() == '':
+        return ''
+
+    stage_value = stage_value.strip()
+
+    # If already education level, return as-is
+    if stage_value in ['國中', '高中']:
+        return stage_value
+
+    # Try to map publisher to education level
+    if stage_value in PUBLISHER_TO_STAGE:
+        return PUBLISHER_TO_STAGE[stage_value]
+
+    # Unknown value, return as-is (will need manual review)
+    return stage_value
+
 def parse_array_field(value, delimiter=';'):
     """
     Parse a field that might be a comma or semicolon-separated array
@@ -410,6 +443,9 @@ def csv_to_json(csv_path, json_path):
                 elif key == 'english_word' or mapped_key == 'english_word':
                     # Clean POS annotations from english_word at source
                     processed_row['english_word'] = clean_english_word(value)
+                elif key == 'stage' or mapped_key == 'stage':
+                    # Normalize stage: convert publisher names to education level
+                    processed_row['stage'] = normalize_stage(value)
                 else:
                     # For other fields, use mapped key
                     if mapped_key in processed_row:
