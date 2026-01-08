@@ -1,6 +1,19 @@
 import React from "react";
-import { VocabularyWord, POS_LABEL, POSType } from "../../types";
+import { VocabularyWord, POSType } from "../../types";
 import { useFavorites } from "../../hooks/useFavorites";
+
+// English POS abbreviations to match word card format
+const POS_ABBREV: Record<POSType, string> = {
+  noun: "n.",
+  verb: "v.",
+  adjective: "adj.",
+  adverb: "adv.",
+  preposition: "prep.",
+  conjunction: "conj.",
+  interjection: "interj.",
+  pronoun: "pron.",
+  other: "",
+};
 
 interface FavoritesPageProps {
   words: VocabularyWord[];
@@ -138,31 +151,23 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                   className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition"
                 >
                   <div className="flex flex-col gap-2">
+                    {/* Line 1: English word */}
                     <h3 className="text-xl font-bold text-gray-900">
                       {word.english_word}
                     </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {word.posTags && word.posTags.length > 0 ? (
-                        word.posTags.map((pos, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600"
-                          >
-                            {POS_LABEL[pos as POSType] || pos}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                          other
+                    {/* Line 2: POS abbreviation (English) + Chinese definition - Issue #52 */}
+                    <p className="text-sm text-gray-600">
+                      {word.posTags && word.posTags.length > 0 && (
+                        <span className="text-gray-500">
+                          {word.posTags
+                            .map((pos) => POS_ABBREV[pos as POSType] || pos)
+                            .filter(Boolean)
+                            .join(" ")}
+                          {" "}
                         </span>
                       )}
-                    </div>
-                    {/* Chinese translation - Issue #52 */}
-                    {word.chinese_definition && (
-                      <p className="text-sm text-gray-600">
-                        {word.chinese_definition}
-                      </p>
-                    )}
+                      {word.chinese_definition}
+                    </p>
                     <div className="flex gap-2 mt-2">
                       {/* Link to word card - Issue #53 */}
                       <button
