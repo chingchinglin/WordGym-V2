@@ -44,6 +44,9 @@ export interface VocabularyWord {
   example_sentence_2?: string;
   example_translation?: string;
   example_translation_2?: string;
+  year_1?: string; // Source year for example_sentence_2
+  part_1?: string; // Source part for example_sentence_2
+  source_1?: string; // Source description for example_sentence_2
 
   // Video URL (YouTube video ID)
   videoUrl?: string;

@@ -11,6 +11,75 @@ const getBaseWord = (word: string): string => {
   return word.split("(")[0].trim();
 };
 
+// Common irregular verb forms mapping
+const IRREGULAR_VERBS: Record<string, string[]> = {
+  become: ["became", "becoming"],
+  begin: ["began", "begun", "beginning"],
+  find: ["found", "finding"],
+  hide: ["hid", "hidden", "hiding"],
+  light: ["lit", "lighted", "lighting"],
+  write: ["wrote", "written", "writing"],
+  speak: ["spoke", "spoken", "speaking"],
+  break: ["broke", "broken", "breaking"],
+  choose: ["chose", "chosen", "choosing"],
+  drive: ["drove", "driven", "driving"],
+  eat: ["ate", "eaten", "eating"],
+  fall: ["fell", "fallen", "falling"],
+  give: ["gave", "given", "giving"],
+  know: ["knew", "known", "knowing"],
+  ride: ["rode", "ridden", "riding"],
+  see: ["saw", "seen", "seeing"],
+  take: ["took", "taken", "taking"],
+  go: ["went", "gone", "going"],
+  do: ["did", "done", "doing"],
+  have: ["had", "having"],
+  make: ["made", "making"],
+  come: ["came", "coming"],
+  run: ["ran", "running"],
+  sit: ["sat", "sitting"],
+  stand: ["stood", "standing"],
+  understand: ["understood", "understanding"],
+  teach: ["taught", "teaching"],
+  catch: ["caught", "catching"],
+  bring: ["brought", "bringing"],
+  buy: ["bought", "buying"],
+  think: ["thought", "thinking"],
+  fight: ["fought", "fighting"],
+  seek: ["sought", "seeking"],
+  feel: ["felt", "feeling"],
+  keep: ["kept", "keeping"],
+  leave: ["left", "leaving"],
+  lose: ["lost", "losing"],
+  meet: ["met", "meeting"],
+  pay: ["paid", "paying"],
+  say: ["said", "saying"],
+  sell: ["sold", "selling"],
+  send: ["sent", "sending"],
+  spend: ["spent", "spending"],
+  tell: ["told", "telling"],
+  win: ["won", "winning"],
+  build: ["built", "building"],
+  hear: ["heard", "hearing"],
+  hold: ["held", "holding"],
+  read: ["read", "reading"],
+  sleep: ["slept", "sleeping"],
+  wear: ["wore", "worn", "wearing"],
+  bear: ["bore", "born", "bearing"],
+  tear: ["tore", "torn", "tearing"],
+  swim: ["swam", "swum", "swimming"],
+  sing: ["sang", "sung", "singing"],
+  drink: ["drank", "drunk", "drinking"],
+  ring: ["rang", "rung", "ringing"],
+  sink: ["sank", "sunk", "sinking"],
+  spring: ["sprang", "sprung", "springing"],
+  grow: ["grew", "grown", "growing"],
+  throw: ["threw", "thrown", "throwing"],
+  blow: ["blew", "blown", "blowing"],
+  fly: ["flew", "flown", "flying"],
+  draw: ["drew", "drawn", "drawing"],
+  withdraw: ["withdrew", "withdrawn", "withdrawing"],
+};
+
 // Generate common word forms for matching
 const getWordForms = (word: string): string[] => {
   const base = getBaseWord(word).toLowerCase();
@@ -53,6 +122,58 @@ const getWordForms = (word: string): string[] => {
   forms.push(base + "er"); // fast -> faster
   forms.push(base + "est"); // fast -> fastest
   forms.push(base + "ly"); // quick -> quickly
+
+  // Word class transformations (noun <-> verb <-> adjective)
+  // arrival -> arrive, defense -> defend
+  if (base.endsWith("al")) {
+    forms.push(base.slice(0, -2) + "e"); // arrival -> arrive
+    forms.push(base.slice(0, -2)); // arrival -> arriv (will match arrive via prefix)
+  }
+  if (base.endsWith("ment")) {
+    forms.push(base.slice(0, -4)); // development -> develop
+  }
+  if (base.endsWith("tion")) {
+    forms.push(base.slice(0, -3) + "e"); // completion -> complete
+    forms.push(base.slice(0, -4)); // completion -> complet (will match)
+  }
+  if (base.endsWith("sion")) {
+    forms.push(base.slice(0, -3) + "e"); // decision -> decide
+    forms.push(base.slice(0, -4)); // decision -> decis
+  }
+  if (base.endsWith("ness")) {
+    forms.push(base.slice(0, -4)); // readiness -> readi (will match ready)
+    forms.push(base.slice(0, -4) + "y"); // readiness -> ready
+  }
+  if (base.endsWith("ence")) {
+    forms.push(base.slice(0, -3) + "t"); // difference -> different
+  }
+  if (base.endsWith("ance")) {
+    forms.push(base.slice(0, -3) + "t"); // importance -> important
+  }
+  if (base.endsWith("ly")) {
+    forms.push(base.slice(0, -2)); // readily -> readi (will match ready)
+    if (base.endsWith("ily")) {
+      forms.push(base.slice(0, -3) + "y"); // readily -> ready
+    }
+  }
+  if (base.endsWith("ing")) {
+    forms.push(base.slice(0, -3)); // defending -> defend
+    forms.push(base.slice(0, -3) + "e"); // defending -> defende
+    forms.push(base.slice(0, -3) + "ed"); // defending -> defended
+  }
+
+  // Common irregular verb forms
+  if (IRREGULAR_VERBS[base]) {
+    forms.push(...IRREGULAR_VERBS[base]);
+  }
+
+  // Also check if base is an irregular form of something
+  for (const [root, irregulars] of Object.entries(IRREGULAR_VERBS)) {
+    if (irregulars.includes(base)) {
+      forms.push(root);
+      forms.push(...irregulars);
+    }
+  }
 
   return [...new Set(forms)];
 };
