@@ -215,21 +215,30 @@ def parse_word_forms(value):
 
 def clean_english_word(word):
     """
-    Clean POS annotations and markers from english_word field
-    Removes: (adj.), (n.), (adv.), (v.), [C], [U], etc.
+    Clean POS annotations, phonetics, and markers from english_word field
+    Removes: (adj.), (n.), (vi. vt.), [phonetic], [C], [U], (him; his; himself), etc.
     Examples:
       "historic (adj.)" -> "historic"
       "appearance (n.) [C]" -> "appearance"
-      "joyous (adj.)" -> "joyous"
+      "he (him; his; himself)" -> "he"
+      "average [U, C]" -> "average"
+      "encourage [ɪn`kɝɪdʒ]vt." -> "encourage"
+      "promise (vi. vt.)" -> "promise"
     """
     if not word or word.strip() == '':
         return ''
 
     cleaned = word
-    # Remove POS annotations like (adj.), (n.), (adv.), (v.), etc.
-    cleaned = re.sub(r'\s*\([a-z\.\/]+\)\s*', ' ', cleaned)
-    # Remove countable/uncountable markers like [C], [U]
-    cleaned = re.sub(r'\s*\[[A-Z]\]\s*', ' ', cleaned)
+    # Remove phonetic transcriptions in brackets like [ɪn`kɝɪdʒ], [prɪzṇ]
+    cleaned = re.sub(r'\s*\[[^\]]*[ɪəɛæɔʌʊɝɑˏ`ṇ][^\]]*\]\s*', ' ', cleaned)
+    # Remove trailing POS like vt., vi., n., adj., adv. (not in parentheses)
+    cleaned = re.sub(r'\s*(vt\.|vi\.|n\.|adj\.|adv\.)\s*$', '', cleaned)
+    # Remove POS annotations like (adj.), (n.), (adv.), (v.), (vi. vt.), (usu. pl.)
+    cleaned = re.sub(r'\s*\([a-z\.\s\/]+\)\s*', ' ', cleaned)
+    # Remove pronoun/verb variants like (him; his; himself), (me; my; mine; myself)
+    cleaned = re.sub(r'\s*\([^)]*;\s*[^)]+\)\s*', ' ', cleaned)
+    # Remove countable/uncountable markers like [C], [U], [U, C], [C, U]
+    cleaned = re.sub(r'\s*\[[A-Z,\s]+\]\s*', ' ', cleaned)
     # Clean up extra whitespace
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
 
