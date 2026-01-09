@@ -14,27 +14,62 @@ PUBLISHER_TO_STAGE = {
     '遠東': '高中',
 }
 
-def normalize_stage(stage_value):
+def infer_stage_from_textbook(textbook_index):
+    """
+    Infer education stage from textbook_index based on publisher.
+    This is more reliable than the CSV stage column.
+
+    Args:
+        textbook_index: List of textbook entries like [{"version": "康軒", "vol": "B1", "lesson": "U1"}]
+
+    Returns:
+        '國中' or '高中' or '' if cannot determine
+    """
+    if not textbook_index or not isinstance(textbook_index, list):
+        return ''
+
+    # Check each textbook entry
+    for entry in textbook_index:
+        if isinstance(entry, dict):
+            version = entry.get('version', '')
+            if version in PUBLISHER_TO_STAGE:
+                return PUBLISHER_TO_STAGE[version]
+
+    return ''
+
+def normalize_stage(stage_value, textbook_index=None):
     """
     Normalize stage value to education level (國中/高中).
-    If the value is a publisher name, map it to the corresponding education level.
-    If already 國中/高中, return as-is.
+    Priority:
+      1. If textbook_index has publisher info, use that (most reliable)
+      2. If stage_value is already 國中/高中, use that
+      3. If stage_value is a publisher name, map it
+      4. Fallback to textbook inference if stage is invalid
     """
+    # Priority 1: If textbook_index has clear publisher info, use it
+    # This is the most reliable source
+    if textbook_index:
+        inferred = infer_stage_from_textbook(textbook_index)
+        if inferred:
+            return inferred
+
+    # If no stage value provided
     if not stage_value or stage_value.strip() == '':
         return ''
 
     stage_value = stage_value.strip()
 
-    # If already education level, return as-is
+    # Priority 2: If already education level, return as-is
     if stage_value in ['國中', '高中']:
         return stage_value
 
-    # Try to map publisher to education level
+    # Priority 3: Try to map publisher to education level
     if stage_value in PUBLISHER_TO_STAGE:
         return PUBLISHER_TO_STAGE[stage_value]
 
-    # Unknown value, return as-is (will need manual review)
-    return stage_value
+    # Priority 4: Unknown value - try textbook inference again, or return empty
+    # Don't return invalid values like "名詞", "過去式" etc.
+    return ''
 
 def parse_array_field(value, delimiter=';'):
     """
@@ -293,8 +328,18 @@ def merge_word_entries(existing, new_entry):
     # Merge affix_info
     existing['affix_info'] = merge_affix_info(existing['affix_info'], new_entry['affix_info'])
 
-    # Prefer non-empty strings
-    for key in ['stage', 'level', 'cefr', 'kk_phonetic', 'chinese_definition',
+    # Special handling for stage: recalculate from merged textbook_index
+    # This ensures publisher-based inference takes priority after merging
+    merged_textbook = existing['textbook_index']  # Already merged above
+    inferred_stage = infer_stage_from_textbook(merged_textbook)
+    if inferred_stage:
+        existing['stage'] = inferred_stage
+    else:
+        # Fallback to prefer_non_empty if no textbook info
+        existing['stage'] = prefer_non_empty(existing['stage'], new_entry['stage'])
+
+    # Prefer non-empty strings for other fields
+    for key in ['level', 'cefr', 'kk_phonetic', 'chinese_definition',
                 'example_sentence', 'example_translation', 'example_sentence_2',
                 'example_translation_2', 'example_sentence_3', 'example_translation_3',
                 'example_sentence_4', 'example_translation_4', 'example_sentence_5',
@@ -444,12 +489,17 @@ def csv_to_json(csv_path, json_path):
                     # Clean POS annotations from english_word at source
                     processed_row['english_word'] = clean_english_word(value)
                 elif key == 'stage' or mapped_key == 'stage':
-                    # Normalize stage: convert publisher names to education level
-                    processed_row['stage'] = normalize_stage(value)
+                    # Store raw stage value, will normalize after textbook_index is processed
+                    processed_row['_raw_stage'] = value
                 else:
                     # For other fields, use mapped key
                     if mapped_key in processed_row:
                         processed_row[mapped_key] = value
+
+            # Final stage normalization using textbook_index (guaranteed to be processed now)
+            # This ensures publisher-based inference takes priority over invalid CSV stage values
+            raw_stage = processed_row.pop('_raw_stage', '')
+            processed_row['stage'] = normalize_stage(raw_stage, processed_row.get('textbook_index'))
 
             # Clean up empty affix_info
             if not processed_row['affix_info']:
