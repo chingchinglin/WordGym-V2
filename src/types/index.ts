@@ -24,10 +24,12 @@ export interface VocabularyWord {
   // Grammar and linguistic details
   kk_phonetic?: string;
   posTags?: string[];
+  basic_pos?: string; // Comma-separated POS tags string
   grammar_main_category?: string;
   grammar_sub_category?: string;
   grammar_function?: string;
   applicable_sentence_pattern?: string;
+  word_forms_detail?: Array<{ pos: string; form: string }>; // Parsed word forms
   word_forms?:
     | string
     | Array<{ pos: string; details: string }>
@@ -42,8 +44,14 @@ export interface VocabularyWord {
   // Example and context information
   example_sentence?: string;
   example_sentence_2?: string;
+  example_sentence_3?: string;
+  example_sentence_4?: string;
+  example_sentence_5?: string;
   example_translation?: string;
   example_translation_2?: string;
+  example_translation_3?: string;
+  example_translation_4?: string;
+  example_translation_5?: string;
   year_1?: string; // Source year for example_sentence_2
   part_1?: string; // Source part for example_sentence_2
   source_1?: string; // Source description for example_sentence_2

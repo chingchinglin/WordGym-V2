@@ -14,7 +14,7 @@ import type { UserSettings } from "./types";
 
 function App() {
   const { hash } = useHashRoute();
-  const { data } = useDataset();
+  const { data, cacheInfo, refreshCache } = useDataset();
   const { userSettings, setUserSettings } = useUserSettings();
   const [showWelcome, setShowWelcome] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
@@ -169,6 +169,8 @@ function App() {
             setShowWelcome(true);
           }
         }}
+        cacheInfo={cacheInfo}
+        onRefreshCache={refreshCache}
       >
         {/* Block content if no version selected */}
         {!showVersionModal && renderContent()}

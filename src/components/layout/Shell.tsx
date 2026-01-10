@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import type { UserSettings } from "../../types";
+import type { CacheInfo } from "../../hooks/useDataset";
 
 export interface ShellProps {
   children: React.ReactNode;
   route?: string;
   userSettings: UserSettings | null;
   onUserSettingsChange: (settings: UserSettings | null) => void;
+  cacheInfo?: CacheInfo;
+  onRefreshCache?: () => Promise<void>;
 }
 
 export const Shell: React.FC<ShellProps> = ({
@@ -13,9 +16,33 @@ export const Shell: React.FC<ShellProps> = ({
   route,
   userSettings,
   onUserSettingsChange,
+  cacheInfo,
+  onRefreshCache,
 }) => {
   const [showGuide, setShowGuide] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Handle cache refresh
+  const handleRefreshCache = async () => {
+    if (!onRefreshCache || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await onRefreshCache();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Format cache age for display
+  const formatCacheAge = (ms?: number): string => {
+    if (!ms) return "";
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) return `${hours}小時前`;
+    if (minutes > 0) return `${minutes}分鐘前`;
+    return "剛剛";
+  };
 
   // Get current route
   const [currentHash, setCurrentHash] = useState(
@@ -481,8 +508,8 @@ export const Shell: React.FC<ShellProps> = ({
               我們提供個人化的單字庫與遊戲化的練習模式，讓您隨時隨地都能高效複習。透過清晰的學習路徑，讓您清楚掌握弱點、看見進步，輕鬆累積單字實力，自信迎接大考。
             </p>
             <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
-              <p>
-                ©{" "}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>©{" "}
                 <a
                   href="https://www.junyiacademy.org/"
                   target="_blank"
@@ -490,16 +517,51 @@ export const Shell: React.FC<ShellProps> = ({
                   className="text-indigo-600 hover:underline"
                 >
                   均一教育平台
-                </a>{" "}
-                |{" "}
+                </a></span>
+                <span>|</span>
                 <a
                   href="https://forms.gle/dM8VbrzUDd5pr1y49"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-600 hover:underline"
                 >
-                  💬 意見回饋
+                  意見回饋
                 </a>
+                {/* Issue #72: Manual cache refresh button */}
+                {onRefreshCache && (
+                  <>
+                    <span>|</span>
+                    <button
+                      onClick={handleRefreshCache}
+                      disabled={isRefreshing || cacheInfo?.isLoading}
+                      className="inline-flex items-center gap-1 text-gray-500 hover:text-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={cacheInfo?.fromCache
+                        ? `資料快取：${formatCacheAge(cacheInfo.cacheAge)}更新`
+                        : "重新載入單字資料"
+                      }
+                    >
+                      <svg
+                        className={`h-3.5 w-3.5 ${isRefreshing || cacheInfo?.isLoading ? 'animate-spin' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      <span className="text-xs">
+                        {isRefreshing || cacheInfo?.isLoading
+                          ? "更新中..."
+                          : "更新資料"
+                        }
+                      </span>
+                    </button>
+                  </>
+                )}
               </p>
             </div>
           </div>

@@ -2,9 +2,11 @@
  * useDataset Hook - Core Data Management
  * Migrated from index.html lines 841-1410
  * Handles dataset loading, merging, and persistence
+ *
+ * Issue #72: Updated to load from Google Sheets CSV with IndexedDB caching
  */
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type {
   VocabularyWord,
   ImportStats,
@@ -24,8 +26,8 @@ import {
 } from "../utils/dataProcessing";
 import { exampleFor, translationFor } from "../utils/wordUtils";
 import { VersionService } from "../services/VersionService";
-import vocabularyData from "../data/vocabulary.json";
-// Removed Google Sheet import
+import { csvDataService, CSVDataResult } from "../services/CSVDataService";
+import vocabularyData from "../data/vocabulary.json"; // Fallback data
 
 const LS: typeof LSType = {
   favorites: "mvp_vocab_favorites",
@@ -87,15 +89,28 @@ function applyThemeOrder(
 }
 
 /**
+ * Cache info type for UI display
+ */
+export interface CacheInfo {
+  isLoading: boolean;
+  fromCache: boolean;
+  cacheAge?: number; // milliseconds
+  lastRefresh?: Date;
+  error?: string;
+}
+
+/**
  * Main useDataset hook
+ * Issue #72: Now loads from Google Sheets CSV with IndexedDB caching
  */
 export function useDataset(initialData: VocabularyWord[] = []) {
   const themeOrderRef = useRef<Record<string, number>>({});
+  const loadAttemptedRef = useRef(false);
 
   /**
    * Hydrate dataset with theme ordering
    */
-  const hydrateDataset = (
+  const hydrateDataset = useCallback((
     items: any[],
     resetCounters = true,
   ): VocabularyWord[] => {
@@ -123,19 +138,74 @@ export function useDataset(initialData: VocabularyWord[] = []) {
 
     themeOrderRef.current = counters;
     return hydrated;
-  };
+  }, []);
 
   /**
-   * Initialize dataset from initialData only (localStorage disabled)
-   * Loads from local JSON data
+   * Initialize with fallback data, then load from CSV
    */
   const [data, setData] = useState<VocabularyWord[]>(() => {
-    // Always start with vocabulary data from JSON
-    // Priority: 1. Imported data 2. vocabularyData from JSON
+    // Start with fallback data from JSON (will be replaced by CSV data)
     return hydrateDataset(
       initialData.length > 0 ? initialData : vocabularyData,
     );
   });
+
+  /**
+   * Cache info state for UI display
+   */
+  const [cacheInfo, setCacheInfo] = useState<CacheInfo>({
+    isLoading: true,
+    fromCache: false,
+  });
+
+  /**
+   * Load data from CSV service (with caching)
+   */
+  const loadFromCSV = useCallback(async (forceRefresh = false) => {
+    setCacheInfo(prev => ({ ...prev, isLoading: true, error: undefined }));
+
+    try {
+      const result: CSVDataResult = await csvDataService.loadData(forceRefresh);
+
+      // Hydrate the data before setting
+      const hydratedData = hydrateDataset(result.data);
+      setData(hydratedData);
+
+      setCacheInfo({
+        isLoading: false,
+        fromCache: result.fromCache,
+        cacheAge: result.cacheAge,
+        lastRefresh: new Date(),
+      });
+
+      console.log(`[useDataset] Loaded ${hydratedData.length} words from ${result.fromCache ? 'cache' : 'CSV'}`);
+    } catch (error) {
+      console.error("[useDataset] Failed to load from CSV, using fallback:", error);
+      // Keep fallback data, just update cache info
+      setCacheInfo({
+        isLoading: false,
+        fromCache: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [hydrateDataset]);
+
+  /**
+   * Refresh cache manually (Issue #72: manual refresh button)
+   */
+  const refreshCache = useCallback(async () => {
+    return loadFromCSV(true);
+  }, [loadFromCSV]);
+
+  /**
+   * Load data on mount
+   */
+  useEffect(() => {
+    if (!loadAttemptedRef.current) {
+      loadAttemptedRef.current = true;
+      loadFromCSV(false);
+    }
+  }, [loadFromCSV]);
 
   /**
    * Persist dataset to localStorage - DISABLED
@@ -739,5 +809,8 @@ export function useDataset(initialData: VocabularyWord[] = []) {
     setData,
     importRows,
     reset,
+    // Issue #72: New cache-related exports
+    cacheInfo,
+    refreshCache,
   };
 }
