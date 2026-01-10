@@ -157,7 +157,8 @@ export const DebugPage: React.FC<DebugPageProps> = ({
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-2 text-left">ID</th>
+              <th className="px-3 py-2 text-left" title="App ID (0-indexed)">ID</th>
+              <th className="px-3 py-2 text-left" title="Google Sheet 列數 (ID + 2)">GS列</th>
               <th className="px-3 py-2 text-left">英文</th>
               <th className="px-3 py-2 text-left">中文</th>
               <th className="px-3 py-2 text-left">Stage</th>
@@ -169,6 +170,7 @@ export const DebugPage: React.FC<DebugPageProps> = ({
             {filteredWords.map((word) => (
               <tr key={word.id} className="border-t hover:bg-gray-50">
                 <td className="px-3 py-2 font-mono text-xs">{word.id}</td>
+                <td className="px-3 py-2 font-mono text-xs text-gray-500" title="Google Sheet 列數">{(word.id ?? 0) + 2}</td>
                 <td className="px-3 py-2 font-semibold">{word.english_word}</td>
                 <td className="px-3 py-2">{word.chinese_definition}</td>
                 <td className="px-3 py-2">
@@ -218,9 +220,14 @@ export const DebugPage: React.FC<DebugPageProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="font-bold text-lg">
-                {selectedWord.english_word} 的完整資料
-              </h3>
+              <div>
+                <h3 className="font-bold text-lg">
+                  {selectedWord.english_word} 的完整資料
+                </h3>
+                <p className="text-sm text-gray-500">
+                  App ID: {selectedWord.id} | Google Sheet 列數: {(selectedWord.id ?? 0) + 2}
+                </p>
+              </div>
               <button
                 onClick={() => setSelectedWord(null)}
                 className="text-gray-500 hover:text-gray-700"
