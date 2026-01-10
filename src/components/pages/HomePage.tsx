@@ -108,7 +108,17 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   };
 
   const handleWordClick = (wordId: number) => {
-    window.location.hash = `#/word/${wordId}`;
+    // Issue #60: Pass current filter context to word detail page
+    // So it can show only the relevant textbook entry
+    const vol = filters.textbook?.vol || "";
+    const lesson = Array.isArray(filters.textbook?.lesson)
+      ? filters.textbook.lesson[0] || ""
+      : filters.textbook?.lesson || "";
+    const params = new URLSearchParams();
+    if (currentTab === "textbook" && vol) params.set("vol", vol);
+    if (currentTab === "textbook" && lesson) params.set("lesson", lesson);
+    const query = params.toString();
+    window.location.hash = `#/word/${wordId}${query ? `?${query}` : ""}`;
   };
 
   // Map POS to colors (more meaningful than random rotation)

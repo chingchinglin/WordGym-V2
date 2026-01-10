@@ -64,60 +64,37 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
     [userSettings?.stage],
   );
 
-  // 國中 textbook versions
-  const juniorVersions = ["康軒", "翰林", "南一"];
-  // 高中 textbook versions
-  const seniorVersions = ["龍騰", "三民", "遠東"];
-
+  // Issue #60: Filter textbook_index to show ONLY user's current selection
+  // Read vol/lesson from URL query params (passed from HomePage when clicking a word)
   const filteredTextbookIndex = useMemo(() => {
     if (!word.textbook_index || !normalizedUserStage)
-      return word.textbook_index;
+      return [];  // Return empty if no stage
 
-    // Read user's current filters from localStorage
-    let userFilters: any = null;
-    try {
-      const stored = localStorage.getItem("wordgym_filters_v1");
-      if (stored) {
-        userFilters = JSON.parse(stored);
-      }
-    } catch (e) {
-      // Ignore localStorage errors
+    const normalizedUserVersion = VersionService.normalizeWithGuard(userSettings?.version || "");
+
+    // If no user version selected, return empty
+    if (!normalizedUserVersion) return [];
+
+    // Parse URL query params for vol/lesson context
+    const hash = window.location.hash;
+    const queryStart = hash.indexOf("?");
+    let contextVol = "";
+    let contextLesson = "";
+    if (queryStart !== -1) {
+      const queryString = hash.slice(queryStart + 1);
+      const params = new URLSearchParams(queryString);
+      contextVol = params.get("vol") || "";
+      contextLesson = params.get("lesson") || "";
     }
 
-    const selectedVol = userFilters?.textbook?.vol;
-    const selectedLessons: string[] = Array.isArray(userFilters?.textbook?.lesson)
-      ? userFilters.textbook.lesson
-      : [];
-
     return word.textbook_index.filter((item) => {
-      // First filter by stage
-      let stageMatches = false;
-      if (normalizedUserStage === "junior") {
-        stageMatches = juniorVersions.includes(item.version);
-      } else if (normalizedUserStage === "senior") {
-        stageMatches = seniorVersions.includes(item.version);
-      } else {
-        stageMatches = true; // Show all if stage unknown
-      }
-
-      if (!stageMatches) return false;
-
-      // Then filter by user's selected textbook version
+      // Only show items matching user's selected textbook version
       const normalizedItemVersion = VersionService.normalizeWithGuard(item.version);
-      const normalizedUserVersion = VersionService.normalizeWithGuard(userSettings?.version || "");
+      if (normalizedItemVersion !== normalizedUserVersion) return false;
 
-      if (normalizedUserVersion && normalizedItemVersion !== normalizedUserVersion) {
-        return false; // Only show user's selected textbook version
-      }
-
-      // Finally filter by vol and lesson if selected
-      if (selectedVol && item.vol !== selectedVol) {
-        return false; // Only show selected vol
-      }
-
-      if (selectedLessons.length > 0 && !selectedLessons.includes(item.lesson)) {
-        return false; // Only show selected lessons
-      }
+      // If vol/lesson context is provided, filter by it
+      if (contextVol && item.vol !== contextVol) return false;
+      if (contextLesson && item.lesson !== contextLesson) return false;
 
       return true;
     });
