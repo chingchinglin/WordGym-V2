@@ -4,7 +4,7 @@
  */
 
 // @ts-expect-error React import needed for JSX
-import React from "react"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { DebugPage } from "../DebugPage";

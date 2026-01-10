@@ -6,7 +6,10 @@
 import { renderHook, act } from "@testing-library/react-hooks/pure";
 
 // waitFor helper for testing async hooks
-const waitFor = async (callback: () => void | Promise<void>, options?: { timeout?: number }) => {
+const waitFor = async (
+  callback: () => void | Promise<void>,
+  options?: { timeout?: number },
+) => {
   const timeout = options?.timeout || 1000;
   const start = Date.now();
   while (Date.now() - start < timeout) {

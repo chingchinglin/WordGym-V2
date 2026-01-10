@@ -88,8 +88,11 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   useEffect(() => {
     // When vol changes and availableLessons are loaded, ALWAYS reset to first lesson
     if (filters.vol && availableLessons.length > 0 && availableLessons[0]) {
-      const volActuallyChanged = prevVolRef.current !== undefined && prevVolRef.current !== filters.vol;
-      const currentLessons = Array.isArray(filters.lesson) ? filters.lesson : [];
+      const volActuallyChanged =
+        prevVolRef.current !== undefined && prevVolRef.current !== filters.vol;
+      const currentLessons = Array.isArray(filters.lesson)
+        ? filters.lesson
+        : [];
       const hasInvalidLesson = currentLessons.some(
         (l) => !availableLessons.includes(l),
       );
@@ -98,7 +101,11 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
       // 1. Volume actually changed (not just initial load), OR
       // 2. Current lessons are invalid for this volume, OR
       // 3. No lessons are currently selected
-      if (volActuallyChanged || hasInvalidLesson || currentLessons.length === 0) {
+      if (
+        volActuallyChanged ||
+        hasInvalidLesson ||
+        currentLessons.length === 0
+      ) {
         updateFilter("lesson", [availableLessons[0]]);
       }
 
