@@ -3,7 +3,22 @@
  * Issue #72: Test data loading and cache management
  */
 
-import { renderHook, act, waitFor } from "@testing-library/react-hooks/pure";
+import { renderHook, act } from "@testing-library/react-hooks/pure";
+
+// waitFor helper for testing async hooks
+const waitFor = async (callback: () => void | Promise<void>, options?: { timeout?: number }) => {
+  const timeout = options?.timeout || 1000;
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      await callback();
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+  throw new Error("waitFor timed out");
+};
 
 // Mock CSVDataService
 jest.mock("../../services/CSVDataService", () => ({

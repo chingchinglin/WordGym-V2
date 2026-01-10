@@ -22,11 +22,16 @@ const mockDB = {
   close: jest.fn(),
 };
 
-const mockOpenRequest = {
+const mockOpenRequest: {
+  result: typeof mockDB;
+  onerror: ((event: any) => void) | null;
+  onsuccess: ((event: any) => void) | null;
+  onupgradeneeded: ((event: any) => void) | null;
+} = {
   result: mockDB,
-  onerror: null as any,
-  onsuccess: null as any,
-  onupgradeneeded: null as any,
+  onerror: null,
+  onsuccess: null,
+  onupgradeneeded: null,
 };
 
 // Mock indexedDB global
@@ -174,10 +179,16 @@ describe("IndexedDBCache", () => {
       const errorCache = new IndexedDBCache("error-db", "error-store");
 
       mockIndexedDB.open.mockImplementationOnce(() => {
-        const errorRequest = {
+        const errorRequest: {
+          result: null;
+          onerror: ((event: any) => void) | null;
+          onsuccess: ((event: any) => void) | null;
+          onupgradeneeded: ((event: any) => void) | null;
+        } = {
           result: null,
-          onerror: null as any,
-          onsuccess: null as any,
+          onerror: null,
+          onsuccess: null,
+          onupgradeneeded: null,
         };
         setTimeout(() => {
           if (errorRequest.onerror) {

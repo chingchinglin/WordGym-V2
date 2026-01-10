@@ -3,7 +3,8 @@
  * Issue #72: Test debug page functionality
  */
 
-import React from "react";
+// @ts-expect-error React import needed for JSX
+import React from "react"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { DebugPage } from "../DebugPage";

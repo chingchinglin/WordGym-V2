@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import { TextbookIndexItem } from "../../types";
 import { useUserSettings } from "../../hooks/useUserSettings";
 import { VersionService } from "../../services/VersionService";
@@ -18,6 +18,7 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   dataset,
 }) => {
   const { userSettings } = useUserSettings();
+  const prevVolRef = useRef<string | undefined>(filters.vol);
 
   const availableVols = useMemo(() => {
     if (!userSettings?.version || !userSettings.stage) return [];
@@ -85,18 +86,24 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
 
   // Reset lesson selection when vol changes - fixes Issue #70
   useEffect(() => {
-    // When vol changes and availableLessons are loaded, reset to first lesson
+    // When vol changes and availableLessons are loaded, ALWAYS reset to first lesson
     if (filters.vol && availableLessons.length > 0 && availableLessons[0]) {
-      // Only reset if current lesson selection doesn't match available lessons for this vol
-      const currentLessons = Array.isArray(filters.lesson)
-        ? filters.lesson
-        : [];
+      const volActuallyChanged = prevVolRef.current !== undefined && prevVolRef.current !== filters.vol;
+      const currentLessons = Array.isArray(filters.lesson) ? filters.lesson : [];
       const hasInvalidLesson = currentLessons.some(
         (l) => !availableLessons.includes(l),
       );
-      if (hasInvalidLesson || currentLessons.length === 0) {
+
+      // Reset lessons if:
+      // 1. Volume actually changed (not just initial load), OR
+      // 2. Current lessons are invalid for this volume, OR
+      // 3. No lessons are currently selected
+      if (volActuallyChanged || hasInvalidLesson || currentLessons.length === 0) {
         updateFilter("lesson", [availableLessons[0]]);
       }
+
+      // Update the ref for next comparison
+      prevVolRef.current = filters.vol;
     }
   }, [filters.vol, availableLessons, updateFilter]);
 
