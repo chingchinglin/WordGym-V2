@@ -5,6 +5,7 @@ import { FavoritesPage } from "./components/pages/FavoritesPage";
 import { QuizPage } from "./components/pages/QuizPage";
 import QuizHistoryPage from "./components/pages/QuizHistoryPage";
 import { WordDetailPage } from "./components/pages/WordDetailPage";
+import { DebugPage } from "./components/pages/DebugPage";
 import { Shell } from "./components/layout/Shell";
 import { WelcomeModal } from "./components/modals/WelcomeModal";
 import { useDataset } from "./hooks/useDataset";
@@ -109,6 +110,14 @@ function App() {
         return <QuizPage words={data} userSettings={userSettings} />;
       case "#/quiz-history":
         return <QuizHistoryPage />;
+      case "#/debug":
+        return (
+          <DebugPage
+            words={data}
+            cacheInfo={cacheInfo}
+            onRefreshCache={refreshCache}
+          />
+        );
       default:
         return <HomePage words={data} userSettings={userSettings} />;
     }
