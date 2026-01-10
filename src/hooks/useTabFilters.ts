@@ -21,9 +21,12 @@ export const useTabFilters = (userSettings: UserSettings | null) => {
       userSettings?.stage || "",
     );
     return {
+      // Issue #62: Don't use hardcoded defaults for vol/lesson
+      // Let TextbookFilters set correct values based on actual data
+      // Using undefined allows filterWords to skip these filters until valid values are set
       textbook: {
-        vol: "1",
-        lesson: ["1"],
+        vol: undefined as string | undefined,
+        lesson: undefined as string[] | undefined,
       },
       exam: {
         year: "112",

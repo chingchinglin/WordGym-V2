@@ -45,15 +45,27 @@ export function filterWords(
               match = false;
             }
           }
-          if (filters.textbook?.vol && item.vol !== filters.textbook.vol)
-            match = false;
 
-          // Support both single lesson (backward compatibility) and multi-select lessons
-          if (filters.textbook?.lesson) {
-            const selectedLessons = Array.isArray(filters.textbook.lesson)
-              ? filters.textbook.lesson
-              : [filters.textbook.lesson];
-            if (!selectedLessons.includes(item.lesson)) match = false;
+          // Issue #69: When searching, skip vol/lesson filters to search across all lessons
+          // Only apply vol/lesson filters when NOT searching
+          // Issue #62: Also skip if filters are undefined (not yet set to valid values)
+          if (!searchTerm) {
+            // Only apply vol filter if it's defined and has a value
+            if (filters.textbook?.vol !== undefined && filters.textbook.vol !== "") {
+              if (item.vol !== filters.textbook.vol) match = false;
+            }
+
+            // Support both single lesson (backward compatibility) and multi-select lessons
+            // Only apply lesson filter if it's defined and has values
+            if (filters.textbook?.lesson !== undefined) {
+              const selectedLessons = Array.isArray(filters.textbook.lesson)
+                ? filters.textbook.lesson
+                : [filters.textbook.lesson];
+              // Only filter if there are actual lessons selected
+              if (selectedLessons.length > 0 && selectedLessons[0] !== undefined) {
+                if (!selectedLessons.includes(item.lesson)) match = false;
+              }
+            }
           }
 
           return match;
