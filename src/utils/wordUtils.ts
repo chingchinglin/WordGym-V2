@@ -105,7 +105,9 @@ export function formatExampleSource(word: VocabularyWord): string | null {
   }
 
   // Combine non-empty parts with spaces
-  const parts = [year_1, part_1, source_1].filter((part) => part && part.trim());
+  const parts = [year_1, part_1, source_1].filter(
+    (part) => part && part.trim(),
+  );
 
   return parts.length > 0 ? parts.join(" ") : null;
 }

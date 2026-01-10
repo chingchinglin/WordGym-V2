@@ -67,10 +67,11 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
   // Issue #60: Filter textbook_index to show ONLY user's current selection
   // Read vol/lesson from URL query params (passed from HomePage when clicking a word)
   const filteredTextbookIndex = useMemo(() => {
-    if (!word.textbook_index || !normalizedUserStage)
-      return [];  // Return empty if no stage
+    if (!word.textbook_index || !normalizedUserStage) return []; // Return empty if no stage
 
-    const normalizedUserVersion = VersionService.normalizeWithGuard(userSettings?.version || "");
+    const normalizedUserVersion = VersionService.normalizeWithGuard(
+      userSettings?.version || "",
+    );
 
     // If no user version selected, return empty
     if (!normalizedUserVersion) return [];
@@ -89,7 +90,9 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
 
     return word.textbook_index.filter((item) => {
       // Only show items matching user's selected textbook version
-      const normalizedItemVersion = VersionService.normalizeWithGuard(item.version);
+      const normalizedItemVersion = VersionService.normalizeWithGuard(
+        item.version,
+      );
       if (normalizedItemVersion !== normalizedUserVersion) return false;
 
       // If vol/lesson context is provided, filter by it

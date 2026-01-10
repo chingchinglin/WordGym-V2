@@ -102,7 +102,9 @@ export class IndexedDBCache {
         const request = store.delete(key);
 
         request.onerror = () => {
-          reject(new Error(`Failed to delete from IndexedDB: ${request.error}`));
+          reject(
+            new Error(`Failed to delete from IndexedDB: ${request.error}`),
+          );
         };
 
         request.onsuccess = () => {

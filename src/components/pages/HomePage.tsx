@@ -54,7 +54,8 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
 
     // Only reset if there's an actual change (not on initial mount or navigation back)
     const stageChanged = prevStage !== undefined && prevStage !== currStage;
-    const versionChanged = prevVersion !== undefined && prevVersion !== currVersion;
+    const versionChanged =
+      prevVersion !== undefined && prevVersion !== currVersion;
 
     if (stageChanged || versionChanged) {
       setCurrentTab("textbook");
@@ -85,8 +86,23 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
 
   const filteredWords = useMemo(() => {
     if (isSettingsMissing) return [];
-    return filterWords(words, userSettings, currentTab, filters, quickFilterPos, searchTerm);
-  }, [isSettingsMissing, words, userSettings, currentTab, filters, quickFilterPos, searchTerm]);
+    return filterWords(
+      words,
+      userSettings,
+      currentTab,
+      filters,
+      quickFilterPos,
+      searchTerm,
+    );
+  }, [
+    isSettingsMissing,
+    words,
+    userSettings,
+    currentTab,
+    filters,
+    quickFilterPos,
+    searchTerm,
+  ]);
 
   // Auto-sync filtered word IDs to global state whenever filters change
   React.useEffect(() => {

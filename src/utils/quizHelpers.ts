@@ -218,7 +218,7 @@ export const makeCloze = (sentence: string, answer: string): string => {
 
   // Last resort: if we can't find the word, append a blank at the end
   // This ensures every question has a blank - Issue #58
-  return `${sentence} (_____)`
+  return `${sentence} (_____)`;
 };
 
 // Check if makeCloze successfully replaced a word with blank
@@ -226,7 +226,7 @@ export const canMakeCloze = (sentence: string, answer: string): boolean => {
   if (!sentence || !answer) return false;
   const result = makeCloze(sentence, answer);
   // If result contains _____ not at the end (not fallback), it's a valid cloze
-  return result.includes('_____') && !result.endsWith('(_____)');
+  return result.includes("_____") && !result.endsWith("(_____)");
 };
 
 export const generateDisractors = (

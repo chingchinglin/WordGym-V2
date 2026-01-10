@@ -231,7 +231,9 @@ word,詞`;
         statusText: "Internal Server Error",
       });
 
-      await expect(service.loadData(true)).rejects.toThrow("Failed to fetch CSV");
+      await expect(service.loadData(true)).rejects.toThrow(
+        "Failed to fetch CSV",
+      );
     });
 
     it("should throw on empty CSV", async () => {
@@ -242,7 +244,9 @@ word,詞`;
         text: () => Promise.resolve(csvData),
       });
 
-      await expect(service.loadData(true)).rejects.toThrow("CSV has no data rows");
+      await expect(service.loadData(true)).rejects.toThrow(
+        "CSV has no data rows",
+      );
     });
   });
 

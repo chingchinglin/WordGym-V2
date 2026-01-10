@@ -51,7 +51,10 @@ export function filterWords(
           // Issue #62: Also skip if filters are undefined (not yet set to valid values)
           if (!searchTerm) {
             // Only apply vol filter if it's defined and has a value
-            if (filters.textbook?.vol !== undefined && filters.textbook.vol !== "") {
+            if (
+              filters.textbook?.vol !== undefined &&
+              filters.textbook.vol !== ""
+            ) {
               if (item.vol !== filters.textbook.vol) match = false;
             }
 
@@ -62,7 +65,10 @@ export function filterWords(
                 ? filters.textbook.lesson
                 : [filters.textbook.lesson];
               // Only filter if there are actual lessons selected
-              if (selectedLessons.length > 0 && selectedLessons[0] !== undefined) {
+              if (
+                selectedLessons.length > 0 &&
+                selectedLessons[0] !== undefined
+              ) {
                 if (!selectedLessons.includes(item.lesson)) match = false;
               }
             }

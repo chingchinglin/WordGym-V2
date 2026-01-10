@@ -128,7 +128,7 @@ describe("DebugPage", () => {
           words={mockWords}
           cacheInfo={mockCacheInfo}
           onRefreshCache={mockRefresh}
-        />
+        />,
       );
 
       expect(screen.getByText(/強制刷新資料/)).toBeInTheDocument();
@@ -142,7 +142,7 @@ describe("DebugPage", () => {
           words={mockWords}
           cacheInfo={mockCacheInfo}
           onRefreshCache={mockRefresh}
-        />
+        />,
       );
 
       const refreshButton = screen.getByText(/強制刷新資料/);
@@ -154,16 +154,18 @@ describe("DebugPage", () => {
     });
 
     it("should show loading state during refresh", async () => {
-      const mockRefresh = jest.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+      const mockRefresh = jest
+        .fn()
+        .mockImplementation(
+          () => new Promise((resolve) => setTimeout(resolve, 100)),
+        );
 
       render(
         <DebugPage
           words={mockWords}
           cacheInfo={mockCacheInfo}
           onRefreshCache={mockRefresh}
-        />
+        />,
       );
 
       const refreshButton = screen.getByText(/強制刷新資料/);

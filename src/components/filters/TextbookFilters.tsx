@@ -88,9 +88,11 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
     // When vol changes and availableLessons are loaded, reset to first lesson
     if (filters.vol && availableLessons.length > 0 && availableLessons[0]) {
       // Only reset if current lesson selection doesn't match available lessons for this vol
-      const currentLessons = Array.isArray(filters.lesson) ? filters.lesson : [];
+      const currentLessons = Array.isArray(filters.lesson)
+        ? filters.lesson
+        : [];
       const hasInvalidLesson = currentLessons.some(
-        (l) => !availableLessons.includes(l)
+        (l) => !availableLessons.includes(l),
       );
       if (hasInvalidLesson || currentLessons.length === 0) {
         updateFilter("lesson", [availableLessons[0]]);

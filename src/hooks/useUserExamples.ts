@@ -16,7 +16,9 @@ export function useUserExamples() {
         const parsed = JSON.parse(raw);
         return typeof parsed === "object" ? parsed : {};
       }
-    } catch { /* localStorage may be unavailable */ }
+    } catch {
+      /* localStorage may be unavailable */
+    }
     return {};
   });
 

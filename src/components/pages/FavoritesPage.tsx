@@ -93,7 +93,10 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
               {/* Image on right with eager loading - WebP for faster load */}
               <div className="flex-1">
                 <picture>
-                  <source srcSet="./images/favorites-girl.webp" type="image/webp" />
+                  <source
+                    srcSet="./images/favorites-girl.webp"
+                    type="image/webp"
+                  />
                   <img
                     src="./images/favorites-girl.png"
                     alt="背單字女孩插圖"
@@ -162,8 +165,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                           {word.posTags
                             .map((pos) => POS_ABBREV[pos as POSType] || pos)
                             .filter(Boolean)
-                            .join(" ")}
-                          {" "}
+                            .join(" ")}{" "}
                         </span>
                       )}
                       {word.chinese_definition}
@@ -171,7 +173,9 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                     <div className="flex gap-2 mt-2">
                       {/* Link to word card - Issue #53 */}
                       <button
-                        onClick={() => (window.location.hash = `#/word/${word.id}`)}
+                        onClick={() =>
+                          (window.location.hash = `#/word/${word.id}`)
+                        }
                         className="flex-1 px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-sm font-medium transition"
                       >
                         查看單字卡

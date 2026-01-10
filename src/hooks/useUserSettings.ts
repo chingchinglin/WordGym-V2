@@ -116,7 +116,9 @@ export function useUserSettings() {
         if (raw) {
           return JSON.parse(raw);
         }
-      } catch { /* localStorage may be unavailable */ }
+      } catch {
+        /* localStorage may be unavailable */
+      }
       return null;
     })(),
     error: null,

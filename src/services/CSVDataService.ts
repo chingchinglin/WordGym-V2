@@ -8,7 +8,8 @@ import { IndexedDBCache } from "./IndexedDBCache";
 
 // Google Sheet published as CSV (read-only)
 // Format: https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}
-const CSV_URL = "https://docs.google.com/spreadsheets/d/1RRR2HkwdwxabYVx5Y1Fuec1DKdi4xoSBLSaNVEAwUAQ/export?format=csv&gid=0";
+const CSV_URL =
+  "https://docs.google.com/spreadsheets/d/1RRR2HkwdwxabYVx5Y1Fuec1DKdi4xoSBLSaNVEAwUAQ/export?format=csv&gid=0";
 
 // Cache expiry: 24 hours (in milliseconds)
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -44,9 +45,12 @@ function parseCSV(csvText: string): string[][] {
     } else if (char === "," && !insideQuotes) {
       currentRow.push(currentCell.trim());
       currentCell = "";
-    } else if ((char === "\n" || (char === "\r" && nextChar === "\n")) && !insideQuotes) {
+    } else if (
+      (char === "\n" || (char === "\r" && nextChar === "\n")) &&
+      !insideQuotes
+    ) {
       currentRow.push(currentCell.trim());
-      if (currentRow.some(cell => cell.length > 0)) {
+      if (currentRow.some((cell) => cell.length > 0)) {
         rows.push(currentRow);
       }
       currentRow = [];
@@ -60,7 +64,7 @@ function parseCSV(csvText: string): string[][] {
   // Handle last row
   if (currentCell.length > 0 || currentRow.length > 0) {
     currentRow.push(currentCell.trim());
-    if (currentRow.some(cell => cell.length > 0)) {
+    if (currentRow.some((cell) => cell.length > 0)) {
       rows.push(currentRow);
     }
   }
@@ -72,14 +76,19 @@ function parseCSV(csvText: string): string[][] {
  * Parse textbook_index string to array of objects
  * Format: "龍騰-B1-U4" or "龍騰-B1-U4; 翰林-B2-L3" (semicolon separated)
  */
-function parseTextbookIndex(raw: string): { version: string; vol: string; lesson: string }[] {
+function parseTextbookIndex(
+  raw: string,
+): { version: string; vol: string; lesson: string }[] {
   if (!raw || typeof raw !== "string") return [];
 
-  const items = raw.split(";").map(s => s.trim()).filter(Boolean);
+  const items = raw
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
   const result: { version: string; vol: string; lesson: string }[] = [];
 
-  items.forEach(item => {
-    const parts = item.split("-").map(s => s.trim());
+  items.forEach((item) => {
+    const parts = item.split("-").map((s) => s.trim());
     if (parts.length >= 3) {
       result.push({
         version: parts[0],
@@ -98,7 +107,10 @@ function parseTextbookIndex(raw: string): { version: string; vol: string; lesson
  */
 function parseExamTags(raw: string): string[] {
   if (!raw || typeof raw !== "string") return [];
-  return raw.split(";").map(s => s.trim()).filter(Boolean);
+  return raw
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -108,11 +120,14 @@ function parseExamTags(raw: string): string[] {
 function parseThemeIndex(raw: string): { range: string; theme: string }[] {
   if (!raw || typeof raw !== "string") return [];
 
-  const items = raw.split(/[;|]/).map(s => s.trim()).filter(Boolean);
+  const items = raw
+    .split(/[;|]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   const result: { range: string; theme: string }[] = [];
 
-  items.forEach(item => {
-    const parts = item.split("-").map(s => s.trim());
+  items.forEach((item) => {
+    const parts = item.split("-").map((s) => s.trim());
     if (parts.length >= 2) {
       const range = parts[0];
       const theme = parts.slice(1).join("-");
@@ -128,13 +143,23 @@ function parseThemeIndex(raw: string): { range: string; theme: string }[] {
 /**
  * Convert CSV row to VocabularyWord object
  */
-function rowToWord(headers: string[], row: string[], index: number): VocabularyWord | null {
+function rowToWord(
+  headers: string[],
+  row: string[],
+  index: number,
+): VocabularyWord | null {
   const obj: Record<string, string> = {};
   headers.forEach((header, i) => {
     obj[header] = row[i] || "";
   });
 
-  const englishWord = (obj["english_word"] || obj["Word"] || obj["英文"] || obj["英文單字"] || "").trim();
+  const englishWord = (
+    obj["english_word"] ||
+    obj["Word"] ||
+    obj["英文"] ||
+    obj["英文單字"] ||
+    ""
+  ).trim();
   if (!englishWord) return null;
 
   // Normalize stage
@@ -144,8 +169,12 @@ function rowToWord(headers: string[], row: string[], index: number): VocabularyW
   else if (rawStage === "國中" || rawStage === "junior") stage = "junior";
 
   // Parse POS tags
-  const posRaw = obj["posTags"] || obj["basic_pos"] || obj["pos"] || obj["詞性"] || "";
-  const posTags = posRaw.split(/[,;，、]/).map(s => s.trim()).filter(Boolean);
+  const posRaw =
+    obj["posTags"] || obj["basic_pos"] || obj["pos"] || obj["詞性"] || "";
+  const posTags = posRaw
+    .split(/[,;，、]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (posTags.length === 0) posTags.push("other");
 
   return {
@@ -153,7 +182,8 @@ function rowToWord(headers: string[], row: string[], index: number): VocabularyW
     english_word: englishWord,
     english: englishWord,
     kk_phonetic: obj["kk_phonetic"] || obj["KK"] || obj["KK音標"] || "",
-    chinese_definition: obj["chinese_definition"] || obj["中譯"] || obj["中文"] || "",
+    chinese_definition:
+      obj["chinese_definition"] || obj["中譯"] || obj["中文"] || "",
     // pos is optional, using posTags instead
     posTags,
     basic_pos: posTags.join(", "),
@@ -161,10 +191,20 @@ function rowToWord(headers: string[], row: string[], index: number): VocabularyW
     grammar_sub_category: obj["grammar_sub_category"] || "",
     grammar_function: obj["grammar_function"] || "",
     applicable_sentence_pattern: obj["applicable_sentence_pattern"] || "",
-    example_sentence: obj["example_sentence"] || obj["例句"] || obj["ai例句"] || "",
-    example_translation: obj["example_translation"] || obj["翻譯"] || obj["ai例句中譯"] || "",
-    example_sentence_2: obj["example_sentence_2"] || obj["例句2"] || obj["GSAT_Example_Sentence_1"] || "",
-    example_translation_2: obj["example_translation_2"] || obj["翻譯2"] || obj["GSAT_Translation_1"] || "",
+    example_sentence:
+      obj["example_sentence"] || obj["例句"] || obj["ai例句"] || "",
+    example_translation:
+      obj["example_translation"] || obj["翻譯"] || obj["ai例句中譯"] || "",
+    example_sentence_2:
+      obj["example_sentence_2"] ||
+      obj["例句2"] ||
+      obj["GSAT_Example_Sentence_1"] ||
+      "",
+    example_translation_2:
+      obj["example_translation_2"] ||
+      obj["翻譯2"] ||
+      obj["GSAT_Translation_1"] ||
+      "",
     example_sentence_3: obj["example_sentence_3"] || "",
     example_translation_3: obj["example_translation_3"] || "",
     example_sentence_4: obj["example_sentence_4"] || "",
@@ -175,20 +215,50 @@ function rowToWord(headers: string[], row: string[], index: number): VocabularyW
     part_1: obj["part_1"] || "",
     source_1: obj["source_1"] || "",
     theme: obj["theme"] || "",
-    themes: obj["themes"] ? obj["themes"].split(/[,;]/).map(s => s.trim()).filter(Boolean) : [],
+    themes: obj["themes"]
+      ? obj["themes"]
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
     level: obj["level"] || obj["Level"] || "",
     cefr: obj["cefr"] || obj["CEFR"] || "",
     word_forms: obj["word_forms"] || "",
     word_forms_detail: [],
-    synonyms: obj["synonyms"] ? obj["synonyms"].split(/[,;]/).map(s => s.trim()).filter(Boolean) : [],
-    antonyms: obj["antonyms"] ? obj["antonyms"].split(/[,;]/).map(s => s.trim()).filter(Boolean) : [],
-    confusables: obj["confusables"] ? obj["confusables"].split(/[,;]/).map(s => s.trim()).filter(Boolean) : [],
-    phrases: obj["phrases"] ? obj["phrases"].split(";").map(s => s.trim()).filter(Boolean) : [],
+    synonyms: obj["synonyms"]
+      ? obj["synonyms"]
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
+    antonyms: obj["antonyms"]
+      ? obj["antonyms"]
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
+    confusables: obj["confusables"]
+      ? obj["confusables"]
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
+    phrases: obj["phrases"]
+      ? obj["phrases"]
+          .split(";")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
     videoUrl: obj["videoUrl"] || obj["video_url"] || obj["影片連結"] || "",
     stage,
-    textbook_index: parseTextbookIndex(obj["textbook_index"] || obj["課本索引"] || ""),
+    textbook_index: parseTextbookIndex(
+      obj["textbook_index"] || obj["課本索引"] || "",
+    ),
     exam_tags: parseExamTags(obj["exam_tags"] || obj["歷屆試題"] || ""),
-    theme_index: stage === "junior" ? parseThemeIndex(obj["主題"] || obj["theme_index"] || "") : [],
+    theme_index:
+      stage === "junior"
+        ? parseThemeIndex(obj["主題"] || obj["theme_index"] || "")
+        : [],
     affix_info: {},
   };
 }
@@ -199,7 +269,9 @@ function rowToWord(headers: string[], row: string[], index: number): VocabularyW
 async function fetchCSVData(): Promise<VocabularyWord[]> {
   const response = await fetch(CSV_URL);
   if (!response.ok) {
-    throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch CSV: ${response.status} ${response.statusText}`,
+    );
   }
 
   const csvText = await response.text();
@@ -239,7 +311,10 @@ export class CSVDataService {
   async loadData(forceRefresh = false): Promise<CSVDataResult> {
     // Check cache first (unless forcing refresh)
     if (!forceRefresh) {
-      const cached = await this.cache.get<{ data: VocabularyWord[]; timestamp: number }>("vocabulary");
+      const cached = await this.cache.get<{
+        data: VocabularyWord[];
+        timestamp: number;
+      }>("vocabulary");
       if (cached) {
         const age = Date.now() - cached.timestamp;
         if (age < CACHE_EXPIRY_MS) {
@@ -270,8 +345,15 @@ export class CSVDataService {
   /**
    * Get cache info (for debugging/display)
    */
-  async getCacheInfo(): Promise<{ exists: boolean; age?: number; expiresIn?: number }> {
-    const cached = await this.cache.get<{ data: VocabularyWord[]; timestamp: number }>("vocabulary");
+  async getCacheInfo(): Promise<{
+    exists: boolean;
+    age?: number;
+    expiresIn?: number;
+  }> {
+    const cached = await this.cache.get<{
+      data: VocabularyWord[];
+      timestamp: number;
+    }>("vocabulary");
     if (!cached) {
       return { exists: false };
     }

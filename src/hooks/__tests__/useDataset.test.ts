@@ -96,7 +96,7 @@ describe("useDataset", () => {
 
       // Data should be updated from CSV
       expect(result.current.data.some((w) => w.english_word === "hello")).toBe(
-        true
+        true,
       );
     });
 
@@ -141,7 +141,7 @@ describe("useDataset", () => {
   describe("Error Handling", () => {
     it("should handle CSV load error gracefully", async () => {
       (csvDataService.loadData as jest.Mock).mockRejectedValue(
-        new Error("Network error")
+        new Error("Network error"),
       );
 
       const { result } = renderHook(() => useDataset());
@@ -205,7 +205,7 @@ describe("useDataset", () => {
 
       // Synonyms should be merged
       const helloWord = result.current.data.find(
-        (w) => w.english_word === "hello"
+        (w) => w.english_word === "hello",
       );
       expect(helloWord?.synonyms).toContain("hi");
     });

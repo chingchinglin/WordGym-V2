@@ -28,7 +28,7 @@ export const DebugPage: React.FC<DebugPageProps> = ({
     ? words.filter(
         (w) =>
           w.english_word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.chinese_definition.includes(searchTerm)
+          w.chinese_definition.includes(searchTerm),
       )
     : words.slice(0, 50); // Show first 50 by default
 
@@ -77,7 +77,9 @@ export const DebugPage: React.FC<DebugPageProps> = ({
           </div>
           <div>
             <span className="text-gray-600">快取時間:</span>{" "}
-            <span className="font-mono">{formatCacheAge(cacheInfo?.cacheAge)}</span>
+            <span className="font-mono">
+              {formatCacheAge(cacheInfo?.cacheAge)}
+            </span>
           </div>
           <div>
             <span className="text-gray-600">狀態:</span>{" "}
@@ -115,7 +117,9 @@ export const DebugPage: React.FC<DebugPageProps> = ({
           </div>
           <div>
             <span className="text-gray-600">無 stage:</span>{" "}
-            <span className="font-mono text-red-600">{unknownStage.length}</span>
+            <span className="font-mono text-red-600">
+              {unknownStage.length}
+            </span>
           </div>
         </div>
       </div>
@@ -130,7 +134,8 @@ export const DebugPage: React.FC<DebugPageProps> = ({
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
         />
         <p className="text-sm text-gray-500 mt-1">
-          顯示 {filteredWords.length} 筆 {searchTerm ? "(搜尋結果)" : "(前 50 筆)"}
+          顯示 {filteredWords.length} 筆{" "}
+          {searchTerm ? "(搜尋結果)" : "(前 50 筆)"}
         </p>
       </div>
 
@@ -172,15 +177,17 @@ export const DebugPage: React.FC<DebugPageProps> = ({
                       word.stage === "junior"
                         ? "bg-blue-100 text-blue-800"
                         : word.stage === "senior"
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-red-100 text-red-800"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-red-100 text-red-800"
                     }`}
                   >
                     {word.stage || "無"}
                   </span>
                 </td>
                 <td className="px-3 py-2 text-xs font-mono">
-                  {word.textbook_index?.map((t) => `${t.version}-${t.vol}-${t.lesson}`).join(", ") || "-"}
+                  {word.textbook_index
+                    ?.map((t) => `${t.version}-${t.vol}-${t.lesson}`)
+                    .join(", ") || "-"}
                 </td>
                 <td className="px-3 py-2">
                   <button

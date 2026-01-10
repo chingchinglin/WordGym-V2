@@ -63,7 +63,9 @@ export const Importer: React.FC<ImporterProps> = ({
           );
           return true;
         }
-      } catch { /* JSON parse failed, try CSV */ }
+      } catch {
+        /* JSON parse failed, try CSV */
+      }
       return false;
     };
 

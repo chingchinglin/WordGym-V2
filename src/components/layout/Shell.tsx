@@ -445,10 +445,18 @@ export const Shell: React.FC<ShellProps> = ({
                       </p>
                       <button
                         onClick={() => {
-                          if (confirm("確定要清除快取並重新載入嗎？這會清除歷史記錄，但會保留您的教材設定。")) {
+                          if (
+                            confirm(
+                              "確定要清除快取並重新載入嗎？這會清除歷史記錄，但會保留您的教材設定。",
+                            )
+                          ) {
                             // Preserve user settings and current tab before clearing
-                            const savedSettings = localStorage.getItem("wordgym_user_settings_v1");
-                            const savedTab = localStorage.getItem("wordgym_current_tab_v1");
+                            const savedSettings = localStorage.getItem(
+                              "wordgym_user_settings_v1",
+                            );
+                            const savedTab = localStorage.getItem(
+                              "wordgym_current_tab_v1",
+                            );
 
                             // Clear all storage
                             localStorage.clear();
@@ -456,10 +464,16 @@ export const Shell: React.FC<ShellProps> = ({
 
                             // Restore user settings and tab
                             if (savedSettings) {
-                              localStorage.setItem("wordgym_user_settings_v1", savedSettings);
+                              localStorage.setItem(
+                                "wordgym_user_settings_v1",
+                                savedSettings,
+                              );
                             }
                             if (savedTab) {
-                              localStorage.setItem("wordgym_current_tab_v1", savedTab);
+                              localStorage.setItem(
+                                "wordgym_current_tab_v1",
+                                savedTab,
+                              );
                             }
 
                             window.location.reload();
@@ -509,15 +523,17 @@ export const Shell: React.FC<ShellProps> = ({
             </p>
             <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span>©{" "}
-                <a
-                  href="https://www.junyiacademy.org/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
-                >
-                  均一教育平台
-                </a></span>
+                <span>
+                  ©{" "}
+                  <a
+                    href="https://www.junyiacademy.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 hover:underline"
+                  >
+                    均一教育平台
+                  </a>
+                </span>
                 <span>|</span>
                 <a
                   href="https://forms.gle/dM8VbrzUDd5pr1y49"
@@ -535,13 +551,14 @@ export const Shell: React.FC<ShellProps> = ({
                       onClick={handleRefreshCache}
                       disabled={isRefreshing || cacheInfo?.isLoading}
                       className="inline-flex items-center gap-1 text-gray-500 hover:text-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={cacheInfo?.fromCache
-                        ? `資料快取：${formatCacheAge(cacheInfo.cacheAge)}更新`
-                        : "重新載入單字資料"
+                      title={
+                        cacheInfo?.fromCache
+                          ? `資料快取：${formatCacheAge(cacheInfo.cacheAge)}更新`
+                          : "重新載入單字資料"
                       }
                     >
                       <svg
-                        className={`h-3.5 w-3.5 ${isRefreshing || cacheInfo?.isLoading ? 'animate-spin' : ''}`}
+                        className={`h-3.5 w-3.5 ${isRefreshing || cacheInfo?.isLoading ? "animate-spin" : ""}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -556,8 +573,7 @@ export const Shell: React.FC<ShellProps> = ({
                       <span className="text-xs">
                         {isRefreshing || cacheInfo?.isLoading
                           ? "更新中..."
-                          : "更新資料"
-                        }
+                          : "更新資料"}
                       </span>
                     </button>
                   </>

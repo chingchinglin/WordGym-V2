@@ -110,35 +110,37 @@ export function useDataset(initialData: VocabularyWord[] = []) {
   /**
    * Hydrate dataset with theme ordering
    */
-  const hydrateDataset = useCallback((
-    items: any[],
-    resetCounters = true,
-  ): VocabularyWord[] => {
-    const counters = resetCounters ? {} : { ...themeOrderRef.current };
-    const hydrated = (Array.isArray(items) ? items : []).map((item, index) => {
-      const prepared = ensureWordFormsDetail(item);
-      const clone: any = { ...prepared };
+  const hydrateDataset = useCallback(
+    (items: any[], resetCounters = true): VocabularyWord[] => {
+      const counters = resetCounters ? {} : { ...themeOrderRef.current };
+      const hydrated = (Array.isArray(items) ? items : []).map(
+        (item, index) => {
+          const prepared = ensureWordFormsDetail(item);
+          const clone: any = { ...prepared };
 
-      // Ensure id exists for color rotation and identification
-      if (!clone.id && clone.id !== 0) {
-        clone.id = index;
-      }
-
-      if (clone.theme_order && typeof clone.theme_order === "object") {
-        Object.entries(clone.theme_order).forEach(([theme, order]) => {
-          const num = Number(order);
-          if (Number.isFinite(num) && num >= 0) {
-            counters[theme] = Math.max(counters[theme] || 0, num + 1);
+          // Ensure id exists for color rotation and identification
+          if (!clone.id && clone.id !== 0) {
+            clone.id = index;
           }
-        });
-      }
-      applyThemeOrder(clone, getWordThemes(clone), counters);
-      return clone;
-    });
 
-    themeOrderRef.current = counters;
-    return hydrated;
-  }, []);
+          if (clone.theme_order && typeof clone.theme_order === "object") {
+            Object.entries(clone.theme_order).forEach(([theme, order]) => {
+              const num = Number(order);
+              if (Number.isFinite(num) && num >= 0) {
+                counters[theme] = Math.max(counters[theme] || 0, num + 1);
+              }
+            });
+          }
+          applyThemeOrder(clone, getWordThemes(clone), counters);
+          return clone;
+        },
+      );
+
+      themeOrderRef.current = counters;
+      return hydrated;
+    },
+    [],
+  );
 
   /**
    * Initialize with fallback data, then load from CSV
@@ -161,34 +163,43 @@ export function useDataset(initialData: VocabularyWord[] = []) {
   /**
    * Load data from CSV service (with caching)
    */
-  const loadFromCSV = useCallback(async (forceRefresh = false) => {
-    setCacheInfo(prev => ({ ...prev, isLoading: true, error: undefined }));
+  const loadFromCSV = useCallback(
+    async (forceRefresh = false) => {
+      setCacheInfo((prev) => ({ ...prev, isLoading: true, error: undefined }));
 
-    try {
-      const result: CSVDataResult = await csvDataService.loadData(forceRefresh);
+      try {
+        const result: CSVDataResult =
+          await csvDataService.loadData(forceRefresh);
 
-      // Hydrate the data before setting
-      const hydratedData = hydrateDataset(result.data);
-      setData(hydratedData);
+        // Hydrate the data before setting
+        const hydratedData = hydrateDataset(result.data);
+        setData(hydratedData);
 
-      setCacheInfo({
-        isLoading: false,
-        fromCache: result.fromCache,
-        cacheAge: result.cacheAge,
-        lastRefresh: new Date(),
-      });
+        setCacheInfo({
+          isLoading: false,
+          fromCache: result.fromCache,
+          cacheAge: result.cacheAge,
+          lastRefresh: new Date(),
+        });
 
-      console.log(`[useDataset] Loaded ${hydratedData.length} words from ${result.fromCache ? 'cache' : 'CSV'}`);
-    } catch (error) {
-      console.error("[useDataset] Failed to load from CSV, using fallback:", error);
-      // Keep fallback data, just update cache info
-      setCacheInfo({
-        isLoading: false,
-        fromCache: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  }, [hydrateDataset]);
+        console.log(
+          `[useDataset] Loaded ${hydratedData.length} words from ${result.fromCache ? "cache" : "CSV"}`,
+        );
+      } catch (error) {
+        console.error(
+          "[useDataset] Failed to load from CSV, using fallback:",
+          error,
+        );
+        // Keep fallback data, just update cache info
+        setCacheInfo({
+          isLoading: false,
+          fromCache: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [hydrateDataset],
+  );
 
   /**
    * Refresh cache manually (Issue #72: manual refresh button)
@@ -800,7 +811,9 @@ export function useDataset(initialData: VocabularyWord[] = []) {
     try {
       localStorage.removeItem(LS.dataset);
       localStorage.removeItem(LS.presetApplied);
-    } catch { /* localStorage may be unavailable */ }
+    } catch {
+      /* localStorage may be unavailable */
+    }
     setData(hydrateDataset([]));
   };
 
