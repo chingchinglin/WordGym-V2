@@ -83,6 +83,21 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
     }
   }, [availableVols, filters.vol, updateFilter]);
 
+  // Reset lesson selection when vol changes - fixes Issue #70
+  useEffect(() => {
+    // When vol changes and availableLessons are loaded, reset to first lesson
+    if (filters.vol && availableLessons.length > 0 && availableLessons[0]) {
+      // Only reset if current lesson selection doesn't match available lessons for this vol
+      const currentLessons = Array.isArray(filters.lesson) ? filters.lesson : [];
+      const hasInvalidLesson = currentLessons.some(
+        (l) => !availableLessons.includes(l)
+      );
+      if (hasInvalidLesson || currentLessons.length === 0) {
+        updateFilter("lesson", [availableLessons[0]]);
+      }
+    }
+  }, [filters.vol, availableLessons, updateFilter]);
+
   // Show message if no data available
   if (availableVols.length === 0) {
     return (

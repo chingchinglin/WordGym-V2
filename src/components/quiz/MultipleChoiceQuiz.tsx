@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { VocabularyWord } from "../../types";
-import { makeCloze } from "../../utils/quizHelpers";
+import { makeCloze, canMakeCloze } from "../../utils/quizHelpers";
 import { speak } from "../../utils/speechUtils";
 import { Button } from "../ui/Button";
 import QuizCompletionScreen from "./QuizCompletionScreen";
@@ -86,10 +86,22 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     return false;
   })();
 
-  const validPool = useMemo(
-    () => pool.filter((w) => w.example_sentence && w.example_sentence.trim()),
-    [pool],
-  );
+  const validPool = useMemo(() => {
+    // Filter words that have example sentences
+    const withSentences = pool.filter((w) => w.example_sentence && w.example_sentence.trim());
+
+    // Prioritize words where the cloze can be made properly (word appears in sentence)
+    // Put words with proper cloze first, then words with fallback cloze
+    const properCloze = withSentences.filter((w) =>
+      canMakeCloze(w.example_sentence || '', cleanWord(w.english_word))
+    );
+    const fallbackCloze = withSentences.filter((w) =>
+      !canMakeCloze(w.example_sentence || '', cleanWord(w.english_word))
+    );
+
+    // Return proper cloze words first, then fallback (Issue #58)
+    return [...properCloze, ...fallbackCloze];
+  }, [pool]);
 
   // Shuffle questions - use all selected words (no limit)
   const shuffledPool = useMemo(() => {
