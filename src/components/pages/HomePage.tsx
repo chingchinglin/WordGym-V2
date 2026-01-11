@@ -179,7 +179,9 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             className={`flex-1 sm:flex-none text-lg font-bold px-6 py-3 rounded-full border transition-all duration-200 min-h-[52px] ${
               currentTab === key
                 ? "bg-[#5A4FCF] text-white border-transparent shadow-[0_4px_6px_rgba(90,79,207,0.3)]"
-                : "bg-white text-gray-700 border-[#E2E8F0] hover:bg-[#EDF2F7]"
+                : hoveredTab === key
+                  ? "bg-[#5A4FCF] text-white border-transparent"
+                  : "bg-white text-gray-700 border-[#E2E8F0] hover:bg-[#EDF2F7]"
             }`}
           >
             {label}

@@ -538,7 +538,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                 {(() => {
                   const source = formatExampleSource(word);
                   return source ? (
-                    <div className="text-xs text-indigo-600 mt-1">{source}</div>
+                    <div className="text-xs text-gray-400 mt-1 text-right">{source}</div>
                   ) : null;
                 })()}
               </div>
