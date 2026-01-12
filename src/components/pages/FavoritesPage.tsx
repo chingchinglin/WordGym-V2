@@ -1,19 +1,6 @@
 import React from "react";
-import { VocabularyWord, POSType } from "../../types";
+import { VocabularyWord, POSType, POS_LABEL } from "../../types";
 import { useFavorites } from "../../hooks/useFavorites";
-
-// English POS abbreviations to match word card format
-const POS_ABBREV: Record<POSType, string> = {
-  noun: "n.",
-  verb: "v.",
-  adjective: "adj.",
-  adverb: "adv.",
-  preposition: "prep.",
-  conjunction: "conj.",
-  interjection: "interj.",
-  pronoun: "pron.",
-  other: "",
-};
 
 interface FavoritesPageProps {
   words: VocabularyWord[];
@@ -158,14 +145,15 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                     <h3 className="text-xl font-bold text-gray-900">
                       {word.english_word}
                     </h3>
-                    {/* Line 2: POS abbreviation (English) + Chinese definition - Issue #52 */}
+                    {/* Line 2: POS label + Chinese definition - Issue #68 */}
                     <p className="text-sm text-gray-600">
                       {word.posTags && word.posTags.length > 0 && (
-                        <span className="text-gray-500">
+                        <span className="text-gray-500 font-medium">
                           {word.posTags
-                            .map((pos) => POS_ABBREV[pos as POSType] || pos)
+                            .filter((pos) => pos !== "other") // Filter out "other" tags
+                            .map((pos) => POS_LABEL[pos as POSType] || pos)
                             .filter(Boolean)
-                            .join(" ")}{" "}
+                            .join("、")}{" "}
                         </span>
                       )}
                       {word.chinese_definition}
