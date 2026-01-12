@@ -178,45 +178,107 @@ const getWordForms = (word: string): string[] => {
   return [...new Set(forms)];
 };
 
+// Helper function to check if a string is a multi-word phrase
+const isPhrase = (text: string): boolean => {
+  const trimmed = text.trim();
+  // Check if contains multiple words separated by spaces
+  return /\s+/.test(trimmed);
+};
+
+// Helper function to get all word forms for a phrase (applies to last word)
+const getPhraseWordForms = (phrase: string): string[] => {
+  const words = phrase.trim().split(/\s+/);
+  if (words.length <= 1) {
+    return getWordForms(phrase);
+  }
+
+  // For phrases, generate forms of the last word and keep other words fixed
+  const lastWord = words[words.length - 1];
+  const otherWords = words.slice(0, -1);
+  const lastWordForms = getWordForms(lastWord);
+
+  return lastWordForms.map((form) => [...otherWords, form].join(" "));
+};
+
 // Make cloze sentence by replacing the answer with blanks
 export const makeCloze = (sentence: string, answer: string): string => {
   const baseWord = getBaseWord(answer);
-  const esc = escapeForRegex(baseWord);
+  const isMultiWord = isPhrase(baseWord);
 
-  // First try exact match
-  const exactRx = new RegExp(`(^|[^A-Za-z])(${esc})(?=[^A-Za-z]|$)`, "i");
-  if (exactRx.test(sentence)) {
-    return String(sentence).replace(exactRx, (m) =>
-      m.replace(new RegExp(esc, "i"), "_____"),
-    );
-  }
+  if (isMultiWord) {
+    // Handle multi-word phrases (e.g., "around the corner")
+    const phraseWordForms = getPhraseWordForms(baseWord);
 
-  // Try matching word forms
-  const wordForms = getWordForms(baseWord);
-  for (const form of wordForms) {
-    const formEsc = escapeForRegex(form);
-    const formRx = new RegExp(`(^|[^A-Za-z])(${formEsc})(?=[^A-Za-z]|$)`, "i");
-    if (formRx.test(sentence)) {
-      return String(sentence).replace(formRx, (m) =>
-        m.replace(new RegExp(formEsc, "i"), "_____"),
+    // Try each phrase form with word boundaries
+    for (const phraseForm of phraseWordForms) {
+      const phraseEsc = escapeForRegex(phraseForm);
+      // Match the phrase as whole words (bounded by non-letter characters or boundaries)
+      const phraseRx = new RegExp(
+        `(^|[^A-Za-z])(${phraseEsc})(?=[^A-Za-z]|$)`,
+        "i",
       );
+      if (phraseRx.test(sentence)) {
+        return String(sentence).replace(phraseRx, (m) =>
+          m.replace(new RegExp(escapeForRegex(phraseForm), "i"), "_____"),
+        );
+      }
+    }
+
+    // If phrase not found as whole, try finding individual words and blank each
+    // This handles cases where words might be separated differently
+    const words = baseWord.split(/\s+/);
+    for (const word of words) {
+      const wordEsc = escapeForRegex(word);
+      const wordRx = new RegExp(`(^|[^A-Za-z])(${wordEsc})(?=[^A-Za-z]|$)`, "i");
+      if (wordRx.test(sentence)) {
+        // Found at least one word from the phrase, blank it
+        return String(sentence).replace(wordRx, (m) =>
+          m.replace(new RegExp(wordEsc, "i"), "_____"),
+        );
+      }
+    }
+  } else {
+    // Handle single word (existing logic)
+    const esc = escapeForRegex(baseWord);
+
+    // First try exact match
+    const exactRx = new RegExp(`(^|[^A-Za-z])(${esc})(?=[^A-Za-z]|$)`, "i");
+    if (exactRx.test(sentence)) {
+      return String(sentence).replace(exactRx, (m) =>
+        m.replace(new RegExp(esc, "i"), "_____"),
+      );
+    }
+
+    // Try matching word forms
+    const wordForms = getWordForms(baseWord);
+    for (const form of wordForms) {
+      const formEsc = escapeForRegex(form);
+      const formRx = new RegExp(
+        `(^|[^A-Za-z])(${formEsc})(?=[^A-Za-z]|$)`,
+        "i",
+      );
+      if (formRx.test(sentence)) {
+        return String(sentence).replace(formRx, (m) =>
+          m.replace(new RegExp(formEsc, "i"), "_____"),
+        );
+      }
+    }
+
+    // Fallback: find any word that starts with the base word (3+ chars)
+    if (baseWord.length >= 3) {
+      const prefixRx = new RegExp(
+        `(^|[^A-Za-z])(${esc}[a-z]*)(?=[^A-Za-z]|$)`,
+        "i",
+      );
+      if (prefixRx.test(sentence)) {
+        return String(sentence).replace(prefixRx, (m, prefix, word) =>
+          m.replace(word, "_____"),
+        );
+      }
     }
   }
 
-  // Fallback: find any word that starts with the base word (3+ chars)
-  if (baseWord.length >= 3) {
-    const prefixRx = new RegExp(
-      `(^|[^A-Za-z])(${esc}[a-z]*)(?=[^A-Za-z]|$)`,
-      "i",
-    );
-    if (prefixRx.test(sentence)) {
-      return String(sentence).replace(prefixRx, (m, prefix, word) =>
-        m.replace(word, "_____"),
-      );
-    }
-  }
-
-  // Last resort: if we can't find the word, append a blank at the end
+  // Last resort: if we can't find the word/phrase, append a blank at the end
   // This ensures every question has a blank - Issue #58
   return `${sentence} (_____)`;
 };
