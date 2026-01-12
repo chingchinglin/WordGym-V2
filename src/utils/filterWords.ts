@@ -128,7 +128,9 @@ export function filterWords(
 
     // POS filter
     if (quickFilterPos !== "all") {
-      const posMatch = word.posTags?.includes(quickFilterPos) || false;
+      // Handle words with empty posTags - treat as "other"
+      const posTags = word.posTags && word.posTags.length > 0 ? word.posTags : ["other"];
+      const posMatch = posTags.includes(quickFilterPos);
       if (!posMatch) return false;
     }
 

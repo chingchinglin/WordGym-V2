@@ -141,7 +141,8 @@ export function getFilteredWords(
   // 3. Quick POS Filter (applies across all tabs)
   if (quickFilterPos && quickFilterPos !== "all") {
     filtered = filtered.filter((word) => {
-      const posTags = word.posTags || [];
+      // Handle words with empty posTags - treat as "other"
+      const posTags = (word.posTags && word.posTags.length > 0) ? word.posTags : ["other"];
       return posTags.includes(quickFilterPos);
     });
 
