@@ -122,6 +122,56 @@ export const DebugPage: React.FC<DebugPageProps> = ({
             </span>
           </div>
         </div>
+        {/* POS Tags Statistics */}
+        <div className="mt-4 pt-4 border-t border-green-200">
+          <h3 className="font-semibold text-green-800 mb-2 text-sm">詞性統計</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+            <div>
+              <span className="text-gray-600">名詞:</span>{" "}
+              <span className="font-mono">
+                {words.filter((w) => w.posTags?.includes("noun")).length}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">動詞:</span>{" "}
+              <span className="font-mono">
+                {words.filter((w) => w.posTags?.includes("verb")).length}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">形容詞:</span>{" "}
+              <span className="font-mono">
+                {words.filter((w) => w.posTags?.includes("adjective")).length}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">副詞:</span>{" "}
+              <span className="font-mono">
+                {words.filter((w) => w.posTags?.includes("adverb")).length}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">無 posTags:</span>{" "}
+              <span className="font-mono text-red-600">
+                {words.filter((w) => !w.posTags || w.posTags.length === 0).length}
+              </span>
+            </div>
+          </div>
+          {/* Sample words with posTags */}
+          <div className="mt-2 text-xs">
+            <span className="text-gray-600">範例（前3個有 posTags 的單字）:</span>
+            <div className="mt-1 space-y-1">
+              {words
+                .filter((w) => w.posTags && w.posTags.length > 0)
+                .slice(0, 3)
+                .map((w) => (
+                  <div key={w.id} className="font-mono text-gray-700">
+                    {w.english_word}: posTags={JSON.stringify(w.posTags)}, posOriginal={w.posOriginal || "無"}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search */}

@@ -99,6 +99,16 @@ export function getThemeDisplayLabels(word: VocabularyWord): string[] {
 export function formatExampleSource(word: VocabularyWord): string | null {
   const { year_1, part_1, source_1 } = word;
 
+  // Debug: Log for row 8112
+  if (word.english_word && (year_1 || part_1 || source_1)) {
+    console.log('[formatExampleSource] Debug:', {
+      english_word: word.english_word,
+      year_1,
+      part_1,
+      source_1,
+    });
+  }
+
   // If all fields are empty, return null
   if (!year_1 && !part_1 && !source_1) {
     return null;
@@ -242,7 +252,7 @@ export function wordToMarkdown(
           .filter(Boolean);
     const cleanedForms = formsList.filter(Boolean);
     if (cleanedForms.length)
-      grammarLines.push(`- 詞性變化：${cleanedForms.join("、")}`);
+      grammarLines.push(`- 詞形變化：${cleanedForms.join("、")}`);
 
     if (grammarLines.length) {
       lines.push("", "### 詞性", ...grammarLines);

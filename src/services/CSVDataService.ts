@@ -5,6 +5,7 @@
 
 import { VocabularyWord } from "../types";
 import { IndexedDBCache } from "./IndexedDBCache";
+import { normalizePOS } from "../utils/dataProcessing";
 
 // Google Sheet published as CSV (read-only)
 // Format: https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}
@@ -168,13 +169,40 @@ function rowToWord(
   if (rawStage === "高中" || rawStage === "senior") stage = "senior";
   else if (rawStage === "國中" || rawStage === "junior") stage = "junior";
 
-  // Parse POS tags
+  // Parse POS tags and posOriginal
   const posRaw =
     obj["posTags"] || obj["basic_pos"] || obj["pos"] || obj["詞性"] || "";
-  const posTags = posRaw
-    .split(/[,;，、]/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  
+  // Store original POS format from 詞性 column (e.g., "(n.)" or "(adj./v./n.)")
+  // This is used for display in word cards
+  const posOriginal = obj["詞性"] || obj["posOriginal"] || "";
+  
+  // Parse and normalize POS tags for filtering
+  // Handle formats like "(n.)", "(adj./v./n.)", "n.", "noun", etc.
+  let posTags: string[] = [];
+  
+  if (posRaw) {
+    // Remove parentheses if present (e.g., "(n.)" -> "n.")
+    let cleanedRaw = posRaw.trim();
+    if (cleanedRaw.startsWith("(") && cleanedRaw.endsWith(")")) {
+      cleanedRaw = cleanedRaw.slice(1, -1).trim();
+    }
+    
+    // Split by common delimiters: / , ; ， 、
+    const parts = cleanedRaw.split(/[/,;，、]/).map((s) => s.trim()).filter(Boolean);
+    
+    // Normalize each part to standard POSType format
+    posTags = parts.map((part) => {
+      // Remove trailing dots (e.g., "n." -> "n")
+      const cleaned = part.replace(/\.$/, "").trim();
+      // Use normalizePOS to convert to standard format (noun, verb, etc.)
+      return normalizePOS(cleaned);
+    });
+    
+    // Remove duplicates while preserving order
+    posTags = Array.from(new Set(posTags));
+  }
+  
   if (posTags.length === 0) posTags.push("other");
 
   return {
@@ -186,6 +214,7 @@ function rowToWord(
       obj["chinese_definition"] || obj["中譯"] || obj["中文"] || "",
     // pos is optional, using posTags instead
     posTags,
+    posOriginal: posOriginal.trim(),
     basic_pos: posTags.join(", "),
     grammar_main_category: posTags[0] || "",
     grammar_sub_category: obj["grammar_sub_category"] || "",
@@ -211,9 +240,9 @@ function rowToWord(
     example_translation_4: obj["example_translation_4"] || "",
     example_sentence_5: obj["example_sentence_5"] || "",
     example_translation_5: obj["example_translation_5"] || "",
-    year_1: obj["year_1"] || "",
-    part_1: obj["part_1"] || "",
-    source_1: obj["source_1"] || "",
+    year_1: (obj["year_1"] || obj["Year_1"] || "").trim(),
+    part_1: (obj["part_1"] || obj["Part_1"] || "").trim(),
+    source_1: (obj["source_1"] || obj["Source_1"] || "").trim(),
     theme: obj["theme"] || "",
     themes: obj["themes"]
       ? obj["themes"]
@@ -223,32 +252,37 @@ function rowToWord(
       : [],
     level: obj["level"] || obj["Level"] || "",
     cefr: obj["cefr"] || obj["CEFR"] || "",
-    word_forms: obj["word_forms"] || "",
+    word_forms:
+      obj["word_forms"] || obj["詞形變化"] || obj["詞性變化"] || "",
     word_forms_detail: [],
-    synonyms: obj["synonyms"]
-      ? obj["synonyms"]
-          .split(/[,;]/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [],
-    antonyms: obj["antonyms"]
-      ? obj["antonyms"]
-          .split(/[,;]/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [],
-    confusables: obj["confusables"]
-      ? obj["confusables"]
-          .split(/[,;]/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [],
-    phrases: obj["phrases"]
-      ? obj["phrases"]
-          .split(";")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [],
+    synonyms:
+      obj["synonyms"] || obj["同義字"]
+        ? (obj["synonyms"] || obj["同義字"] || "")
+            .split(/[,;]/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    antonyms:
+      obj["antonyms"] || obj["反義字"]
+        ? (obj["antonyms"] || obj["反義字"] || "")
+            .split(/[,;]/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    confusables:
+      obj["confusables"] || obj["易混淆字"]
+        ? (obj["confusables"] || obj["易混淆字"] || "")
+            .split(/[,;]/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    phrases:
+      obj["phrases"] || obj["片語"]
+        ? (obj["phrases"] || obj["片語"] || "")
+            .split(";")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
     videoUrl: obj["videoUrl"] || obj["video_url"] || obj["影片連結"] || "",
     stage,
     textbook_index: parseTextbookIndex(
@@ -259,7 +293,13 @@ function rowToWord(
       stage === "junior"
         ? parseThemeIndex(obj["主題"] || obj["theme_index"] || "")
         : [],
-    affix_info: {},
+    affix_info: {
+      prefix: obj["prefix"] || obj["字首"] || "",
+      suffix: obj["suffix"] || obj["字尾"] || "",
+      root: obj["root"] || obj["字根"] || "",
+      meaning: obj["meaning"] || obj["意思"] || "",
+      example: obj["example"] || obj["例子"] || "",
+    },
   };
 }
 
@@ -287,6 +327,16 @@ async function fetchCSVData(): Promise<VocabularyWord[]> {
   for (let i = 1; i < rows.length; i++) {
     const word = rowToWord(headers, rows[i], i);
     if (word) {
+      // Debug: Log row 8112 (index 8111) to check source fields
+      if (i === 8111) {
+        console.log('[CSVDataService] Row 8112 debug:', {
+          english_word: word.english_word,
+          year_1: word.year_1,
+          part_1: word.part_1,
+          source_1: word.source_1,
+          headers: headers.filter(h => h.includes('Year') || h.includes('Part') || h.includes('Source')),
+        });
+      }
       words.push(word);
     }
   }

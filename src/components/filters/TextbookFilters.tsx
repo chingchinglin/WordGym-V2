@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useRef } from "react";
 import { TextbookIndexItem } from "../../types";
 import { useUserSettings } from "../../hooks/useUserSettings";
 import { VersionService } from "../../services/VersionService";
+import { CustomSelect } from "../ui/CustomSelect";
 
 interface TextbookFiltersProps {
   filters: {
@@ -117,14 +118,12 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   // Show message if no data available
   if (availableVols.length === 0) {
     return (
-      <div className="mb-6 rounded-xl border-2 border-yellow-200 bg-yellow-50 p-4">
-        <p className="text-sm text-yellow-800 font-medium mb-1">
-          課本進度資料尚未建立
+      <div className="mb-6 rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+        <p className="text-sm text-blue-800 font-medium">
+          資料建置中...
         </p>
-        <p className="text-xs text-yellow-700">
-          目前 Google Sheet 中「{userSettings?.version}
-          」版本的課本進度資料尚未填入。
-          請聯繫管理員或切換至「大考衝刺」或「主題探索」模式。
+        <p className="text-xs text-blue-700 mt-1">
+          「{userSettings?.version}」版本的課本進度資料正在準備中，請稍後再試或切換至「大考衝刺」或「主題探索」模式。
         </p>
       </div>
     );
@@ -171,25 +170,35 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   };
 
   return (
-    <div className="mb-6 grid gap-4 md:grid-cols-2">
-      <div>
+    <div className="mb-6 grid gap-4 grid-cols-1 md:grid-cols-3 md:items-stretch">
+      <div className="md:col-span-1 flex flex-col">
         <label className="block text-sm font-medium text-gray-500 mb-2">
           冊次
         </label>
-        <select
+        <CustomSelect
           value={filters.vol || availableVols[0]}
-          onChange={(e) => updateFilter("vol", e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A4FCF] focus:border-transparent"
-        >
-          {availableVols.map((vol) => (
-            <option key={vol} value={vol}>
-              {vol}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => updateFilter("vol", value)}
+          options={availableVols.map((vol) => {
+            // 冊次中文標註映射
+            const volLabelMap: Record<string, string> = {
+              B1: "第一冊",
+              B2: "第二冊",
+              B3: "第三冊",
+              B4: "第四冊",
+              B5: "第五冊",
+              B6: "第六冊",
+            };
+            const chineseLabel = volLabelMap[vol] || "";
+            return {
+              value: vol,
+              label: chineseLabel ? `${vol}(${chineseLabel})` : vol,
+            };
+          })}
+          className="w-full"
+        />
       </div>
 
-      <div>
+      <div className="md:col-span-2 flex flex-col">
         <div className="flex items-center justify-between mb-2">
           <label className="block text-sm font-medium text-gray-500">
             課次（可複選）
@@ -209,9 +218,9 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 p-3 border border-gray-300 rounded-lg max-h-40 overflow-y-auto min-h-[120px]">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 p-3 border border-gray-300 rounded-lg bg-white max-h-40 overflow-y-auto min-h-[120px] flex-1">
           {availableLessons.length === 0 ? (
-            <div className="col-span-3 sm:col-span-4 flex items-center justify-center text-gray-400 text-sm min-h-[96px]">
+            <div className="col-span-3 sm:col-span-5 flex items-center justify-center text-gray-400 text-sm min-h-[96px]">
               {filters.vol ? "載入中..." : "請選擇冊次"}
             </div>
           ) : (
@@ -221,7 +230,7 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
                 <button
                   key={lesson}
                   onClick={() => handleLessonToggle(lesson)}
-                  className={`u-style px-3 py-2 text-sm ${selectedLessons.includes(lesson) ? "selected" : ""}`}
+                  className={`u-style text-sm ${selectedLessons.includes(lesson) ? "selected" : ""}`}
                 >
                   {lesson}
                 </button>

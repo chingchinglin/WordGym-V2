@@ -6,10 +6,18 @@
   --primary-color: #3b82f6;
   --secondary-color: #10b981;
   --accent-color: #ec4899;
-  --primary-purple: #7c4dff;
-  --hover-bg: #f4f0ff;
+  /* 頂層大分類（Tab 導航）選中狀態 */
+  --top-level-selected: #5252D4;
+  /* 選中狀態（課次/詞性按鈕） */
+  --selected-bg: #7575FF;
+  /* 未選取狀態邊框 */
+  --unselected-border: #A3A3FF;
+  /* Hover 效果背景 */
+  --hover-bg: #F5F5FF;
   --disabled-border: #d1d1d1;
   --disabled-bg: #f9f9f9;
+  /* 向後相容 */
+  --primary-purple: #7575FF;
 }
 
 body {
@@ -135,15 +143,28 @@ code {
 /* Unified Button Style (u-style) - For consistent styling across components */
 .u-style {
   background-color: #ffffff;
-  border: 2px solid var(--primary-purple);
+  border: 1px solid var(--unselected-border);
   border-radius: 6px;
   transition: all 0.2s ease;
   cursor: pointer;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 尺寸標準化 */
+  min-width: 96px;
+  height: 40px;
+  padding: 8px 16px;
+  flex-shrink: 0;
+  /* 文字處理 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .u-style:hover:not(:disabled) {
   background-color: var(--hover-bg);
-  border-color: #6200ee;
+  border-color: var(--unselected-border);
 }
 
 .u-style:disabled,
@@ -155,8 +176,55 @@ code {
   opacity: 0.7;
 }
 
-/* Selected state for u-style buttons */
+/* Selected state for u-style buttons (課次/詞性按鈕) */
 .u-style.selected {
-  background-color: var(--primary-purple);
+  background-color: var(--selected-bg);
   color: #ffffff;
+  border-color: var(--selected-bg);
+}
+
+/* Select dropdown styling - ensure white background */
+/* For Edge/macOS compatibility */
+select {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+select option {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Ensure select dropdown menu (when open) has white background */
+select:focus,
+select:active,
+select:hover {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Edge browser specific - dropdown list styling */
+select::-ms-expand {
+  display: none;
+}
+
+/* Webkit browsers (Safari, Chrome, Edge) - dropdown arrow styling */
+select::-webkit-appearance {
+  -webkit-appearance: none;
+}
+
+/* For Edge on macOS - ensure dropdown options are white */
+@supports (-webkit-appearance: none) {
+  select {
+    background-color: #ffffff !important;
+  }
+  
+  select option {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+  }
 }

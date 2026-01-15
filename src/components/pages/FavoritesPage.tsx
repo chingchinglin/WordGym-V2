@@ -1,5 +1,5 @@
 import React from "react";
-import { VocabularyWord, POSType, POS_LABEL } from "../../types";
+import { VocabularyWord } from "../../types";
 import { useFavorites } from "../../hooks/useFavorites";
 
 interface FavoritesPageProps {
@@ -145,18 +145,14 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                     <h3 className="text-xl font-bold text-gray-900">
                       {word.english_word}
                     </h3>
-                    {/* Line 2: POS label + Chinese definition - Issue #68 */}
+                    {/* Line 2: Chinese definition + POS original format */}
                     <p className="text-sm text-gray-600">
-                      {word.posTags && word.posTags.length > 0 && (
+                      {word.chinese_definition}
+                      {word.posOriginal && (
                         <span className="text-gray-500 font-medium">
-                          {word.posTags
-                            .filter((pos) => pos !== "other") // Filter out "other" tags
-                            .map((pos) => POS_LABEL[pos as POSType] || pos)
-                            .filter(Boolean)
-                            .join("、")}{" "}
+                          {" "}{word.posOriginal}
                         </span>
                       )}
-                      {word.chinese_definition}
                     </p>
                     <div className="flex gap-2 mt-2">
                       {/* Link to word card - Issue #53 */}

@@ -5,7 +5,9 @@ import { useTabFilters } from "../../hooks/useTabFilters";
 import { useQuickFilterPos } from "../../hooks/useQuickFilterPos";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useFilteredWordIds } from "../../hooks/useFilteredWordIds";
+import { useQuizRange } from "../../hooks/useQuizRange";
 import { filterWords } from "../../utils/filterWords";
+import { FEATURES } from "../../config/features";
 import type { VocabularyWord, UserSettings } from "../../types";
 
 import { QuickPOSFilter } from "../filters/QuickPOSFilter";
@@ -21,8 +23,8 @@ const TABS = {
 
 const TAB_TOOLTIPS: Record<string, string> = {
   textbook: "收錄各版本教科書單字，請選擇冊次與課次",
-  exam: "針對歷年會考、學測高頻核心單字進行特訓，請選擇練習目標",
-  theme: "依據 Level 程度 或 情境學習，請選擇感興趣的分類開始探索",
+  exam: "針對歷年會考、學測高頻核心單字進行特訓，請選擇練習目標（即將推出，敬請期待！）",
+  theme: "依據 Level 程度 或 情境學習，請選擇感興趣的分類開始探索（即將推出，敬請期待！）",
 };
 
 interface HomePageProps {
@@ -37,6 +39,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   const { quickFilterPos, setQuickFilterPos } = useQuickFilterPos();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { setFilteredWordIds } = useFilteredWordIds();
+  const { accumulatedIds, addToRange, clearRange } = useQuizRange();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
@@ -84,8 +87,17 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   // Show message only if truly no settings
   const isSettingsMissing = !userSettings?.stage || !userSettings?.version;
 
+  // Check if current tab is locked (Coming Soon)
+  const isCurrentTabLocked = useMemo(() => {
+    if (currentTab === "exam") return !FEATURES.exam;
+    if (currentTab === "theme") return !FEATURES.theme;
+    return false;
+  }, [currentTab]);
+
   const filteredWords = useMemo(() => {
     if (isSettingsMissing) return [];
+    // If tab is locked, return empty array to show Coming Soon
+    if (isCurrentTabLocked) return [];
     return filterWords(
       words,
       userSettings,
@@ -96,6 +108,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
     );
   }, [
     isSettingsMissing,
+    isCurrentTabLocked,
     words,
     userSettings,
     currentTab,
@@ -119,8 +132,13 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   }
 
   const handleTestRange = () => {
-    const wordIds = filteredWords.map((word) => word.id).join(",");
-    window.location.hash = `#/quiz?words=${wordIds}`;
+    // Add current filtered words to accumulated range
+    const currentWordIds = filteredWords.map((word) => word.id);
+    addToRange(currentWordIds);
+    
+    // Navigate to quiz page without URL params
+    // QuizPage will read from sessionStorage (accumulated range)
+    window.location.hash = `#/quiz`;
   };
 
   const handleWordClick = (wordId: number) => {
@@ -176,12 +194,12 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             onClick={() => setCurrentTab(key as "textbook" | "exam" | "theme")}
             onMouseEnter={() => setHoveredTab(key)}
             onMouseLeave={() => setHoveredTab(null)}
-            className={`flex-1 sm:flex-none text-lg font-bold px-6 py-3 rounded-full border transition-all duration-200 min-h-[52px] ${
+            className={`flex-1 sm:flex-none text-lg font-bold px-6 py-3 rounded-full border min-h-[52px] transition-[background-color] duration-200 ease-in-out ${
               currentTab === key
-                ? "bg-[#5A4FCF] text-white border-transparent shadow-[0_4px_6px_rgba(90,79,207,0.3)]"
+                ? "bg-[#5B56D6] text-white border-transparent shadow-[0_4px_6px_rgba(91,86,214,0.3)]"
                 : hoveredTab === key
-                  ? "bg-[#5A4FCF] text-white border-transparent"
-                  : "bg-white text-gray-700 border-[#E2E8F0] hover:bg-[#EDF2F7]"
+                  ? "bg-[#F5F5F5] text-gray-700 border-[#E2E8F0]"
+                  : "bg-white text-gray-700 border-[#E2E8F0] hover:bg-[#F5F5F5]"
             }`}
           >
             {label}
@@ -265,7 +283,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
           placeholder="搜尋單字..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A4FCF] focus:border-transparent"
+          className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7575FF] focus:border-transparent"
         />
         {searchTerm && (
           <button
@@ -283,8 +301,8 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
           <div>
             <h2 className="text-xl font-semibold">
               {currentTab === "textbook" && "課本進度"}
-              {currentTab === "exam" && "大考衝刺（歷屆試題）"}
-              {currentTab === "theme" && "主題探索（Level 分類）"}
+              {currentTab === "exam" && "大考衝刺"}
+              {currentTab === "theme" && "主題探索"}
             </h2>
             <p className="text-sm text-gray-500">
               符合條件的單字：{filteredWords.length} 筆
@@ -294,15 +312,37 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
           {filteredWords.length > 0 && (
             <button
               onClick={handleTestRange}
-              className="ml-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              className="ml-auto px-4 py-2 bg-[#66BB6A] text-white font-semibold rounded-lg hover:bg-[#5AA85F] transition-colors"
             >
               測驗此範圍
             </button>
           )}
         </div>
 
-        {/* Word Grid */}
-        {filteredWords.length === 0 ? (
+        {/* Word Grid or Coming Soon */}
+        {isCurrentTabLocked ? (
+          // Coming Soon Card
+          <div className="rounded-2xl border border-gray-200 bg-white/80 shadow-sm p-12 text-center">
+            <div className="space-y-4">
+              <p className="text-gray-600 leading-relaxed text-lg">
+                即將推出，敬請期待！
+              </p>
+              <p className="text-base text-gray-500">
+                此功能正在建置中，我們將盡快為您提供完整的學習體驗。
+              </p>
+              <div className="pt-2">
+                <a
+                  href="https://forms.gle/SrvhD7T9ZgTiq6dH9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:text-indigo-700 hover:underline font-medium transition-colors"
+                >
+                  新功能上線請通知我
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : filteredWords.length === 0 ? (
           <div className="rounded-2xl border border-gray-200 bg-white/80 shadow-sm p-8 text-center">
             <p className="text-sm text-gray-500">
               找不到符合條件的單字，請調整篩選條件。

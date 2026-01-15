@@ -18,6 +18,7 @@ export function normalizePOS(raw: string | undefined | null): POSType {
   if (/^v[.\s/]*$|^vt\b|^vi\b|^verb\b|動詞/.test(s)) return "verb";
   if (/^adj[.\s/]*$|^adjective\b|形容/.test(s)) return "adjective";
   if (/^adv[.\s/]*$|^adverb\b|副詞/.test(s)) return "adverb";
+  if (/^phr[.\s/]*$|^phrase\b|片語/.test(s)) return "phrase";
   if (/^pron[.\s/]*$|^pronoun\b|代名/.test(s)) return "pronoun";
   if (/^prep[.\s/]*$|^preposition\b|介系/.test(s)) return "preposition";
   if (/^conj[.\s/]*$|^conjunction\b|連接/.test(s)) return "conjunction";

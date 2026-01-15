@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { VocabularyWord, UserSettings } from "../../types";
 import { useHashRoute } from "../../hooks/useHashRoute";
 import { useFilteredWordIds } from "../../hooks/useFilteredWordIds";
+import { useQuizRange } from "../../hooks/useQuizRange";
 import { VersionService } from "../../services/VersionService";
 import MultipleChoiceQuiz from "../quiz/MultipleChoiceQuiz";
 import FlashcardQuiz from "../quiz/FlashcardQuiz";
@@ -13,7 +14,8 @@ interface QuizPageProps {
 
 export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
   const { hash, push } = useHashRoute();
-  const { filteredWordIds } = useFilteredWordIds();
+  const { filteredWordIds, setFilteredWordIds } = useFilteredWordIds();
+  const { clearRange, accumulatedIds } = useQuizRange();
 
   // Parse URL params
   const params = useMemo(() => {
@@ -40,22 +42,36 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
     });
   }, [words, userSettings]);
 
-  // Parse word IDs from URL params OR use global filtered word IDs
+  // Parse word IDs from URL params OR use accumulated range OR use global filtered word IDs
   const quizWords = useMemo(() => {
     const wordIdsParam = params.get("words");
 
-    // Priority 1: URL params (from explicit "測驗此範圍" button click)
+    // Priority 1: URL params (explicit range, e.g., from FavoritesPage or direct navigation)
+    // This takes precedence and does NOT use accumulated range
     if (wordIdsParam) {
       const wordIds = wordIdsParam.split(",").map((id) => parseInt(id, 10));
       return words.filter((w) => wordIds.includes(w.id));
     }
 
-    // Priority 2: Global filtered word IDs (from HomePage filter state)
+    // Priority 2: Accumulated range from sessionStorage (from HomePage "測驗此範圍" button)
+    try {
+      const accumulatedRange = sessionStorage.getItem("wordgym_quiz_range_v1");
+      if (accumulatedRange) {
+        const wordIds = JSON.parse(accumulatedRange) as number[];
+        if (wordIds.length > 0) {
+          return words.filter((w) => wordIds.includes(w.id));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to read accumulated quiz range:", error);
+    }
+
+    // Priority 3: Global filtered word IDs (from HomePage filter state, backward compatibility)
     if (filteredWordIds && filteredWordIds.length > 0) {
       return words.filter((w) => filteredWordIds.includes(w.id));
     }
 
-    // Priority 3: Empty (show prompt to select range)
+    // Priority 4: Empty (show prompt to select range)
     return [];
   }, [params, words, filteredWordIds, versionFilteredWords]);
 
@@ -161,16 +177,35 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
 
   // Selection screen
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <div className="bg-white rounded-2xl shadow-lg border-t-4 border-indigo-600 p-8">
+    <div className="bg-gray-50 pb-8">
+      <div className="max-w-2xl mx-auto px-4 pt-6">
+        <div className="bg-white rounded-2xl shadow-lg border-t-4 border-indigo-600 p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           實力驗收
         </h1>
-        <p className="text-center text-gray-600 mb-4">
-          你已選擇練習{" "}
-          <span className="font-bold text-indigo-600">{quizWords.length}</span>{" "}
-          題
-        </p>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-base text-gray-600">
+            你已選擇練習{" "}
+            <span className="font-bold text-indigo-600">{quizWords.length}</span>{" "}
+            題
+          </p>
+          {quizWords.length > 0 && (
+            <button
+              onClick={() => {
+                // Clear all possible sources
+                clearRange(); // Clear sessionStorage accumulated range
+                setFilteredWordIds([]); // Clear localStorage filtered word IDs
+                // Navigate to quiz page without params to show empty state
+                // This will trigger quizWords to become empty array
+                push("#/quiz");
+              }}
+              className="px-4 py-2 text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              title="清除測驗範圍"
+            >
+              清除測驗範圍
+            </button>
+          )}
+        </div>
 
         {/* Warning when less than 5 questions */}
         {quizWords.length > 0 && quizWords.length < 5 && (
@@ -182,12 +217,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="flex flex-col items-center space-y-4">
           {/* Multiple Choice Button */}
           <button
             onClick={handleStartMultipleChoice}
             disabled={validQuizWords.length === 0 || quizWords.length < 5}
-            className={`w-full py-6 px-6 rounded-2xl text-white font-bold text-xl transition shadow-lg ${
+            className={`w-full max-w-md py-4 px-6 rounded-2xl text-white font-bold text-xl transition shadow-lg ${
               validQuizWords.length === 0 || quizWords.length < 5
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-xl"
@@ -205,7 +240,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           <button
             onClick={handleStartFlashcard}
             disabled={quizWords.length < 5}
-            className={`w-full py-6 px-6 rounded-2xl font-bold text-xl transition shadow-md hover:shadow-lg ${
+            className={`w-full max-w-md py-4 px-6 rounded-2xl font-bold text-xl transition shadow-md hover:shadow-lg ${
               quizWords.length < 5
                 ? "bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed"
                 : "bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
@@ -217,10 +252,11 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           {/* Quiz History Button */}
           <button
             onClick={handleViewHistory}
-            className="w-full py-6 px-6 rounded-2xl bg-gray-100 border-2 border-gray-300 text-gray-700 font-bold text-xl hover:bg-gray-200 transition shadow-md hover:shadow-lg"
+            className="w-full max-w-md py-4 px-6 rounded-2xl bg-white border-2 border-gray-300 text-gray-700 font-bold text-xl hover:bg-gray-50 transition shadow-md hover:shadow-lg"
           >
             查看歷史記錄
           </button>
+        </div>
         </div>
       </div>
     </div>

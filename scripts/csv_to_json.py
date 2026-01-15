@@ -261,12 +261,32 @@ def parse_pos_tags(pos_column):
         'conj.': 'conjunction',
         'pron.': 'pronoun',
         'interj.': 'interjection',
+        'int.': 'interjection',  # Alternative format for interjection
         'det.': 'determiner',
-        'aux.': 'auxiliary'
+        'aux.': 'auxiliary',
+        'phr.': 'phrase',  # Phrase (片語)
+        'art.': 'article',  # Article (冠詞)
+        'abbr.': 'abbreviation',  # Abbreviation (縮寫)
     }
 
-    # Check for any known POS markers
-    return [pos_mapping.get(tag.strip(), tag.strip()) for tag in pos_mapping.keys() if tag in pos_column]
+    # Remove parentheses if present
+    pos_column = pos_column.strip()
+    if pos_column.startswith('(') and pos_column.endswith(')'):
+        pos_column = pos_column[1:-1]
+    
+    # Handle compound POS formats (e.g., "adj./n." or "n./v.")
+    pos_parts = pos_column.split('/')
+    pos_tags = []
+    
+    for part in pos_parts:
+        part = part.strip()
+        if part in pos_mapping:
+            pos_tags.append(pos_mapping[part])
+        elif part:
+            # Keep unknown POS as-is for debugging
+            pos_tags.append(part)
+    
+    return pos_tags
 
 def merge_word_entries(existing, new_entry):
     """
@@ -347,8 +367,40 @@ def merge_word_entries(existing, new_entry):
         # Fallback to prefer_non_empty if no textbook info
         existing['stage'] = prefer_non_empty(existing['stage'], new_entry['stage'])
 
+    # Special handling for posOriginal: prefer the most complete one (with most POS tags)
+    def prefer_most_complete_pos(pos1, pos2):
+        if not pos1:
+            return pos2
+        if not pos2:
+            return pos1
+        # Count number of POS tags (by counting '/' + 1)
+        count1 = pos1.count('/') + 1 if '/' in pos1 else 1
+        count2 = pos2.count('/') + 1 if '/' in pos2 else 1
+        # Prefer the one with more POS tags
+        return pos1 if count1 >= count2 else pos2
+    
+    existing['posOriginal'] = prefer_most_complete_pos(
+        existing.get('posOriginal', ''),
+        new_entry.get('posOriginal', '')
+    )
+    
+    # Special handling for chinese_definition: prefer the longer/more complete one
+    # User requirement: use original I column content directly, no merging
+    def prefer_complete_chinese(def1, def2):
+        if not def1:
+            return def2
+        if not def2:
+            return def1
+        # Prefer the longer one (more complete definition)
+        return def1 if len(def1) >= len(def2) else def2
+    
+    existing['chinese_definition'] = prefer_complete_chinese(
+        existing.get('chinese_definition', ''),
+        new_entry.get('chinese_definition', '')
+    )
+    
     # Prefer non-empty strings for other fields
-    for key in ['level', 'cefr', 'kk_phonetic', 'chinese_definition',
+    for key in ['level', 'cefr', 'kk_phonetic',
                 'example_sentence', 'example_translation', 'example_sentence_2',
                 'example_translation_2', 'example_sentence_3', 'example_translation_3',
                 'example_sentence_4', 'example_translation_4', 'example_sentence_5',
@@ -383,7 +435,8 @@ def csv_to_json(csv_path, json_path):
         'Part_1': 'part_1',
         'Source_1': 'source_1',
         '詞性': 'pos',
-        '詞性變化': 'word_forms',
+        '詞形變化': 'word_forms',
+        '詞性變化': 'word_forms',  # 向後相容
         '片語': 'phrases',
         '同義字': 'synonyms',
         '反義字': 'antonyms',
@@ -398,10 +451,12 @@ def csv_to_json(csv_path, json_path):
 
     with open(csv_path, 'r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
-        # Use dictionary to track words by lowercase english_word
-        words_dict = {}
+        # Use list to store all records (no merging)
+        data = []
+        row_index = 0  # For generating unique IDs
 
         for row in reader:
+            row_index += 1
             # Create a new row with all possible keys initialized
             processed_row = {
                 'stage': '',
@@ -427,7 +482,8 @@ def csv_to_json(csv_path, json_path):
                 'part_1': '',
                 'source_1': '',
                 'pos': '',
-                'posTags': [],
+                'posTags': [],  # Keep as array for backward compatibility
+                'posOriginal': '',  # Store original Z column format like "(adj./v./n.)" - use this for display
                 'word_forms': [],
                 'phrases': [],
                 'synonyms': [],
@@ -454,8 +510,11 @@ def csv_to_json(csv_path, json_path):
                 elif key == '主題' or mapped_key == 'theme_index':
                     processed_row['theme_index'] = parse_theme_index(value)
                 elif key == '詞性':
+                    # Store original format from Z column (e.g., "(adj./v./n.)")
+                    processed_row['posOriginal'] = value.strip()
+                    # Keep posTags for backward compatibility, but prefer posOriginal for display
                     processed_row['posTags'] = parse_pos_tags(value)
-                elif key == '詞性變化' or mapped_key == 'word_forms':
+                elif key == '詞形變化' or key == '詞性變化' or mapped_key == 'word_forms':
                     processed_row['word_forms'] = parse_word_forms(value)
                 elif key == '片語' or mapped_key == 'phrases':
                     processed_row['phrases'] = parse_array_field(value)
@@ -516,18 +575,11 @@ def csv_to_json(csv_path, json_path):
 
             # Only process rows with at least english_word
             if processed_row.get('english_word'):
-                word_key = processed_row['english_word'].lower()
-
-                # Check if we've seen this word before
-                if word_key in words_dict:
-                    # Merge with existing entry
-                    words_dict[word_key] = merge_word_entries(words_dict[word_key], processed_row)
-                else:
-                    # First occurrence of this word
-                    words_dict[word_key] = processed_row
-
-    # Convert dictionary to list
-    data = list(words_dict.values())
+                # Assign unique ID based on row index
+                processed_row['id'] = row_index
+                
+                # Add to data list (no merging - each CSV row becomes a separate JSON record)
+                data.append(processed_row)
 
     # Write processed data to JSON
     with open(json_path, 'w', encoding='utf-8') as jsonfile:

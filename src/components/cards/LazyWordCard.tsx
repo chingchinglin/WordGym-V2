@@ -71,20 +71,23 @@ export const LazyWordCard: React.FC<LazyWordCardProps> = ({
                 {word.english_word}
               </h3>
 
-              {/* Chinese definition (includes part of speech in English) */}
-              {word.chinese_definition && (
-                <p
-                  className="text-sm text-gray-600 overflow-hidden"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    lineHeight: "1.4",
-                  }}
-                >
-                  {word.chinese_definition}
-                </p>
-              )}
+              {/* Chinese definition + POS original format */}
+              <p
+                className="text-sm text-gray-600 overflow-hidden"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  lineHeight: "1.4",
+                }}
+              >
+                {word.chinese_definition}
+                {word.posOriginal && (
+                  <span className="text-gray-500 font-medium">
+                    {" "}{word.posOriginal}
+                  </span>
+                )}
+              </p>
             </>
           ) : (
             <div className="flex items-center justify-center py-8">

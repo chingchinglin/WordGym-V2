@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { VocabularyWord, POS_LABEL, POSType, UserSettings } from "../../types";
+import { VocabularyWord, UserSettings } from "../../types";
 import { useSpeech } from "../../hooks/useSpeech";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useUserExamples } from "../../hooks/useUserExamples";
@@ -144,10 +144,8 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
     // Basic info
     lines.push("### 基本資訊");
     if (word.kk_phonetic) lines.push(`- KK音標：${word.kk_phonetic}`);
-    if (word.posTags?.length) {
-      const posText =
-        word.posTags?.map((p) => POS_LABEL[p as POSType] || p).join("、") || "";
-      lines.push(`- 詞性：${posText}`);
+    if (word.posOriginal) {
+      lines.push(`- 詞性：${word.posOriginal}`);
     }
     if (word.level) lines.push(`- Level：${word.level}`);
     if (word.chinese_definition)
@@ -185,7 +183,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
           lines.push(`- 子分類：${word.grammar_sub_category}`);
         if (word.grammar_function)
           lines.push(`- 語法功能：${word.grammar_function}`);
-        if (wordForms.length) lines.push(`- 詞性變化：${wordForms.join("、")}`);
+        if (wordForms.length) lines.push(`- 詞形變化：${wordForms.join("、")}`);
         lines.push("");
       }
     }
@@ -368,15 +366,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
               </span>
             )}
 
-            {/* POS Tags */}
-            {word.posTags?.map((pos, idx) => (
-              <span
-                key={idx}
-                className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-50 text-indigo-700"
-              >
-                {POS_LABEL[pos as POSType] || pos}
-              </span>
-            ))}
+            {/* POS Tags - Removed: Display original format from Z column instead */}
 
             {/* CEFR */}
             {word.cefr && (
@@ -520,7 +510,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     {word.example_translation}
                   </div>
                 )}
-                <div className="text-xs text-indigo-600 mt-1">基礎例句</div>
+                <div className="text-xs text-gray-400 mt-1 text-right">基礎例句</div>
               </div>
             )}
 
@@ -607,7 +597,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             {wordFormsList.length > 0 && (
               <div>
                 <div className="text-sm font-semibold text-gray-500 mb-2">
-                  詞性變化
+                  詞形變化
                 </div>
                 <div className="px-4 py-3 rounded-lg bg-indigo-50 border border-indigo-200 grid gap-4 md:grid-cols-2">
                   {wordFormsList.map((form, idx) => {

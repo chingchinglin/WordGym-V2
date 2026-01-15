@@ -130,8 +130,28 @@ export function filterWords(
     if (quickFilterPos !== "all") {
       // Handle words with empty posTags - treat as "other"
       const posTags = word.posTags && word.posTags.length > 0 ? word.posTags : ["other"];
-      const posMatch = posTags.includes(quickFilterPos);
-      if (!posMatch) return false;
+      
+      // Special handling for "other" category
+      // Match all words that have "other" POS tags (preposition, conjunction, pronoun, interjection, other)
+      // or words with no main POS tags (noun, verb, adjective, adverb, phrase)
+      // Note: Mixed words (e.g., any has both adjective and pronoun) will appear in both categories
+      if (quickFilterPos === "other") {
+        const mainPos = ["noun", "verb", "adjective", "adverb", "phrase"];
+        const otherPos = ["preposition", "conjunction", "interjection", "pronoun", "other"];
+        const hasOtherPos = posTags.some((tag) => otherPos.includes(tag));
+        const hasMainPos = posTags.some((tag) => mainPos.includes(tag));
+        
+        // If word has "other" POS, it should appear in "other" category (even if it also has main POS)
+        if (hasOtherPos) return true;
+        // If word has no main POS and no "other" POS, it should also appear in "other" (unrecognized tags)
+        if (!hasMainPos) return true;
+        // If word only has main POS, it should NOT appear in "other"
+        return false;
+      } else {
+        // For main POS categories, use simple includes check
+        const posMatch = posTags.includes(quickFilterPos);
+        if (!posMatch) return false;
+      }
     }
 
     // Search term filter

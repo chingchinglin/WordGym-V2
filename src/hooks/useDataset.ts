@@ -355,7 +355,7 @@ export function useDataset(initialData: VocabularyWord[] = []) {
         if (!tags.length) tags.push("other");
 
         // Parse word forms
-        const formsRaw = raw.word_forms ?? raw["詞性變化"];
+        const formsRaw = raw.word_forms ?? raw["詞形變化"] ?? raw["詞性變化"];
         const formsForDetail = Array.isArray(formsRaw)
           ? formsRaw
           : multiSplit(formsRaw || "");

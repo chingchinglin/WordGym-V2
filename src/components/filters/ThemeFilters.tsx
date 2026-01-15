@@ -98,9 +98,11 @@ export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
 
   const isJunior =
     VersionService.normalizeStage(userSettings?.stage || "") === "junior";
+  const isSenior =
+    VersionService.normalizeStage(userSettings?.stage || "") === "senior";
 
   return (
-    <div className={`mb-6 ${isJunior ? "grid gap-4 md:grid-cols-2" : ""}`}>
+    <div className={`mb-6 ${isJunior || isSenior ? "grid gap-4 md:grid-cols-2" : ""}`}>
       <div>
         <label className="block text-sm font-medium text-gray-500 mb-2">
           {VersionService.normalizeStage(userSettings?.stage || "") === "junior"
@@ -110,7 +112,7 @@ export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
         <select
           value={filters.range || availableRanges[0]}
           onChange={(e) => updateFilter("range", e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A4FCF] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7575FF] focus:border-transparent"
         >
           {availableRanges.map((range) => (
             <option key={range} value={range}>
@@ -132,7 +134,7 @@ export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
               (availableThemes.length > 0 ? availableThemes[0] : "")
             }
             onChange={(e) => updateFilter("theme", e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A4FCF] focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7575FF] focus:border-transparent"
             disabled={availableThemes.length === 0}
           >
             {availableThemes.map((theme) => (
@@ -141,7 +143,34 @@ export const ThemeFilters: React.FC<ThemeFiltersProps> = ({
               </option>
             ))}
             {availableThemes.length === 0 && (
-              <option value="">無可用主題</option>
+              <option value="">內容建置中</option>
+            )}
+          </select>
+        </div>
+      )}
+
+      {VersionService.normalizeStage(userSettings?.stage || "") ===
+        "senior" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-500 mb-2">
+            主題分類
+          </label>
+          <select
+            value={
+              filters.theme ||
+              (availableThemes.length > 0 ? availableThemes[0] : "")
+            }
+            onChange={(e) => updateFilter("theme", e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7575FF] focus:border-transparent"
+            disabled={availableThemes.length === 0}
+          >
+            {availableThemes.map((theme) => (
+              <option key={theme} value={theme}>
+                {theme}
+              </option>
+            ))}
+            {availableThemes.length === 0 && (
+              <option value="">內容建置中</option>
             )}
           </select>
         </div>

@@ -24,6 +24,7 @@ export interface VocabularyWord {
   // Grammar and linguistic details
   kk_phonetic?: string;
   posTags?: string[];
+  posOriginal?: string; // Original format from Z column (e.g., "(adj./v./n.)")
   basic_pos?: string; // Comma-separated POS tags string
   grammar_main_category?: string;
   grammar_sub_category?: string;
@@ -80,6 +81,7 @@ export type POSType =
   | "verb"
   | "adjective"
   | "adverb"
+  | "phrase"
   | "preposition"
   | "conjunction"
   | "interjection"
@@ -91,6 +93,7 @@ export const POS_LABEL: Record<POSType, string> = {
   verb: "動詞",
   adjective: "形容詞",
   adverb: "副詞",
+  phrase: "片語",
   preposition: "介係詞",
   conjunction: "連接詞",
   interjection: "感嘆詞",

@@ -4,7 +4,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
-  base: '/WordGym-students-merge/',
+  base: '/WordGym-V2/',
   build: {
     outDir: 'dist',
     emptyOutDir: true
