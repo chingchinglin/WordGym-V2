@@ -15,7 +15,7 @@ interface QuizPageProps {
 export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
   const { hash, push } = useHashRoute();
   const { filteredWordIds, setFilteredWordIds } = useFilteredWordIds();
-  const { clearRange, accumulatedIds } = useQuizRange();
+  const { clearRange } = useQuizRange();
 
   // Parse URL params
   const params = useMemo(() => {

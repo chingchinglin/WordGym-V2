@@ -39,7 +39,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   const { quickFilterPos, setQuickFilterPos } = useQuickFilterPos();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { setFilteredWordIds } = useFilteredWordIds();
-  const { accumulatedIds, addToRange, clearRange } = useQuizRange();
+  const { addToRange } = useQuizRange();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);

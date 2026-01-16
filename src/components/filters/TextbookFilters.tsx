@@ -176,24 +176,26 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
           冊次
         </label>
         <CustomSelect
-          value={filters.vol || availableVols[0]}
+          value={filters.vol || availableVols[0] || ""}
           onChange={(value) => updateFilter("vol", value)}
-          options={availableVols.map((vol) => {
-            // 冊次中文標註映射
-            const volLabelMap: Record<string, string> = {
-              B1: "第一冊",
-              B2: "第二冊",
-              B3: "第三冊",
-              B4: "第四冊",
-              B5: "第五冊",
-              B6: "第六冊",
-            };
-            const chineseLabel = volLabelMap[vol] || "";
-            return {
-              value: vol,
-              label: chineseLabel ? `${vol}(${chineseLabel})` : vol,
-            };
-          })}
+          options={availableVols
+            .filter((vol): vol is string => vol !== undefined)
+            .map((vol) => {
+              // 冊次中文標註映射
+              const volLabelMap: Record<string, string> = {
+                B1: "第一冊",
+                B2: "第二冊",
+                B3: "第三冊",
+                B4: "第四冊",
+                B5: "第五冊",
+                B6: "第六冊",
+              };
+              const chineseLabel = volLabelMap[vol] || "";
+              return {
+                value: vol,
+                label: chineseLabel ? `${vol}(${chineseLabel})` : vol,
+              };
+            })}
           className="w-full"
         />
       </div>
