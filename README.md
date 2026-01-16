@@ -1,6 +1,8 @@
 # WordGym-students-merge
 國高中英文單字學習網站
 
+<!-- Auto-deploy trigger -->
+
 ## 部署方式
 
 ### 自動部署
