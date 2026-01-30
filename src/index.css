@@ -143,8 +143,8 @@ code {
 /* Unified Button Style (u-style) - For consistent styling across components */
 .u-style {
   background-color: #ffffff;
-  border: 1px solid var(--unselected-border);
-  border-radius: 6px;
+  border: 2px solid #E5E7EB;  /* Gray-200: 淺灰邊框，未選中更明顯 */
+  border-radius: 8px;
   transition: all 0.2s ease;
   cursor: pointer;
   text-align: center;
@@ -160,11 +160,13 @@ code {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #6B7280;  /* Gray-500: 未選中文字偏灰 */
 }
 
-.u-style:hover:not(:disabled) {
-  background-color: var(--hover-bg);
-  border-color: var(--unselected-border);
+.u-style:hover:not(:disabled):not(.selected) {
+  background-color: #F3F4F6;  /* Gray-100 */
+  border-color: #9CA3AF;  /* Gray-400 */
+  color: #374151;  /* Gray-700 */
 }
 
 .u-style:disabled,
@@ -178,9 +180,12 @@ code {
 
 /* Selected state for u-style buttons (課次/詞性按鈕) */
 .u-style.selected {
-  background-color: var(--selected-bg);
+  background-color: #4338CA;  /* Indigo-700: 深紫色，對比明顯 */
   color: #ffffff;
-  border-color: var(--selected-bg);
+  border-color: #4338CA;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(67, 56, 202, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  transform: scale(1.02);
 }
 
 /* Select dropdown styling - ensure white background */

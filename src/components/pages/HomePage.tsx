@@ -9,6 +9,7 @@ import { useQuizRange } from "../../hooks/useQuizRange";
 import { filterWords } from "../../utils/filterWords";
 import { FEATURES } from "../../config/features";
 import type { VocabularyWord, UserSettings } from "../../types";
+import type { CacheInfo } from "../../hooks/useDataset";
 
 import { QuickPOSFilter } from "../filters/QuickPOSFilter";
 import { TextbookFilters } from "../filters/TextbookFilters";
@@ -17,22 +18,24 @@ import { ThemeFilters } from "../filters/ThemeFilters";
 
 const TABS = {
   textbook: "課本進度",
-  exam: "大考衝刺",
   theme: "主題探索",
+  exam: "大考衝刺",
 };
 
 const TAB_TOOLTIPS: Record<string, string> = {
   textbook: "收錄各版本教科書單字，請選擇冊次與課次",
+  theme_國中: "依據教育部主題分類學習，請選擇感興趣的分類開始探索（即將推出，敬請期待！）",
+  theme_高中: "依據 Level 程度，請選擇感興趣的分類開始探索（即將推出，敬請期待！）",
   exam: "針對歷年會考、學測高頻核心單字進行特訓，請選擇練習目標（即將推出，敬請期待！）",
-  theme: "依據 Level 程度 或 情境學習，請選擇感興趣的分類開始探索（即將推出，敬請期待！）",
 };
 
 interface HomePageProps {
   words: VocabularyWord[];
   userSettings: UserSettings | null; // Added userSettings prop
+  cacheInfo?: CacheInfo; // Cache info for loading state
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
+export const HomePage: React.FC<HomePageProps> = ({ words, userSettings, cacheInfo }) => {
   // Removed local useUserSettings() call, now using userSettings prop directly
   const { currentTab, setCurrentTab } = useCurrentTab();
   const { filters, updateFilter } = useTabFilters(userSettings);
@@ -123,6 +126,12 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
     setFilteredWordIds(wordIds);
   }, [filteredWords, setFilteredWordIds]);
 
+  // Check if data is loading
+  // Show overlay only when: data is actively loading AND no words available yet
+  // If we have fallback data (words.length > 0), don't show overlay
+  // This allows users to use the app immediately with fallback data while CSV loads in background
+  const isLoading = cacheInfo?.isLoading === true && words.length === 0;
+
   if (isSettingsMissing) {
     return (
       <div className="text-center py-12">
@@ -175,19 +184,35 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      {/* Welcome Section */}
-      <div className="text-gray-600 mb-6 leading-relaxed space-y-1">
-        <p className="text-lg font-medium text-gray-500">
-          歡迎來到 WordGym 單字健身坊！
-        </p>
-        <p className="text-base text-gray-500">
-          請從課本進度、大考衝刺或主題探索，選擇想要學習的內容！
-        </p>
-      </div>
+    <div className="container mx-auto p-4 relative">
+      {/* Loading Overlay - blocks all interactions when data is loading */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-auto">
+          <div className="flex flex-col items-center gap-3 text-white">
+            <div 
+              className="h-12 w-12 border-4 border-white/30 border-t-white rounded-full animate-spin" 
+              aria-label="資料載入中"
+            />
+            <div className="text-base font-medium">資料讀取中...</div>
+            <div className="text-sm text-white/80">請稍候，正在載入單字資料</div>
+          </div>
+        </div>
+      )}
+      
+      {/* Main Content - disabled when loading */}
+      <div className={isLoading ? "pointer-events-none opacity-50" : ""}>
+        {/* Welcome Section */}
+        <div className="text-gray-600 mb-6 leading-relaxed space-y-1">
+          <p className="text-lg font-medium text-gray-500">
+            歡迎來到 WordGym 單字健身坊！
+          </p>
+          <p className="text-base text-gray-500">
+            請從課本進度、大考衝刺或主題探索，選擇想要學習的內容！
+          </p>
+        </div>
 
-      {/* Tab Navigation - Updated styling to match original */}
-      <div className="mb-4 flex flex-wrap gap-4">
+        {/* Tab Navigation - Updated styling to match original */}
+        <div className="mb-4 flex flex-wrap gap-4">
         {Object.entries(TABS).map(([key, label]) => (
           <button
             key={key}
@@ -205,23 +230,32 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             {label}
           </button>
         ))}
-      </div>
+        </div>
 
-      {/* Tooltip - shows based on hovered or active tab (Issue #55) */}
-      <div className="mb-6 h-8 flex items-center">
+        {/* Tooltip - shows based on hovered or active tab (Issue #55) */}
+        <div className="mb-6 h-8 flex items-center">
         <p
           className="text-sm text-gray-500 transition-opacity duration-150"
           style={{ opacity: 1 }}
         >
-          {TAB_TOOLTIPS[hoveredTab || currentTab]}
+          {(() => {
+            const tab = hoveredTab || currentTab;
+            if (tab === "theme") {
+              // 根據學程顯示不同說明
+              const stage = userSettings?.stage || "國中";
+              return TAB_TOOLTIPS[`theme_${stage}`] || TAB_TOOLTIPS["theme_國中"];
+            }
+            return TAB_TOOLTIPS[tab];
+          })()}
         </p>
-      </div>
+        </div>
 
-      {/* Dynamic Filters */}
-      {currentTab === "textbook" && (
+        {/* Dynamic Filters */}
+        {currentTab === "textbook" && (
         <TextbookFilters
           filters={filters.textbook}
           updateFilter={(key, value) => updateFilter("textbook", key, value)}
+          userSettings={userSettings}
           dataset={{
             textbook_index: words
               .flatMap((word) => word.textbook_index || [])
@@ -240,17 +274,17 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
               })),
           }}
         />
-      )}
+        )}
 
-      {currentTab === "exam" && (
+        {currentTab === "exam" && (
         <ExamFilters
           filters={filters.exam}
           updateFilter={(key, value) => updateFilter("exam", key, value)}
           dataset={{ words }}
         />
-      )}
+        )}
 
-      {currentTab === "theme" && (
+        {currentTab === "theme" && (
         <ThemeFilters
           filters={filters.theme}
           updateFilter={(key, value) => updateFilter("theme", key, value)}
@@ -266,18 +300,18 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             words: words,
           }}
         />
-      )}
+        )}
 
-      {/* Quick POS Filter */}
-      <div className="mb-6">
+        {/* Quick POS Filter */}
+        <div className="mb-6">
         <label className="block text-sm font-medium text-gray-500 mb-2">
           詞性快篩
         </label>
-        <QuickPOSFilter />
-      </div>
+          <QuickPOSFilter />
+        </div>
 
-      {/* Search Bar with Clear Button */}
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        {/* Search Bar with Clear Button */}
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <input
           type="text"
           placeholder="搜尋單字..."
@@ -293,10 +327,10 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             清除搜尋
           </button>
         )}
-      </div>
+        </div>
 
-      {/* Results Section */}
-      <div className="mt-10 space-y-4">
+        {/* Results Section */}
+        <div className="mt-10 space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold">
@@ -366,6 +400,7 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings }) => {
             })}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

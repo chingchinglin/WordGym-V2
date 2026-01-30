@@ -166,28 +166,43 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     });
 
     const allDistractors: string[] = [];
+    const usedWords = new Set<string>(); // Track used words to avoid duplicates
 
     // Add random words from same POS in pool
+    // IMPORTANT: Check for duplicates immediately to avoid issues after deduplication
     const shuffledSamePOS = [...samePOSInPool].sort(() => Math.random() - 0.5);
-    for (let i = 0; i < Math.min(3, shuffledSamePOS.length); i++) {
-      allDistractors.push(cleanWord(shuffledSamePOS[i].english_word));
+    for (let i = 0; i < shuffledSamePOS.length && allDistractors.length < 3; i++) {
+      const word = cleanWord(shuffledSamePOS[i].english_word);
+      if (!usedWords.has(word.toLowerCase())) {
+        allDistractors.push(word);
+        usedWords.add(word.toLowerCase());
+      }
     }
 
     // Step 2: If not enough, add random words from pool (any POS)
+    // IMPORTANT: Continue checking for duplicates
     if (allDistractors.length < 3) {
       const otherWords = pool.filter(
-        (w) =>
-          cleanWord(w.english_word) !== correctAnswer &&
-          !allDistractors.includes(cleanWord(w.english_word)),
+        (w) => {
+          const word = cleanWord(w.english_word);
+          return (
+            word !== correctAnswer &&
+            !usedWords.has(word.toLowerCase())
+          );
+        },
       );
       const shuffledOthers = [...otherWords].sort(() => Math.random() - 0.5);
 
       for (
         let i = 0;
-        i < Math.min(3 - allDistractors.length, shuffledOthers.length);
+        i < shuffledOthers.length && allDistractors.length < 3;
         i++
       ) {
-        allDistractors.push(cleanWord(shuffledOthers[i].english_word));
+        const word = cleanWord(shuffledOthers[i].english_word);
+        if (!usedWords.has(word.toLowerCase())) {
+          allDistractors.push(word);
+          usedWords.add(word.toLowerCase());
+        }
       }
     }
 
@@ -228,17 +243,44 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       }
     }
 
-    // Ensure exactly 3 unique distractors
-    const uniqueDistractors = [...new Set(allDistractors.slice(0, 3))];
+    // At this point, allDistractors should already be unique (checked during collection)
+    // But we still ensure uniqueness as a safety measure
+    const uniqueDistractors: string[] = [];
+    const seen = new Set<string>();
+    
+    for (const distractor of allDistractors) {
+      const lower = distractor.toLowerCase();
+      if (!seen.has(lower) && distractor !== correctAnswer) {
+        uniqueDistractors.push(distractor);
+        seen.add(lower);
+        if (uniqueDistractors.length >= 3) break;
+      }
+    }
 
-    // If we still don't have 3 after deduplication, pad with fallbacks
+    // If we still don't have 3 unique distractors, pad with fallbacks
+    // This should rarely happen now since we check for duplicates during collection
     while (uniqueDistractors.length < 3) {
-      const syntheticOption = `word_${uniqueDistractors.length + 1}`;
-      if (
-        !uniqueDistractors.includes(syntheticOption) &&
-        syntheticOption !== correctAnswer
-      ) {
-        uniqueDistractors.push(syntheticOption);
+      const unusedFallbacks = fallbackOptions.filter(
+        (fb) =>
+          fb !== correctAnswer.toLowerCase() &&
+          !seen.has(fb.toLowerCase()),
+      );
+
+      if (unusedFallbacks.length > 0) {
+        const randomFallback =
+          unusedFallbacks[Math.floor(Math.random() * unusedFallbacks.length)];
+        uniqueDistractors.push(randomFallback);
+        seen.add(randomFallback.toLowerCase());
+      } else {
+        // Last resort: generate synthetic options (should rarely happen)
+        const syntheticOption = `word_${uniqueDistractors.length + 1}`;
+        if (!seen.has(syntheticOption.toLowerCase()) && syntheticOption !== correctAnswer) {
+          uniqueDistractors.push(syntheticOption);
+          seen.add(syntheticOption.toLowerCase());
+        } else {
+          // Avoid infinite loop
+          break;
+        }
       }
     }
 
@@ -427,11 +469,11 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   if (!question) return null;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">實力驗收</h1>
+    <div className="pb-20 md:pb-0">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">實力驗收</h1>
       {/* Quiz Mode Selection Buttons */}
-      <div className="mb-4 flex gap-3">
-        <button className="flex-1 px-8 py-3 rounded-xl bg-indigo-600 text-white text-lg font-medium transition">
+      <div className="mb-3 md:mb-4 flex gap-2 md:gap-3">
+        <button className="flex-1 px-4 md:px-8 py-2 md:py-3 rounded-xl bg-indigo-600 text-white text-sm md:text-lg font-medium transition">
           選擇題
         </button>
         <button
@@ -440,42 +482,42 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
             params.set("type", "flashcard");
             window.location.hash = `#/quiz?${params.toString()}`;
           }}
-          className="flex-1 px-8 py-3 rounded-xl bg-white border border-gray-300 text-gray-700 text-lg font-medium hover:bg-gray-50 transition"
+          className="flex-1 px-4 md:px-8 py-2 md:py-3 rounded-xl bg-white border border-gray-300 text-gray-700 text-sm md:text-lg font-medium hover:bg-gray-50 transition"
         >
           閃卡
         </button>
         <button
           onClick={() => (window.location.hash = "#/quiz-history")}
-          className="flex-1 px-8 py-3 rounded-xl bg-gray-100 border border-gray-300 text-gray-700 text-lg font-medium hover:bg-gray-200 transition"
+          className="hidden md:flex flex-1 px-8 py-3 rounded-xl bg-gray-100 border border-gray-300 text-gray-700 text-lg font-medium hover:bg-gray-200 transition"
         >
           查看歷史記錄
         </button>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 md:mb-4 flex items-center justify-between">
         <div className="text-sm text-gray-600">
           第 {idx + 1} 題 / {shuffledPool.length} 題
         </div>
-        <div className="text-lg font-semibold text-indigo-600">
+        <div className="text-base md:text-lg font-semibold text-indigo-600">
           得分：{score} / {idx + (showResult ? 1 : 0)}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-indigo-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-medium text-gray-700 mb-3">
+      <div className="rounded-2xl border border-indigo-200 bg-white p-4 md:p-6 shadow-sm">
+        <p className="text-sm font-medium text-gray-700 mb-2 md:mb-3">
           請選出句中最適合的單字：
         </p>
 
-        <p className="text-lg mb-6 leading-relaxed">{question.sentence}</p>
+        <p className="text-base md:text-lg mb-4 md:mb-6 leading-relaxed">{question.sentence}</p>
 
         {showResult && question.translation && (
-          <p className="text-sm text-gray-500 mb-6 italic">
+          <p className="text-sm text-gray-500 mb-3 md:mb-6 italic">
             {question.translation}
           </p>
         )}
 
-        <div className="mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="mb-3 md:mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-3">
             {question.options.map((option, i) => {
               const isSelected = selectedAnswer === option;
               const isCorrect = option === question.correctAnswer;
@@ -492,7 +534,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
                   key={i}
                   onClick={() => handleSelect(option)}
                   disabled={showResult}
-                  className={`${bgColor} border-2 rounded-xl p-4 text-left transition hover:shadow-md disabled:cursor-not-allowed`}
+                  className={`${bgColor} border-2 rounded-xl p-3 md:p-4 text-left transition hover:shadow-md disabled:cursor-not-allowed text-sm md:text-base`}
                 >
                   <span className="font-medium">
                     {String.fromCharCode(65 + i)}.
@@ -508,30 +550,32 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
 
         {showResult && (
           <div
-            className={`p-4 rounded-xl mb-4 ${
+            className={`p-3 md:p-4 rounded-xl ${
               selectedAnswer === question.correctAnswer
                 ? "bg-green-50 border border-green-200"
                 : "bg-red-50 border border-red-200"
             }`}
           >
-            <p className="font-medium mb-2">
-              {selectedAnswer === question.correctAnswer
-                ? "✓ 答對了！"
-                : "✗ 答錯了"}
-            </p>
-            <p className="text-sm">
-              正確答案：
-              <span className="font-semibold">{question.correctAnswer}</span>
-            </p>
-            {question.word.chinese_definition && (
-              <p className="text-sm text-gray-600">
-                中文：{question.word.chinese_definition}
-              </p>
-            )}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span className="font-medium">
+                  {selectedAnswer === question.correctAnswer
+                    ? "✓ 答對了！"
+                    : "✗ 答錯了"}
+                </span>
+                <span className="ml-2 text-sm">
+                  正確答案：<span className="font-semibold">{question.correctAnswer}</span>
+                  {question.word.chinese_definition && (
+                    <span className="text-gray-600 ml-1">({question.word.chinese_definition})</span>
+                  )}
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="flex gap-3">
+        {/* Desktop buttons - hidden on mobile */}
+        <div className="hidden md:flex gap-3 mt-4">
           {!showResult ? (
             <Button onClick={handleSubmit} disabled={!selectedAnswer}>
               提交答案
@@ -540,7 +584,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
             <>
               <Button onClick={handleNext}>下一題</Button>
               <button
-                onClick={() => speak(question.correctAnswer)}
+                onClick={() => speak(question.correctAnswer, 'word')}
                 className="px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 transition"
                 title="發音"
               >
@@ -549,6 +593,35 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
             </>
           )}
         </div>
+      </div>
+
+      {/* Mobile fixed bottom action bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex gap-3 shadow-lg z-50">
+        {!showResult ? (
+          <Button
+            onClick={handleSubmit}
+            disabled={!selectedAnswer}
+            className="flex-1 py-3 text-base"
+          >
+            提交答案
+          </Button>
+        ) : (
+          <>
+            <Button
+              onClick={handleNext}
+              className="flex-1 py-3 text-base"
+            >
+              下一題 →
+            </Button>
+            <button
+              onClick={() => speak(question.correctAnswer, 'word')}
+              className="px-4 py-3 rounded-xl border border-gray-300 hover:bg-gray-50 transition"
+              title="發音"
+            >
+              🔊
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
