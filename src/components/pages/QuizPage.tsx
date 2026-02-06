@@ -1,11 +1,20 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { VocabularyWord, UserSettings } from "../../types";
 import { useHashRoute } from "../../hooks/useHashRoute";
-import { useFilteredWordIds } from "../../hooks/useFilteredWordIds";
 import { useQuizRange } from "../../hooks/useQuizRange";
 import { VersionService } from "../../services/VersionService";
 import MultipleChoiceQuiz from "../quiz/MultipleChoiceQuiz";
 import FlashcardQuiz from "../quiz/FlashcardQuiz";
+
+// Fisher-Yates shuffle algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 interface QuizPageProps {
   words: VocabularyWord[];
@@ -14,8 +23,10 @@ interface QuizPageProps {
 
 export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
   const { hash, push } = useHashRoute();
-  const { filteredWordIds, setFilteredWordIds } = useFilteredWordIds();
-  const { clearRange } = useQuizRange();
+  const { clearRange, accumulatedIds } = useQuizRange();
+
+  // Custom quiz count state
+  const [customCount, setCustomCount] = useState<string>("");
 
   // Parse URL params
   const params = useMemo(() => {
@@ -42,7 +53,9 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
     });
   }, [words, userSettings]);
 
-  // Parse word IDs from URL params OR use accumulated range OR use global filtered word IDs
+  // Parse word IDs from URL params OR use accumulated range
+  // Note: Removed Priority 3 (localStorage filteredWordIds) to ensure first-time users see 0 questions
+  // Include accumulatedIds in dependencies to react to clearRange() calls
   const quizWords = useMemo(() => {
     const wordIdsParam = params.get("words");
 
@@ -54,6 +67,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
     }
 
     // Priority 2: Accumulated range from sessionStorage (from HomePage "測驗此範圍" button)
+    // Use accumulatedIds from hook to ensure reactivity when cleared
+    if (accumulatedIds && accumulatedIds.length > 0) {
+      return words.filter((w) => accumulatedIds.includes(w.id));
+    }
+
+    // Also check sessionStorage directly as fallback (for immediate updates)
     try {
       const accumulatedRange = sessionStorage.getItem("wordgym_quiz_range_v1");
       if (accumulatedRange) {
@@ -66,14 +85,10 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
       console.error("Failed to read accumulated quiz range:", error);
     }
 
-    // Priority 3: Global filtered word IDs (from HomePage filter state, backward compatibility)
-    if (filteredWordIds && filteredWordIds.length > 0) {
-      return words.filter((w) => filteredWordIds.includes(w.id));
-    }
-
-    // Priority 4: Empty (show prompt to select range)
+    // Priority 3: Empty (show prompt to select range)
+    // This ensures first-time users see 0 questions instead of old localStorage data
     return [];
-  }, [params, words, filteredWordIds, versionFilteredWords]);
+  }, [params, words, versionFilteredWords, accumulatedIds]);
 
   const validQuizWords = useMemo(() => {
     // Filter words that have example sentences for multiple choice quiz
@@ -82,10 +97,39 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
     );
   }, [quizWords]);
 
+  // Check if custom count is valid (empty or >= 5)
+  const isCustomCountValid = useMemo(() => {
+    if (!customCount) return true; // Empty is valid (use all)
+    const count = parseInt(customCount, 10);
+    return !isNaN(count) && count >= 5;
+  }, [customCount]);
+
+  // Get randomly selected words based on custom count
+  const getSelectedWords = (forMultipleChoice: boolean): VocabularyWord[] => {
+    const pool = forMultipleChoice ? validQuizWords : quizWords;
+    const count = customCount ? parseInt(customCount, 10) : 0;
+
+    if (count >= 5 && count < pool.length) {
+      // Randomly select the specified number of words
+      const shuffled = shuffleArray(pool);
+      return shuffled.slice(0, count);
+    }
+
+    return pool;
+  };
+
   const handleStartMultipleChoice = () => {
     const currentParams = new URLSearchParams(hash.split("?")[1] || "");
     currentParams.set("type", "multiple-choice");
     currentParams.delete("_restart"); // Remove restart flag if exists
+
+    // If custom count is set, pass selected word IDs via URL
+    const count = customCount ? parseInt(customCount, 10) : 0;
+    if (count > 0 && count < validQuizWords.length) {
+      const selectedWords = getSelectedWords(true);
+      currentParams.set("words", selectedWords.map((w) => w.id).join(","));
+    }
+
     push(`#/quiz?${currentParams.toString()}`);
   };
 
@@ -93,6 +137,14 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
     const currentParams = new URLSearchParams(hash.split("?")[1] || "");
     currentParams.set("type", "flashcard");
     currentParams.delete("_restart"); // Remove restart flag if exists
+
+    // If custom count is set, pass selected word IDs via URL
+    const count = customCount ? parseInt(customCount, 10) : 0;
+    if (count > 0 && count < quizWords.length) {
+      const selectedWords = getSelectedWords(false);
+      currentParams.set("words", selectedWords.map((w) => w.id).join(","));
+    }
+
     push(`#/quiz?${currentParams.toString()}`);
   };
 
@@ -183,7 +235,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
           實力驗收
         </h1>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <p className="text-base text-gray-600">
             你已選擇練習{" "}
             <span className="font-bold text-indigo-600">{quizWords.length}</span>{" "}
@@ -192,12 +244,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           {quizWords.length > 0 && (
             <button
               onClick={() => {
-                // Clear all possible sources
-                clearRange(); // Clear sessionStorage accumulated range
-                setFilteredWordIds([]); // Clear localStorage filtered word IDs
+                // Clear accumulated range from sessionStorage
+                clearRange();
+                // Clear URL params if any (e.g., ?words=1,2,3)
                 // Navigate to quiz page without params to show empty state
                 // This will trigger quizWords to become empty array
-                push("#/quiz");
+                window.location.hash = "#/quiz";
               }}
               className="px-4 py-2 text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               title="清除測驗範圍"
@@ -206,6 +258,42 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
             </button>
           )}
         </div>
+
+        {/* Custom quiz count input - only show when more than 20 questions */}
+        {quizWords.length > 20 && (
+          <div className={`mb-6 p-4 rounded-lg border ${
+            customCount && parseInt(customCount, 10) < 5
+              ? "bg-red-50 border-red-200"
+              : "bg-indigo-50 border-indigo-100"
+          }`}>
+            <p className="text-sm text-gray-600 mb-3">
+              因為單字範圍數量較多，請輸入練習題數
+            </p>
+            <label className="flex items-center gap-3 text-sm text-gray-700">
+              <span className="whitespace-nowrap font-medium">自訂題數：</span>
+              <input
+                type="number"
+                min="5"
+                max={quizWords.length}
+                value={customCount}
+                onChange={(e) => setCustomCount(e.target.value)}
+                placeholder={`5 - ${quizWords.length}`}
+                className={`w-32 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center ${
+                  customCount && parseInt(customCount, 10) < 5
+                    ? "border-red-400 bg-red-50"
+                    : "border-gray-300"
+                }`}
+              />
+              <span className={customCount && parseInt(customCount, 10) < 5 ? "text-red-600 font-medium" : "text-gray-500"}>
+                {customCount
+                  ? parseInt(customCount, 10) < 5
+                    ? "（最少需要 5 題）"
+                    : `（隨機抽取 ${customCount} 題）`
+                  : "（如未填會測驗全部範圍）"}
+              </span>
+            </label>
+          </div>
+        )}
 
         {/* Warning when less than 5 questions */}
         {quizWords.length > 0 && quizWords.length < 5 && (
@@ -221,9 +309,9 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           {/* Multiple Choice Button */}
           <button
             onClick={handleStartMultipleChoice}
-            disabled={validQuizWords.length === 0 || quizWords.length < 5}
+            disabled={validQuizWords.length === 0 || quizWords.length < 5 || !isCustomCountValid}
             className={`w-full max-w-md py-4 px-6 rounded-2xl text-white font-bold text-xl transition shadow-lg ${
-              validQuizWords.length === 0 || quizWords.length < 5
+              validQuizWords.length === 0 || quizWords.length < 5 || !isCustomCountValid
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-xl"
             }`}
@@ -239,9 +327,9 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
           {/* Flashcard Button */}
           <button
             onClick={handleStartFlashcard}
-            disabled={quizWords.length < 5}
+            disabled={quizWords.length < 5 || !isCustomCountValid}
             className={`w-full max-w-md py-4 px-6 rounded-2xl font-bold text-xl transition shadow-md hover:shadow-lg ${
-              quizWords.length < 5
+              quizWords.length < 5 || !isCustomCountValid
                 ? "bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed"
                 : "bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
             }`}

@@ -252,6 +252,27 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
 
   if (!currentCard) return null;
 
+  // 取得詞性顯示文字
+  const getPosDisplay = (word: VocabularyWord): string => {
+    const pos = word.posTags?.[0] || word.pos;
+    if (!pos) return "";
+    // 詞性縮寫對照
+    const posMap: Record<string, string> = {
+      noun: "n.",
+      verb: "v.",
+      adjective: "adj.",
+      adverb: "adv.",
+      preposition: "prep.",
+      conjunction: "conj.",
+      interjection: "interj.",
+      pronoun: "pron.",
+      phrase: "phr.",
+      other: "",
+    };
+    return posMap[pos] || pos;
+  };
+
+  const posDisplay = getPosDisplay(currentCard);
   const frontText =
     mode === "en-to-zh"
       ? cleanWord(currentCard.english_word)
@@ -307,6 +328,11 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
               <div className="flex items-center justify-center gap-2 mb-4">
                 <div className="text-2xl md:text-4xl font-bold text-center">
                   {frontText}
+                  {mode === "en-to-zh" && posDisplay && (
+                    <span className="text-lg md:text-2xl font-normal text-gray-400 ml-2">
+                      ({posDisplay})
+                    </span>
+                  )}
                 </div>
                 {mode === "en-to-zh" && (
                   <button
@@ -351,66 +377,71 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
                 </button>
               )}
 
-              <div className="w-full">
+              <div className="w-full flex-1">
                 <div className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight leading-none">
                   {cleanWord(currentCard.english_word)}
+                  {posDisplay && (
+                    <span className="text-base md:text-xl font-normal text-gray-400 ml-2">
+                      ({posDisplay})
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm md:text-base text-gray-500 font-medium mt-1 md:mt-2">
                   {currentCard.chinese_definition || "(無中文翻譯)"}
                 </div>
+
+                {currentCard.example_sentence && (
+                  <div className="w-full mt-3 md:mt-6 pl-3 md:pl-4 border-l-4 border-indigo-400">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <div className="text-lg md:text-2xl font-bold text-gray-800 leading-snug">
+                          {currentCard.example_sentence}
+                        </div>
+                        {currentCard.example_translation && (
+                          <div className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2">
+                            {currentCard.example_translation}
+                          </div>
+                        )}
+                      </div>
+                      <SpeakerButton
+                        onClick={() => speak(currentCard.example_sentence!, 'example1')}
+                        label="播放例句發音"
+                        className="mt-0.5"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {currentCard.example_sentence && (
-                <div className="w-full mt-3 md:mt-6 pl-3 md:pl-4 border-l-4 border-indigo-400">
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1">
-                      <div className="text-base md:text-xl font-bold text-gray-800 leading-snug">
-                        {currentCard.example_sentence}
-                      </div>
-                      {currentCard.example_translation && (
-                        <div className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2">
-                          {currentCard.example_translation}
-                        </div>
-                      )}
-                    </div>
-                    <SpeakerButton
-                      onClick={() => speak(currentCard.example_sentence!, 'example1')}
-                      label="播放例句發音"
-                      className="mt-0.5"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* 電腦版：按鈕整合在卡片內部底端 */}
+              <div className="hidden md:flex w-full justify-center gap-4 mt-4 pt-3 border-t border-gray-100">
+                <Button
+                  variant="danger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext(false);
+                  }}
+                  disabled={isFinished}
+                  className="px-8"
+                >
+                  還不熟
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext(true);
+                  }}
+                  disabled={isFinished}
+                  className="px-8"
+                >
+                  我記得了 ✓
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Desktop buttons - shown inline */}
-      {flipped && (
-        <div className="hidden md:flex -mt-16 justify-center gap-4 relative z-10">
-          <Button
-            variant="danger"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext(false);
-            }}
-            disabled={isFinished}
-          >
-            還不熟
-          </Button>
-          <Button
-            variant="success"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext(true);
-            }}
-            disabled={isFinished}
-          >
-            我記得了 ✓
-          </Button>
-        </div>
-      )}
 
       {/* Mobile fixed bottom action bar */}
       {flipped && (
@@ -452,7 +483,7 @@ const FlashcardQuiz: React.FC<FlashcardQuizProps> = ({ words, onRestart }) => {
         }
         @media (min-width: 768px) {
           .flashcard {
-            margin-bottom: 100px;
+            margin-bottom: 24px;
           }
         }
         .flashcard-inner {
