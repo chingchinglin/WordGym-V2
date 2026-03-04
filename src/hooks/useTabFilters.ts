@@ -39,6 +39,28 @@ export const useTabFilters = (userSettings: UserSettings | null) => {
   };
 
   const [filters, setFilters] = useState(() => {
+    // 優先：label URL 指定的 filter（一次性）
+    const labelFilter = sessionStorage.getItem("wordgym_label_filter");
+    if (labelFilter) {
+      try {
+        const { vol, lesson } = JSON.parse(labelFilter);
+        sessionStorage.removeItem("wordgym_label_filter");
+        const normalizedStage = VersionService.normalizeStage(
+          userSettings?.stage || "",
+        );
+        return {
+          textbook: { vol, lesson: [lesson] },
+          exam: { year: "112" },
+          theme: {
+            range: normalizedStage === "junior" ? "1200" : "Level 4",
+            theme: "",
+          },
+        };
+      } catch {
+        /* fall through */
+      }
+    }
+    // 其次：localStorage 已存的 filter
     const storedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
     return storedFilters ? JSON.parse(storedFilters) : getDefaultFilters();
   });
