@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { VocabularyWord } from "../../types";
 import { Button } from "../ui/Button";
+import { exportWrongWordsToCSV } from "../../utils/csvExport";
 
 interface QuizCompletionScreenProps {
   type: "multiple-choice" | "flashcard";
@@ -369,42 +370,43 @@ const QuizCompletionScreen: React.FC<QuizCompletionScreenProps> = ({
       )}
 
       {/* Action buttons */}
-      <div className="space-y-3">
+      <div className="flex flex-wrap gap-3 justify-center">
         {wrongWords.length > 0 && (
-          <div>
-            <Button
-              variant="primary"
-              onClick={handleAddWrongToFavorites}
-              disabled={addedWrong}
-              className="mb-2"
-            >
-              {addedWrong
-                ? `已加入 ${wrongWords.length} 個單字到重點訓練 ✓`
-                : `將錯題加入重點訓練 (${wrongWords.length}個)`}
-            </Button>
-          </div>
+          <Button
+            variant="primary"
+            onClick={handleAddWrongToFavorites}
+            disabled={addedWrong}
+          >
+            {addedWrong
+              ? `已加入 ${wrongWords.length} 個單字到重點訓練 ✓`
+              : `將錯題加入重點訓練 (${wrongWords.length}個)`}
+          </Button>
         )}
 
         {learningWords.length > 0 && (
-          <div>
-            <Button
-              variant="primary"
-              onClick={handleAddLearningToFavorites}
-              disabled={addedLearning}
-              className="mb-2"
-            >
-              {addedLearning
-                ? `已加入 ${learningWords.length} 個單字到重點訓練 ✓`
-                : `將學習中的單字加入重點訓練 (${learningWords.length}個)`}
-            </Button>
-          </div>
+          <Button
+            variant="primary"
+            onClick={handleAddLearningToFavorites}
+            disabled={addedLearning}
+          >
+            {addedLearning
+              ? `已加入 ${learningWords.length} 個單字到重點訓練 ✓`
+              : `將學習中的單字加入重點訓練 (${learningWords.length}個)`}
+          </Button>
         )}
 
-        <div className="flex gap-3 justify-center">
-          <Button variant="ghost" onClick={onRestart}>
-            重新開始測驗
+        {wrongWords.length > 0 && (
+          <Button
+            variant="ghost"
+            onClick={() => exportWrongWordsToCSV(wrongWords)}
+          >
+            匯出錯題筆記 CSV
           </Button>
-        </div>
+        )}
+
+        <Button variant="ghost" onClick={onRestart}>
+          重新開始測驗
+        </Button>
       </div>
     </div>
   );

@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: API 使用禁令
+
+**未經案主明確允許，禁止呼叫任何外部 API。** 這包括但不限於：
+- Gemini API（生成測驗選項、例句等）
+- OpenAI API
+- 任何需要 API Key 的服務
+
+執行任何會呼叫外部 API 的腳本前，必須先向案主說明並取得同意。
+
 ## Project Overview
 
 WordGym Students (單字健身坊學生版) — A vocabulary learning web app for Taiwanese junior/senior high school students. Bilingual codebase (comments/UI in Traditional Chinese, code in English).

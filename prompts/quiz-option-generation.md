@@ -60,6 +60,10 @@ const response = await callOpenAI({
 2. ❌ 禁止使用「語意相近且填進去也通順」的同義詞！
    例：正確答案 taller 時，不可用 higher, bigger（因為填進去語意也通）
    例：正確答案 written 時，不可用 typed, drafted（因為填進去語意也通）
+3. ❌ 禁止使用「填入後句子仍然正確」的干擾選項！
+   例：句子 "We visited my ___" 正確答案 aunt，不可用 uncle（因為 uncle 填入也正確）
+   例：句子 "I love my ___" 正確答案 mom，不可用 dad、sister（因為填入也正確）
+   ✅ 正確做法：使用詞形變化(aunts)、拼寫相似(ant)、發音相似等
 
 【回傳格式】
 回傳 JSON：

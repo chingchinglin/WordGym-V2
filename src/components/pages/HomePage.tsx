@@ -8,6 +8,7 @@ import { useFilteredWordIds } from "../../hooks/useFilteredWordIds";
 import { useQuizRange } from "../../hooks/useQuizRange";
 import { filterWords } from "../../utils/filterWords";
 import { FEATURES } from "../../config/features";
+import { VersionService } from "../../services/VersionService";
 import type { VocabularyWord, UserSettings } from "../../types";
 import type { CacheInfo } from "../../hooks/useDataset";
 
@@ -24,8 +25,8 @@ const TABS = {
 
 const TAB_TOOLTIPS: Record<string, string> = {
   textbook: "收錄各版本教科書單字，請選擇冊次與課次",
-  theme_國中: "依據教育部主題分類學習，請選擇感興趣的分類開始探索（即將推出，敬請期待！）",
-  theme_高中: "依據 Level 程度，請選擇感興趣的分類開始探索（即將推出，敬請期待！）",
+  theme_junior: "依據教育部參考字彙表，依主題與詞性分類，共37個主題，選擇 2000 單範圍與主題開始探索",
+  theme_high: "依據高中英文參考詞彙表，依級別排序L1~L6程度分類學習，選擇程度開始探索",
   exam: "針對歷年會考、學測高頻核心單字進行特訓，請選擇練習目標（即將推出，敬請期待！）",
 };
 
@@ -241,9 +242,10 @@ export const HomePage: React.FC<HomePageProps> = ({ words, userSettings, cacheIn
           {(() => {
             const tab = hoveredTab || currentTab;
             if (tab === "theme") {
-              // 根據學程顯示不同說明
-              const stage = userSettings?.stage || "國中";
-              return TAB_TOOLTIPS[`theme_${stage}`] || TAB_TOOLTIPS["theme_國中"];
+              // 根據學程顯示不同說明 (使用 normalized stage: junior/high)
+              const normalizedStage = VersionService.normalizeStage(userSettings?.stage || "");
+              const stageKey = normalizedStage === "high" ? "high" : "junior";
+              return TAB_TOOLTIPS[`theme_${stageKey}`] || TAB_TOOLTIPS["theme_junior"];
             }
             return TAB_TOOLTIPS[tab];
           })()}

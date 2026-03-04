@@ -31,8 +31,8 @@ import vocabularyData from "../data/vocabulary.json"; // Fallback data
 
 const LS: typeof LSType = {
   favorites: "mvp_vocab_favorites",
-  dataset: "mvp_vocab_dataset_v36",
-  presetApplied: "mvp_vocab_preset_applied_v36",
+  dataset: "mvp_vocab_dataset_v37",
+  presetApplied: "mvp_vocab_preset_applied_v37",
   homeFilters: "mvp_home_filters_v1",
   userExamples: "mvp_vocab_user_examples_v1",
   quizHistory: "mvp_vocab_quiz_history_v1",

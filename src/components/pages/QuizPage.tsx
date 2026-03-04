@@ -237,9 +237,19 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
         </h1>
         <div className="flex items-center justify-between mb-4">
           <p className="text-base text-gray-600">
-            你已選擇練習{" "}
-            <span className="font-bold text-indigo-600">{quizWords.length}</span>{" "}
-            題
+            {customCount && parseInt(customCount, 10) >= 5 ? (
+              <>
+                將隨機選取{" "}
+                <span className="font-bold text-indigo-600">{customCount}</span>{" "}
+                題挑戰
+              </>
+            ) : (
+              <>
+                你選擇的範圍共有{" "}
+                <span className="font-bold text-indigo-600">{quizWords.length}</span>{" "}
+                題
+              </>
+            )}
           </p>
           {quizWords.length > 0 && (
             <button
@@ -266,31 +276,27 @@ export const QuizPage: React.FC<QuizPageProps> = ({ words, userSettings }) => {
               ? "bg-red-50 border-red-200"
               : "bg-indigo-50 border-indigo-100"
           }`}>
-            <p className="text-sm text-gray-600 mb-3">
-              因為單字範圍數量較多，請輸入練習題數
-            </p>
-            <label className="flex items-center gap-3 text-sm text-gray-700">
-              <span className="whitespace-nowrap font-medium">自訂題數：</span>
+            <label className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <span>全部範圍共 <span className="font-semibold text-indigo-600">{quizWords.length}</span> 題，自訂挑戰題數</span>
               <input
                 type="number"
                 min="5"
                 max={quizWords.length}
                 value={customCount}
                 onChange={(e) => setCustomCount(e.target.value)}
-                placeholder={`5 - ${quizWords.length}`}
-                className={`w-32 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center ${
+                placeholder="填入題數"
+                className={`w-24 px-2 py-1 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center ${
                   customCount && parseInt(customCount, 10) < 5
                     ? "border-red-400 bg-red-50"
                     : "border-gray-300"
                 }`}
               />
-              <span className={customCount && parseInt(customCount, 10) < 5 ? "text-red-600 font-medium" : "text-gray-500"}>
-                {customCount
-                  ? parseInt(customCount, 10) < 5
-                    ? "（最少需要 5 題）"
-                    : `（隨機抽取 ${customCount} 題）`
-                  : "（如未填會測驗全部範圍）"}
-              </span>
+              <span>題，如未填入將會測驗全部範圍</span>
+              {customCount && parseInt(customCount, 10) < 5 && (
+                <span className="text-red-600 font-medium">
+                  （最少 5 題）
+                </span>
+              )}
             </label>
           </div>
         )}

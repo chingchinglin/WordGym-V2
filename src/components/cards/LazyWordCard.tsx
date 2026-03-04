@@ -106,7 +106,9 @@ export const LazyWordCard: React.FC<LazyWordCardProps> = ({
             e.stopPropagation();
             onToggleFavorite(word.id);
           }}
-          className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 hover:bg-white shadow-sm transition-all opacity-0 group-hover:opacity-100"
+          className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 hover:bg-white shadow-sm transition-all ${
+            isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
           title={isFavorite ? "從重點訓練移除" : "加入重點訓練"}
         >
           {isFavorite ? (

@@ -30,7 +30,7 @@ export interface VocabularyWord {
   grammar_sub_category?: string;
   grammar_function?: string;
   applicable_sentence_pattern?: string;
-  word_forms_detail?: Array<{ pos: string; form: string }>; // Parsed word forms
+  word_forms_detail?: WordFormsDetail; // Parsed word forms
   word_forms?:
     | string
     | Array<{ pos: string; details: string }>
@@ -61,8 +61,8 @@ export interface VocabularyWord {
   videoUrl?: string;
 
   // Lexical relations
-  synonyms?: string[];
-  antonyms?: string[];
+  synonyms?: string[] | SynonymAntonymGroup[];
+  antonyms?: string[] | SynonymAntonymGroup[];
   confusables?: string[];
   affix_info?:
     | string
@@ -204,6 +204,12 @@ export interface AffixInfo {
   example?: string;
 }
 
+export interface SynonymAntonymGroup {
+  pos?: string;      // 詞性，例如 "n.", "vi.", "adj."
+  meaning: string;   // 中文解釋
+  words: string[];   // 英文單字陣列
+}
+
 export type NavigationRoute = "home" | "favorites" | "quiz" | "word" | "404";
 
 export type CurrentTab = "exam" | "theme" | "textbook";
@@ -279,8 +285,8 @@ export interface ImportOptions {
 
 export const LS = {
   favorites: "mvp_vocab_favorites",
-  dataset: "mvp_vocab_dataset_v36",
-  presetApplied: "mvp_vocab_preset_applied_v36",
+  dataset: "mvp_vocab_dataset_v37",
+  presetApplied: "mvp_vocab_preset_applied_v37",
   homeFilters: "mvp_home_filters_v1",
   userExamples: "mvp_vocab_user_examples_v1",
   quizHistory: "mvp_vocab_quiz_history_v1",

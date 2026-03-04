@@ -4,47 +4,140 @@ import { VocabularyWord } from "../../types";
 // to ensure we always have exactly 4 options
 
 describe("Multiple Choice Options Generation Logic", () => {
-  // Helper function to simulate the option generation logic from MultipleChoiceQuiz
-  const generateOptions = (
-    correctAnswer: string,
-    pool: VocabularyWord[],
-    currentPOS: string | undefined,
-  ): string[] => {
-    // Step 1: Get same POS words from pool
-    const samePOSInPool = pool.filter((w) => {
-      const wordPOS = w.posTags && w.posTags.length > 0 ? w.posTags[0] : w.pos;
-
-      return (
-        wordPOS &&
-        currentPOS &&
-        wordPOS === currentPOS &&
-        w.english_word !== correctAnswer
-      );
-    });
-
-    const allDistractors: string[] = [];
-
-    // Add random words from same POS
-    const shuffledSamePOS = [...samePOSInPool].sort(() => Math.random() - 0.5);
-    for (let i = 0; i < Math.min(3, shuffledSamePOS.length); i++) {
-      allDistractors.push(shuffledSamePOS[i].english_word);
+  // Helper functions to check textbook index matching
+  const hasSameLesson = (
+    word1: VocabularyWord,
+    word2: VocabularyWord,
+  ): boolean => {
+    if (
+      !word1.textbook_index ||
+      word1.textbook_index.length === 0 ||
+      !word2.textbook_index ||
+      word2.textbook_index.length === 0
+    ) {
+      return false;
     }
 
-    // Step 2: If not enough, add random words from pool (any POS)
+    for (const ti1 of word1.textbook_index) {
+      for (const ti2 of word2.textbook_index) {
+        if (
+          ti1.version === ti2.version &&
+          ti1.vol === ti2.vol &&
+          ti1.lesson === ti2.lesson
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  const hasSameVol = (word1: VocabularyWord, word2: VocabularyWord): boolean => {
+    if (
+      !word1.textbook_index ||
+      word1.textbook_index.length === 0 ||
+      !word2.textbook_index ||
+      word2.textbook_index.length === 0
+    ) {
+      return false;
+    }
+
+    for (const ti1 of word1.textbook_index) {
+      for (const ti2 of word2.textbook_index) {
+        if (ti1.version === ti2.version && ti1.vol === ti2.vol) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Helper function to simulate the option generation logic from MultipleChoiceQuiz
+  const generateOptions = (
+    correctWord: VocabularyWord,
+    pool: VocabularyWord[],
+  ): string[] => {
+    const correctAnswer = correctWord.english_word;
+    const allDistractors: string[] = [];
+
+    // Step 1: Get words from the same textbook lesson (version-vol-lesson)
+    const sameLessonWords = pool.filter(
+      (w) => hasSameLesson(correctWord, w) && w.english_word !== correctAnswer,
+    );
+
+    const shuffledSameLesson = [...sameLessonWords].sort(
+      () => Math.random() - 0.5,
+    );
+    for (let i = 0; i < Math.min(3, shuffledSameLesson.length); i++) {
+      allDistractors.push(shuffledSameLesson[i].english_word);
+    }
+
+    // Step 2: If not enough, get words from the same textbook volume (version-vol)
     if (allDistractors.length < 3) {
-      const otherWords = pool.filter(
+      const sameVolWords = pool.filter(
         (w) =>
+          hasSameVol(correctWord, w) &&
           w.english_word !== correctAnswer &&
           !allDistractors.includes(w.english_word),
       );
-      const shuffledOthers = [...otherWords].sort(() => Math.random() - 0.5);
+      const shuffledSameVol = [...sameVolWords].sort(() => Math.random() - 0.5);
 
       for (
         let i = 0;
-        i < Math.min(3 - allDistractors.length, shuffledOthers.length);
+        i < Math.min(3 - allDistractors.length, shuffledSameVol.length);
         i++
       ) {
-        allDistractors.push(shuffledOthers[i].english_word);
+        allDistractors.push(shuffledSameVol[i].english_word);
+      }
+    }
+
+    // Fallback: If word has no textbook_index, use POS-based strategy
+    if (
+      allDistractors.length < 3 &&
+      (!correctWord.textbook_index || correctWord.textbook_index.length === 0)
+    ) {
+      const currentPOS =
+        correctWord.posTags && correctWord.posTags.length > 0
+          ? correctWord.posTags[0]
+          : correctWord.pos;
+
+      const samePOSInPool = pool.filter((w) => {
+        const wordPOS =
+          w.posTags && w.posTags.length > 0 ? w.posTags[0] : w.pos;
+
+        return (
+          wordPOS &&
+          currentPOS &&
+          wordPOS === currentPOS &&
+          w.english_word !== correctAnswer &&
+          !allDistractors.includes(w.english_word)
+        );
+      });
+
+      const shuffledSamePOS = [...samePOSInPool].sort(() => Math.random() - 0.5);
+      for (
+        let i = 0;
+        i < Math.min(3 - allDistractors.length, shuffledSamePOS.length);
+        i++
+      ) {
+        allDistractors.push(shuffledSamePOS[i].english_word);
+      }
+
+      if (allDistractors.length < 3) {
+        const otherWords = pool.filter(
+          (w) =>
+            w.english_word !== correctAnswer &&
+            !allDistractors.includes(w.english_word),
+        );
+        const shuffledOthers = [...otherWords].sort(() => Math.random() - 0.5);
+
+        for (
+          let i = 0;
+          i < Math.min(3 - allDistractors.length, shuffledOthers.length);
+          i++
+        ) {
+          allDistractors.push(shuffledOthers[i].english_word);
+        }
       }
     }
 
@@ -108,7 +201,89 @@ describe("Multiple Choice Options Generation Logic", () => {
     return finalOptions;
   };
 
-  test("generates exactly 4 options with sufficient pool", () => {
+  test("generates exactly 4 options with same lesson", () => {
+    const pool: VocabularyWord[] = [
+      {
+        id: 1,
+        english_word: "apple",
+        chinese_definition: "蘋果",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
+      },
+      {
+        id: 2,
+        english_word: "banana",
+        chinese_definition: "香蕉",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
+      },
+      {
+        id: 3,
+        english_word: "cherry",
+        chinese_definition: "櫻桃",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
+      },
+      {
+        id: 4,
+        english_word: "date",
+        chinese_definition: "棗子",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
+      },
+    ] as VocabularyWord[];
+
+    const options = generateOptions(pool[0], pool);
+    expect(options).toHaveLength(4);
+    expect(options).toContain("apple");
+  });
+
+  test("generates exactly 4 options with same volume but different lesson", () => {
+    const pool: VocabularyWord[] = [
+      {
+        id: 1,
+        english_word: "apple",
+        chinese_definition: "蘋果",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
+      },
+      {
+        id: 2,
+        english_word: "banana",
+        chinese_definition: "香蕉",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U2" }],
+      },
+      {
+        id: 3,
+        english_word: "cherry",
+        chinese_definition: "櫻桃",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U2" }],
+      },
+      {
+        id: 4,
+        english_word: "date",
+        chinese_definition: "棗子",
+        pos: "noun",
+        posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U3" }],
+      },
+    ] as VocabularyWord[];
+
+    const options = generateOptions(pool[0], pool);
+    expect(options).toHaveLength(4);
+    expect(options).toContain("apple");
+  });
+
+  test("generates exactly 4 options with no textbook_index (fallback to POS)", () => {
     const pool: VocabularyWord[] = [
       {
         id: 1,
@@ -140,46 +315,7 @@ describe("Multiple Choice Options Generation Logic", () => {
       },
     ] as VocabularyWord[];
 
-    const options = generateOptions("apple", pool, "noun");
-    expect(options).toHaveLength(4);
-    expect(options).toContain("apple");
-  });
-
-  test("generates exactly 4 options with insufficient same-POS words", () => {
-    const pool: VocabularyWord[] = [
-      {
-        id: 1,
-        english_word: "apple",
-        chinese_definition: "蘋果",
-        pos: "noun",
-        posTags: ["noun"],
-      },
-      {
-        id: 2,
-        english_word: "run",
-        chinese_definition: "跑",
-        pos: "verb",
-        posTags: ["verb"],
-      },
-    ] as VocabularyWord[];
-
-    const options = generateOptions("apple", pool, "noun");
-    expect(options).toHaveLength(4);
-    expect(options).toContain("apple");
-  });
-
-  test("generates exactly 4 options with minimal pool (1 word)", () => {
-    const pool: VocabularyWord[] = [
-      {
-        id: 1,
-        english_word: "apple",
-        chinese_definition: "蘋果",
-        pos: "noun",
-        posTags: ["noun"],
-      },
-    ] as VocabularyWord[];
-
-    const options = generateOptions("apple", pool, "noun");
+    const options = generateOptions(pool[0], pool);
     expect(options).toHaveLength(4);
     expect(options).toContain("apple");
   });
@@ -192,10 +328,11 @@ describe("Multiple Choice Options Generation Logic", () => {
         chinese_definition: "測試",
         pos: "noun",
         posTags: ["noun"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
       },
     ] as VocabularyWord[];
 
-    const options = generateOptions("test", pool, "noun");
+    const options = generateOptions(pool[0], pool);
     const uniqueOptions = new Set(options);
 
     expect(options).toHaveLength(4);
@@ -211,10 +348,11 @@ describe("Multiple Choice Options Generation Logic", () => {
         chinese_definition: "正確",
         pos: "adjective",
         posTags: ["adjective"],
+        textbook_index: [{ version: "康軒", vol: "B1", lesson: "U1" }],
       },
     ] as VocabularyWord[];
 
-    const options = generateOptions("correct", pool, "adjective");
+    const options = generateOptions(pool[0], pool);
     expect(options).toContain("correct");
     expect(options).toHaveLength(4);
   });

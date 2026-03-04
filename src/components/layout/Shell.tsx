@@ -21,28 +21,11 @@ export const Shell: React.FC<ShellProps> = ({
 }) => {
   const [showGuide, setShowGuide] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Handle cache refresh
-  const handleRefreshCache = async () => {
-    if (!onRefreshCache || isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      await onRefreshCache();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  // Format cache age for display
-  const formatCacheAge = (ms?: number): string => {
-    if (!ms) return "";
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    if (hours > 0) return `${hours}小時前`;
-    if (minutes > 0) return `${minutes}分鐘前`;
-    return "剛剛";
-  };
+  // Cache refresh removed - data is now static for security
+  // Props kept for backwards compatibility but unused
+  void cacheInfo;
+  void onRefreshCache;
 
   // Get current route
   const [currentHash, setCurrentHash] = useState(
@@ -543,41 +526,7 @@ export const Shell: React.FC<ShellProps> = ({
                 >
                   意見回饋
                 </a>
-                {/* Issue #72: Manual cache refresh button */}
-                {onRefreshCache && (
-                  <>
-                    <span>|</span>
-                    <button
-                      onClick={handleRefreshCache}
-                      disabled={isRefreshing || cacheInfo?.isLoading}
-                      className="inline-flex items-center gap-1 text-gray-500 hover:text-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={
-                        cacheInfo?.fromCache
-                          ? `資料快取：${formatCacheAge(cacheInfo.cacheAge)}更新`
-                          : "重新載入單字資料"
-                      }
-                    >
-                      <svg
-                        className={`h-3.5 w-3.5 ${isRefreshing || cacheInfo?.isLoading ? "animate-spin" : ""}`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      <span className="text-xs">
-                        {isRefreshing || cacheInfo?.isLoading
-                          ? "更新中..."
-                          : "更新資料"}
-                      </span>
-                    </button>
-                  </>
-                )}
+                {/* Cache refresh button removed - data is now static for security */}
               </p>
             </div>
           </div>

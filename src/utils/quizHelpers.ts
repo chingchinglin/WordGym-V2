@@ -78,6 +78,99 @@ const IRREGULAR_VERBS: Record<string, string[]> = {
   fly: ["flew", "flown", "flying"],
   draw: ["drew", "drawn", "drawing"],
   withdraw: ["withdrew", "withdrawn", "withdrawing"],
+  // --- Added: missing irregular verbs identified from alignment check ---
+  freeze: ["froze", "frozen", "freezing"],
+  lend: ["lent", "lending"],
+  shake: ["shook", "shaken", "shaking"],
+  shine: ["shone", "shined", "shining"],
+  shrink: ["shrank", "shrunk", "shrunken", "shrinking"],
+  creep: ["crept", "creeping"],
+  flee: ["fled", "fleeing"],
+  overtake: ["overtook", "overtaken", "overtaking"],
+  cling: ["clung", "clinging"],
+  spin: ["spun", "spinning"],
+  spit: ["spat", "spit", "spitting"],
+  weep: ["wept", "weeping"],
+  stride: ["strode", "stridden", "striding"],
+  weave: ["wove", "woven", "weaving"],
+  bind: ["bound", "binding"],
+  slay: ["slew", "slain", "slaying"],
+  grind: ["ground", "grinding"],
+  bite: ["bit", "bitten", "biting"],
+  slide: ["slid", "sliding"],
+  dig: ["dug", "digging"],
+  hang: ["hung", "hanged", "hanging"],
+  sweep: ["swept", "sweeping"],
+  strike: ["struck", "stricken", "striking"],
+  be: ["is", "am", "are", "was", "were", "been", "being"],
+  lead: ["led", "leading"],
+  spread: ["spread", "spreading"],
+  set: ["set", "setting"],
+  shut: ["shut", "shutting"],
+  cut: ["cut", "cutting"],
+  put: ["put", "putting"],
+  hit: ["hit", "hitting"],
+  let: ["let", "letting"],
+  hurt: ["hurt", "hurting"],
+  cost: ["cost", "costing"],
+  quit: ["quit", "quitting"],
+  lay: ["laid", "laying"],
+  lie: ["lay", "lain", "lying"],
+  rise: ["rose", "risen", "rising"],
+  wake: ["woke", "woken", "waking"],
+  steal: ["stole", "stolen", "stealing"],
+  forget: ["forgot", "forgotten", "forgetting"],
+  forgive: ["forgave", "forgiven", "forgiving"],
+  prove: ["proved", "proven", "proving"],
+  show: ["showed", "shown", "showing"],
+  swear: ["swore", "sworn", "swearing"],
+  stick: ["stuck", "sticking"],
+  sting: ["stung", "stinging"],
+  swing: ["swung", "swinging"],
+  deal: ["dealt", "dealing"],
+  feed: ["fed", "feeding"],
+  mean: ["meant", "meaning"],
+  shoot: ["shot", "shooting"],
+  bend: ["bent", "bending"],
+  burst: ["burst", "bursting"],
+  mimic: ["mimicked", "mimicking"],
+};
+
+// Common irregular noun plurals
+const IRREGULAR_NOUNS: Record<string, string[]> = {
+  leaf: ["leaves"],
+  wolf: ["wolves"],
+  tooth: ["teeth"],
+  foot: ["feet"],
+  goose: ["geese"],
+  mouse: ["mice"],
+  child: ["children"],
+  man: ["men"],
+  woman: ["women"],
+  person: ["people", "persons"],
+  life: ["lives"],
+  wife: ["wives"],
+  knife: ["knives"],
+  half: ["halves"],
+  shelf: ["shelves"],
+  self: ["selves"],
+  calf: ["calves"],
+  thief: ["thieves"],
+  loaf: ["loaves"],
+  ox: ["oxen"],
+  criterion: ["criteria"],
+  phenomenon: ["phenomena"],
+  medium: ["media"],
+  datum: ["data"],
+  analysis: ["analyses"],
+  crisis: ["crises"],
+  basis: ["bases"],
+  thesis: ["theses"],
+  hypothesis: ["hypotheses"],
+  stimulus: ["stimuli"],
+  focus: ["foci", "focuses"],
+  fungus: ["fungi", "funguses"],
+  cactus: ["cacti", "cactuses"],
 };
 
 // Generate common word forms for matching
@@ -161,6 +254,33 @@ const getWordForms = (word: string): string[] => {
     forms.push(base.slice(0, -3) + "e"); // defending -> defende
     forms.push(base.slice(0, -3) + "ed"); // defending -> defended
   }
+  // -ive adjectives -> verb forms (impressive -> impress -> impressed/impressing)
+  if (base.endsWith("ive")) {
+    const verbRoot = base.slice(0, -3); // impressive -> impress (remove 'ive', keep 'ss')
+    forms.push(verbRoot); // impress
+    forms.push(verbRoot + "ed"); // impressed
+    forms.push(verbRoot + "ing"); // impressing
+    forms.push(verbRoot + "es"); // impresses
+    // Also try -ive -> -e (creative -> create)
+    forms.push(base.slice(0, -2) + "e"); // creative -> create
+    forms.push(base.slice(0, -2) + "ed"); // creative -> created
+    forms.push(base.slice(0, -2) + "ing"); // creative -> creating
+  }
+  // -ful adjectives (careful -> care)
+  if (base.endsWith("ful")) {
+    forms.push(base.slice(0, -3)); // careful -> care
+    forms.push(base.slice(0, -3) + "s"); // careful -> cares
+    forms.push(base.slice(0, -3) + "d"); // careful -> cared
+    forms.push(base.slice(0, -3) + "ing"); // careful -> caring
+  }
+  // -able/-ible adjectives (memorable -> memory, visible -> vision)
+  if (base.endsWith("able") || base.endsWith("ible")) {
+    const root = base.slice(0, -4);
+    forms.push(root); // memorable -> memor
+    forms.push(root + "y"); // memorable -> memory
+    forms.push(root + "e"); // comparable -> compare
+    forms.push(root + "ed"); // comparable -> compared
+  }
 
   // Common irregular verb forms
   if (IRREGULAR_VERBS[base]) {
@@ -172,6 +292,18 @@ const getWordForms = (word: string): string[] => {
     if (irregulars.includes(base)) {
       forms.push(root);
       forms.push(...irregulars);
+    }
+  }
+
+  // Common irregular noun forms
+  if (IRREGULAR_NOUNS[base]) {
+    forms.push(...IRREGULAR_NOUNS[base]);
+  }
+  // Also check if base is an irregular plural of something
+  for (const [singular, plurals] of Object.entries(IRREGULAR_NOUNS)) {
+    if (plurals.includes(base)) {
+      forms.push(singular);
+      forms.push(...plurals);
     }
   }
 

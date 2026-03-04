@@ -262,24 +262,62 @@ export function wordToMarkdown(
   // Relations Section
   if (sections.relations) {
     const relationLines: string[] = [];
+    
+    // Helper to check if grouped format
+    const isGrouped = (
+      items: string[] | Array<{ pos?: string; meaning: string; words: string[] }> | undefined,
+    ): items is Array<{ pos?: string; meaning: string; words: string[] }> => {
+      if (!items || items.length === 0) return false;
+      return typeof items[0] === "object" && "words" in items[0];
+    };
+
+    // Synonyms
     const synonyms = extras.synonyms ?? word.synonyms ?? [];
-    const synList = Array.isArray(synonyms)
-      ? synonyms
-      : (synonyms as any)
-          .split(/[,;，、]/)
-          .map((s: string) => s.trim())
-          .filter(Boolean);
-    if (synList.length) relationLines.push(`- 同義字：${synList.join("、")}`);
+    if (isGrouped(synonyms)) {
+      // New format: grouped
+      synonyms.forEach((group) => {
+        if (group.words.length > 0) {
+          const title = group.meaning
+            ? `${group.pos || ""}${group.meaning}`
+            : "同義字";
+          relationLines.push(`- ${title}：${group.words.join("、")}`);
+        }
+      });
+    } else {
+      // Old format: string array
+      const synList = Array.isArray(synonyms)
+        ? synonyms
+        : (synonyms as any)
+            .split(/[,;，、]/)
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+      if (synList.length) relationLines.push(`- 同義字：${synList.join("、")}`);
+    }
 
+    // Antonyms
     const antonyms = extras.antonyms ?? word.antonyms ?? [];
-    const antList = Array.isArray(antonyms)
-      ? antonyms
-      : (antonyms as any)
-          .split(/[,;，、]/)
-          .map((s: string) => s.trim())
-          .filter(Boolean);
-    if (antList.length) relationLines.push(`- 反義字：${antList.join("、")}`);
+    if (isGrouped(antonyms)) {
+      // New format: grouped
+      antonyms.forEach((group) => {
+        if (group.words.length > 0) {
+          const title = group.meaning
+            ? `${group.pos || ""}${group.meaning}`
+            : "反義字";
+          relationLines.push(`- ${title}：${group.words.join("、")}`);
+        }
+      });
+    } else {
+      // Old format: string array
+      const antList = Array.isArray(antonyms)
+        ? antonyms
+        : (antonyms as any)
+            .split(/[,;，、]/)
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+      if (antList.length) relationLines.push(`- 反義字：${antList.join("、")}`);
+    }
 
+    // Confusables (keep original format)
     const confusables = extras.confusables ?? word.confusables ?? [];
     const confList = Array.isArray(confusables)
       ? confusables

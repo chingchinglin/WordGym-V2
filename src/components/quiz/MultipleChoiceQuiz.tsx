@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { VocabularyWord } from "../../types";
 import { makeCloze, canMakeCloze } from "../../utils/quizHelpers";
 import { speak } from "../../utils/speechUtils";
@@ -27,8 +27,10 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   const { add: addRecord, history } = useQuizHistory();
   const { hash } = useHashRoute();
 
-  const data = words;
-  const pool = words; // Use words directly from props (already filtered by QuizPage)
+  // 鎖住初始 words，避免 CSV 載入完成後 props 更新導致題目跳動
+  const stableWordsRef = useRef(words);
+  const data = stableWordsRef.current;
+  const pool = stableWordsRef.current;
   const favoritesApi = {
     favorites: Array.from(favorites),
     toggle: (id: number) => {

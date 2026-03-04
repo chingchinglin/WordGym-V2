@@ -7,7 +7,7 @@
 export const FEATURES = {
   textbook: true,   // 課本進度 - 正常運作
   exam: false,      // 大考衝刺 - Coming Soon
-  theme: false,     // 主題探索 - Coming Soon
+  theme: true,      // 主題探索 - 已啟用
 } as const;
 
 /**

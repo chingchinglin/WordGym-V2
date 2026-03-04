@@ -190,6 +190,21 @@ export function normalizeWordFormsDetail(
 ): WordFormsDetail {
   const detail = emptyWordFormsDetail();
 
+  // If both rawDetail and fallback are empty, return empty detail
+  const hasRawDetail = rawDetail && (
+    (Array.isArray(rawDetail) && rawDetail.length > 0) ||
+    (typeof rawDetail === "object" && !Array.isArray(rawDetail) && Object.keys(rawDetail).length > 0)
+  );
+  const hasFallback = (
+    (Array.isArray(fallback) && fallback.length > 0) ||
+    (typeof fallback === "string" && fallback.trim().length > 0)
+  );
+
+  // If no data sources, return empty detail
+  if (!hasRawDetail && !hasFallback) {
+    return detail;
+  }
+
   // Handle structured WordFormsDetail object (not array)
   if (rawDetail && typeof rawDetail === "object" && !Array.isArray(rawDetail)) {
     // Check if it has WordFormsDetail structure
@@ -220,7 +235,7 @@ export function normalizeWordFormsDetail(
   if (Array.isArray(fallback)) {
     remaining.push(...fallback);
   }
-  if (typeof fallback === "string") {
+  if (typeof fallback === "string" && fallback.trim()) {
     remaining.push(...multiSplit(fallback));
   }
 

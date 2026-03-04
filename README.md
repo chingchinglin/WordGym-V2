@@ -3,6 +3,13 @@
 
 <!-- Auto-deploy trigger -->
 
+## 功能介紹
+
+- 單字卡瀏覽：依課本冊次/課次、主題分類篩選單字
+- 實力驗收：選擇題測驗（AI 即時生成干擾選項）與閃卡複習
+- 重點訓練：將不熟的單字加入收藏，集中複習
+- 匯出錯題筆記：測驗完成後可將答錯的單字下載為 CSV（含英文單字、中文定義、題目例句、例句翻譯、我的答案）
+
 ## 部署方式
 
 ### 自動部署
@@ -15,6 +22,29 @@
 | GitHub Release | ✅ 自動 | 每次 push 更新 `latest` release |
 | dist 分支 | ✅ 自動 | 最新 build 檔案 |
 | GCS Bucket | ⏳ 需設定 | 需設定 `GCS_SA_KEY` secret |
+
+### 本地部署到 GCS（推薦）
+
+使用部署腳本可以自動處理版本控制和快取問題：
+
+```bash
+# 設定環境變數
+export GCS_BUCKET=your-bucket-name
+export GCS_SA_KEY=/path/to/service-account-key.json
+export GCS_PATH=event/wordgym  # 可選
+
+# 執行部署
+npm run deploy:gcs
+```
+
+**部署腳本會自動：**
+- ✅ 建置專案
+- ✅ **為 CSS/JS 添加版本參數**（避免快取問題）
+- ✅ 上傳到 GCS
+- ✅ 設定 Cache-Control
+- ✅ 設定公開讀取權限
+
+詳細說明請參考 [GCS 部署指南](docs/DEPLOY_GCS.md)
 
 ### 手動部署到 GCS
 
@@ -37,20 +67,7 @@
 3. 進入路徑: `event/wordgym/`
 4. 上傳解壓後的檔案 (index.html + images/)
 
-#### Step 3: 驗證
-
-訪問 GCS 上的網址確認更新成功
-
-### 啟用 GCS 自動部署
-
-如需每次 push 自動同步到 GCS：
-
-1. 建立 GCS Service Account Key（需有 `jutor-event-di1dzdgl64` bucket 寫入權限）
-2. 到 GitHub Repository → Settings → Secrets and variables → Actions
-3. 新增 Secret: `GCS_SA_KEY`
-4. 將 Service Account Key JSON 內容貼上
-
-設定完成後，每次 push 會自動部署到 GCS。
+**注意**：手動上傳不會自動添加版本參數，可能會有快取問題。建議使用部署腳本。
 
 ---
 

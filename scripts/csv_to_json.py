@@ -75,12 +75,154 @@ def parse_array_field(value, delimiter=';'):
     """
     Parse a field that might be a comma or semicolon-separated array
     Returns an empty list if the field is empty
+    Supports both comma and semicolon delimiters
     """
     if not value or value.strip() == '':
         return []
 
-    # Split and strip each item, remove empty items
-    return [item.strip() for item in value.split(delimiter) if item.strip()]
+    # Try semicolon first (preferred delimiter)
+    if delimiter == ';' and ';' in value:
+        return [item.strip() for item in value.split(';') if item.strip()]
+    
+    # Fallback to comma if no semicolon found
+    if ',' in value:
+        return [item.strip() for item in value.split(',') if item.strip()]
+    
+    # If no delimiter found, return as single item
+    return [value.strip()] if value.strip() else []
+
+def parse_synonyms_antonyms(value):
+    """
+    Parse synonyms/antonyms field into structured format
+    Supports two formats:
+    
+    1. New format (multi-line with POS + Chinese meaning):
+       n.能力，才能，技能
+       power; skill; talent
+    
+    2. Old format (single line, English words only):
+       power, skill, talent
+       or
+       power; skill; talent
+    
+    Returns array of SynonymAntonymGroup objects:
+    [
+        {
+            'pos': 'n.',
+            'meaning': '能力，才能，技能',
+            'words': ['power', 'skill', 'talent']
+        }
+    ]
+    """
+    if not value or value.strip() == '':
+        return []
+    
+    lines = value.strip().split('\n')
+    
+    # If only one line and no POS/Chinese markers, treat as old format
+    if len(lines) == 1:
+        line = lines[0].strip()
+        # Check if contains POS marker (n., vi., adj., etc.)
+        has_pos = re.search(r'^[a-z]+\.', line, re.IGNORECASE)
+        has_chinese = re.search(r'[\u4e00-\u9fff]', line)
+        
+        if not has_pos and not has_chinese:
+            # Old format: English words only
+            # Support both comma and semicolon delimiters
+            words = []
+            for delimiter in [';', ',']:
+                if delimiter in line:
+                    words = [w.strip() for w in line.split(delimiter) if w.strip()]
+                    break
+            
+            if words:
+                # Convert to new format: group without title
+                return [{
+                    'pos': '',
+                    'meaning': '',
+                    'words': words
+                }]
+    
+    # New format: multi-line parsing
+    groups = []
+    current_pos = None
+    current_meaning = None
+    current_words = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Check if this is a title line (contains POS or Chinese)
+        # Pattern: n.xxx or vi.xxx or adj.xxx etc.
+        pos_match = re.match(r'^([a-z]+\.)\s*(.+)$', line, re.IGNORECASE)
+        if pos_match:
+            # Save previous group
+            if current_meaning or current_words:
+                groups.append({
+                    'pos': current_pos or '',
+                    'meaning': current_meaning or '',
+                    'words': current_words
+                })
+            
+            # Start new group
+            current_pos = pos_match.group(1)
+            title_content = pos_match.group(2).strip()
+            
+            # Check if title line contains English words after Chinese
+            # Pattern: n.中文 英文單字 或 n.中文 英文單字; 其他單字
+            # Split by space and check if there are English words after Chinese
+            parts = title_content.split()
+            chinese_parts = []
+            english_words_in_title = []
+            
+            found_chinese = False
+            for part in parts:
+                has_chinese = bool(re.search(r'[\u4e00-\u9fff]', part))
+                is_english = bool(re.match(r'^[a-z]+', part, re.IGNORECASE)) and not has_chinese
+                
+                if has_chinese:
+                    found_chinese = True
+                    chinese_parts.append(part)
+                elif found_chinese and is_english:
+                    # Found English word after Chinese in title line
+                    # Check if it's followed by semicolon (indicating more words)
+                    if ';' in part:
+                        # Split by semicolon, first part is the word
+                        word_parts = part.split(';')
+                        english_words_in_title.append(word_parts[0].strip())
+                        # Add remaining words
+                        english_words_in_title.extend([w.strip() for w in word_parts[1:] if w.strip()])
+                    else:
+                        english_words_in_title.append(part)
+                elif found_chinese:
+                    # Still part of Chinese description
+                    chinese_parts.append(part)
+            
+            # Set meaning (only Chinese parts)
+            current_meaning = ' '.join(chinese_parts) if chinese_parts else ''
+            
+            # If English words were found in title, add them to words list
+            current_words = english_words_in_title if english_words_in_title else []
+        else:
+            # This is an English words line, separated by semicolon
+            words = [w.strip() for w in line.split(';') if w.strip()]
+            if current_meaning or current_pos:
+                current_words.extend(words)
+            else:
+                # No title, treat as word group directly
+                current_words.extend(words)
+    
+    # Save last group
+    if current_meaning or current_words:
+        groups.append({
+            'pos': current_pos or '',
+            'meaning': current_meaning or '',
+            'words': current_words
+        })
+    
+    return groups if groups else []
 
 def extract_pos_from_definition(chinese_def):
     """
@@ -162,7 +304,13 @@ def parse_theme_index(value):
 def parse_word_forms(value):
     """
     Parse word_forms into structured format
-    Expected format:
+    Supports two formats:
+    
+    Format 1 (簡化格式，Google Sheets 常用):
+    n.複數：families
+    adj.比較級：handsomer；最高級：handsomest
+    
+    Format 2 (完整格式):
     名詞
     可數；複數: criminals
 
@@ -173,7 +321,27 @@ def parse_word_forms(value):
     if not value or value.strip() == '':
         return []
 
+    value = value.strip()
     result = []
+    
+    # Try Format 1: Simplified format (e.g., "n.複數：families")
+    # Pattern: pos.變化類型：變化形式
+    simplified_pattern = r'^([a-z]+\.)(.+)$'
+    import re
+    match = re.match(simplified_pattern, value, re.IGNORECASE)
+    
+    if match:
+        pos_abbr = match.group(1)
+        details_part = match.group(2).strip()
+        
+        # Keep original English POS abbreviation (don't convert to Chinese)
+        result.append({
+            'pos': pos_abbr,
+            'details': details_part
+        })
+        return result
+    
+    # Try Format 2: Full format with line breaks
     lines = value.split('\n')
     current_pos = None
     current_details = []
@@ -314,11 +482,16 @@ def merge_word_entries(existing, new_entry):
         return val1 or val2
 
     # Helper to merge word_forms (can be array of objects or string)
+    # IMPORTANT: If new_entry (CSV) has empty word_forms, clear the existing one
     def merge_word_forms(forms1, forms2):
+        # forms1 is existing (from old JSON), forms2 is new (from CSV)
+        # If CSV has empty word_forms, clear the existing one
+        if not forms2 or (isinstance(forms2, str) and not forms2.strip()) or (isinstance(forms2, list) and len(forms2) == 0):
+            return []  # Clear word_forms when CSV has no data
+        
+        # If existing has no data, use new data
         if not forms1:
             return forms2
-        if not forms2:
-            return forms1
 
         # If both are arrays of objects, merge them
         if isinstance(forms1, list) and isinstance(forms2, list):
@@ -438,6 +611,7 @@ def csv_to_json(csv_path, json_path):
         '詞形變化': 'word_forms',
         '詞性變化': 'word_forms',  # 向後相容
         '片語': 'phrases',
+        '搭配詞': 'phrases',  # CSV 使用此欄位名稱
         '同義字': 'synonyms',
         '反義字': 'antonyms',
         '易混淆字': 'confusables',
@@ -486,8 +660,8 @@ def csv_to_json(csv_path, json_path):
                 'posOriginal': '',  # Store original Z column format like "(adj./v./n.)" - use this for display
                 'word_forms': [],
                 'phrases': [],
-                'synonyms': [],
-                'antonyms': [],
+                'synonyms': [],  # Will be array of SynonymAntonymGroup objects
+                'antonyms': [],  # Will be array of SynonymAntonymGroup objects
                 'confusables': [],
                 'affix_info': {},
                 'videoUrl': ''
@@ -516,12 +690,12 @@ def csv_to_json(csv_path, json_path):
                     processed_row['posTags'] = parse_pos_tags(value)
                 elif key == '詞形變化' or key == '詞性變化' or mapped_key == 'word_forms':
                     processed_row['word_forms'] = parse_word_forms(value)
-                elif key == '片語' or mapped_key == 'phrases':
+                elif key == '片語' or key == '搭配詞' or mapped_key == 'phrases':
                     processed_row['phrases'] = parse_array_field(value)
                 elif key == '同義字' or mapped_key == 'synonyms':
-                    processed_row['synonyms'] = parse_array_field(value, delimiter=';')
+                    processed_row['synonyms'] = parse_synonyms_antonyms(value)
                 elif key == '反義字' or mapped_key == 'antonyms':
-                    processed_row['antonyms'] = parse_array_field(value, delimiter=';')
+                    processed_row['antonyms'] = parse_synonyms_antonyms(value)
                 elif key == '易混淆字' or mapped_key == 'confusables':
                     processed_row['confusables'] = parse_array_field(value, delimiter=';')
                 elif key in ['字首', '字尾', '字根', '意思', '例子']:

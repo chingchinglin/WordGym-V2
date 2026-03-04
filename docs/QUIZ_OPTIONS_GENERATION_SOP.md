@@ -227,7 +227,63 @@ node scripts/generate-quiz-options.mjs --limit=100
 
 ---
 
-## 10. 相關檔案
+## 10. 品質規則
+
+### 選項位置分布（程式已處理）
+
+正確答案在 A、B、C、D 四個位置的分布必須**隨機且平均**。
+
+| 位置 | 預期比例 |
+|------|----------|
+| A (第1個) | ~25% |
+| B (第2個) | ~25% |
+| C (第3個) | ~25% |
+| D (第4個) | ~25% |
+
+> ✅ `MultipleChoiceQuiz.tsx` 第 116-133 行已實作平均分布邏輯
+
+---
+
+### 干擾類型分布
+
+每題的 3 個干擾選項應盡量來自 **3 種不同類型**：
+
+| Type | 名稱 | 範例 |
+|------|------|------|
+| A | 詞形錯誤 | ran → run, runs |
+| B | 詞性錯誤 | decision → decide |
+| C | 語意相反 | increase → decrease |
+| D | 拼寫易混淆 | affect → effect |
+| E | 發音相似 | their → there |
+| F | 搭配錯誤 | make → do (decision) |
+
+**規則**：
+- ✅ 理想：A, B, D（3 種不同）
+- ⚠️ 可接受：A, A, B（有 1 種重複）
+- ❌ 避免：B, B, B（全部相同）
+
+**目標符合率**：≥ 80%
+
+---
+
+### 品質檢查腳本
+
+```bash
+# 檢查 Type 分布
+node -e "
+const data = require('./src/data/quiz-options.json');
+let ok = 0;
+data.forEach(item => {
+  const types = new Set(item.distractors.map(d => d.type));
+  if (types.size >= 2) ok++;
+});
+console.log('符合率:', (ok/data.length*100).toFixed(1) + '%');
+"
+```
+
+---
+
+## 11. 相關檔案
 
 | 檔案 | 說明 |
 |------|------|
@@ -239,7 +295,7 @@ node scripts/generate-quiz-options.mjs --limit=100
 
 ---
 
-## 11. 歷史教訓（2026-02-11）
+## 12. 歷史教訓（2026-02-11）
 
 ### 問題事件
 

@@ -1,6 +1,8 @@
 /**
- * DebugPage - 顯示原始資料用於驗證 Google Sheets 更新
- * Issue #72: Debug tool for data verification
+ * DebugPage - 顯示原始資料用於驗證
+ *
+ * SECURITY UPDATE: Data is now loaded from static vocabulary.json.
+ * Cache refresh functionality has been removed.
  */
 
 import React, { useState } from "react";
@@ -9,50 +11,46 @@ import type { CacheInfo } from "../../hooks/useDataset";
 
 interface DebugPageProps {
   words: VocabularyWord[];
-  cacheInfo?: CacheInfo;
-  onRefreshCache?: () => Promise<void>;
+  cacheInfo?: CacheInfo; // Kept for backwards compatibility
+  onRefreshCache?: () => Promise<void>; // Kept for backwards compatibility
 }
 
 export const DebugPage: React.FC<DebugPageProps> = ({
   words,
-  cacheInfo,
-  onRefreshCache,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  cacheInfo: _cacheInfo, // Kept for backwards compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onRefreshCache: _onRefreshCache, // Kept for backwards compatibility
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showRaw, setShowRaw] = useState(false);
   const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Filter words by search term
+  // Filter words by search term - improved precision
   const filteredWords = searchTerm
-    ? words.filter(
-        (w) =>
-          w.english_word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.chinese_definition.includes(searchTerm),
-      )
+    ? words.filter((w) => {
+        const searchTermLower = searchTerm.toLowerCase().trim();
+        if (!searchTermLower) return true;
+
+        const englishWordLower = w.english_word.toLowerCase();
+
+        // Priority 1: Exact match
+        if (englishWordLower === searchTermLower) return true;
+
+        // Priority 2: Starts with
+        if (englishWordLower.startsWith(searchTermLower)) return true;
+
+        // Priority 3: Word boundary match
+        const escapedSearchTerm = searchTermLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const wordBoundaryRegex = new RegExp(`\\b${escapedSearchTerm}\\b`, 'i');
+        if (wordBoundaryRegex.test(englishWordLower)) return true;
+
+        // Priority 4: Chinese definition match
+        if (w.chinese_definition?.toLowerCase().includes(searchTermLower)) return true;
+
+        return false;
+      })
     : words.slice(0, 50); // Show first 50 by default
-
-  // Handle refresh
-  const handleRefresh = async () => {
-    if (!onRefreshCache || isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      await onRefreshCache();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  // Format cache age
-  const formatCacheAge = (ms?: number): string => {
-    if (!ms) return "N/A";
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-    if (hours > 0) return `${hours}h ${minutes}m ago`;
-    if (minutes > 0) return `${minutes}m ${seconds}s ago`;
-    return `${seconds}s ago`;
-  };
 
   // Stats by stage
   const juniorWords = words.filter((w) => w.stage === "junior");
@@ -65,38 +63,15 @@ export const DebugPage: React.FC<DebugPageProps> = ({
         Debug: 資料檢查工具
       </h1>
 
-      {/* Cache Info */}
+      {/* Data Source Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <h2 className="font-semibold text-blue-800 mb-2">快取狀態</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">來源:</span>{" "}
-            <span className="font-mono">
-              {cacheInfo?.fromCache ? "IndexedDB 快取" : "Google Sheets (即時)"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-600">快取時間:</span>{" "}
-            <span className="font-mono">
-              {formatCacheAge(cacheInfo?.cacheAge)}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-600">狀態:</span>{" "}
-            <span className="font-mono">
-              {cacheInfo?.isLoading ? "載入中..." : "已載入"}
-            </span>
-          </div>
-          <div>
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing || cacheInfo?.isLoading}
-              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isRefreshing ? "更新中..." : "強制刷新資料"}
-            </button>
-          </div>
-        </div>
+        <h2 className="font-semibold text-blue-800 mb-2">資料來源</h2>
+        <p className="text-sm text-gray-600">
+          資料來源：靜態打包 (vocabulary.json)
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          資料已於建置時打包進應用程式中，無需網路連線
+        </p>
       </div>
 
       {/* Stats */}

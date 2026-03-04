@@ -13,7 +13,10 @@ export const SpeakerButton: React.FC<SpeakerButtonProps> = ({
 }) => (
   <button
     type="button"
-    onClick={onClick}
+    onClick={(e) => {
+      e.stopPropagation(); // 阻止事件冒泡，避免觸發父元素的點擊事件
+      onClick();
+    }}
     aria-label={label}
     title={label}
     className={`inline-flex h-8 w-8 items-center justify-center rounded-full border border-indigo-200 bg-white text-indigo-600 shadow-sm transition hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${className}`}

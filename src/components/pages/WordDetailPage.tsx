@@ -3,6 +3,7 @@ import { VocabularyWord, UserSettings } from "../../types";
 import { useSpeech } from "../../hooks/useSpeech";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useUserExamples } from "../../hooks/useUserExamples";
+import { useDataset } from "../../hooks/useDataset";
 import { VersionService } from "../../services/VersionService";
 import { formatExampleSource } from "../../utils/wordUtils";
 import SpeakerButton from "../ui/SpeakerButton";
@@ -19,6 +20,18 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
   const { speak } = useSpeech();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { getExamples, addExample, deleteExample } = useUserExamples();
+  const { data } = useDataset(); // 獲取完整資料集以檢查單字是否存在
+
+  // Helper function to check if a word exists in the dataset
+  const wordExists = useMemo(() => {
+    // Create a Set for O(1) lookup performance
+    const wordSet = new Set(
+      data.map((w) => w.english_word.toLowerCase().trim())
+    );
+    return (wordText: string): boolean => {
+      return wordSet.has(wordText.toLowerCase().trim());
+    };
+  }, [data]);
 
   // User examples state
   const [showAddExample, setShowAddExample] = useState(false);
@@ -104,7 +117,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
   }, [word.textbook_index, normalizedUserStage, userSettings?.version]);
 
   const shouldShowThemeIndex = normalizedUserStage === "junior";
-  const shouldShowLevel = normalizedUserStage === "senior";
+  const shouldShowLevel = normalizedUserStage === "high"; // VersionService normalizes "高中" to "high"
   const [exportSections, setExportSections] = useState<Record<string, boolean>>(
     {
       pos: true,
@@ -196,8 +209,34 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
 
       if (hasSynonyms || hasAntonyms || hasConfusables) {
         lines.push("### 同義／反義／易混淆");
-        if (hasSynonyms) lines.push(`- 同義字：${word.synonyms!.join("、")}`);
-        if (hasAntonyms) lines.push(`- 反義字：${word.antonyms!.join("、")}`);
+        
+        // Synonyms
+        if (hasSynonyms) {
+          const synGroups = normalizeToGroups(word.synonyms);
+          synGroups.forEach((group) => {
+            if (group.words.length > 0) {
+              const title = group.meaning
+                ? `${group.pos || ""}${group.meaning}`
+                : "同義字";
+              lines.push(`- ${title}：${group.words.join("、")}`);
+            }
+          });
+        }
+        
+        // Antonyms
+        if (hasAntonyms) {
+          const antGroups = normalizeToGroups(word.antonyms);
+          antGroups.forEach((group) => {
+            if (group.words.length > 0) {
+              const title = group.meaning
+                ? `${group.pos || ""}${group.meaning}`
+                : "反義字";
+              lines.push(`- ${title}：${group.words.join("、")}`);
+            }
+          });
+        }
+        
+        // Confusables
         if (hasConfusables)
           lines.push(`- 易混淆字：${word.confusables!.join("、")}`);
         lines.push("");
@@ -265,12 +304,47 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
   };
 
   // Parse word forms for display
+  // Handle cases where multiple POS are combined with | or ； separator
   const getWordFormsList = () => {
     if (!word.word_forms) return [];
 
     // If word_forms is an array of objects (structured format)
     if (Array.isArray(word.word_forms)) {
-      return word.word_forms;
+      // Expand entries that have multiple POS combined
+      const expanded: { pos: string; details: string }[] = [];
+      word.word_forms.forEach((form: { pos?: string; details?: string } | string) => {
+        if (typeof form === "object" && form.details) {
+          let details = form.details;
+
+          // Split by | first (primary separator)
+          // Then also check for ；followed by POS marker (e.g., ；v., ；n., ；adj.)
+          // Replace ；v., ；n., ；adj. with |v., |n., |adj. for unified splitting
+          details = details.replace(/；([vnaj][a-z]*\.)/gi, "|$1");
+
+          const parts = details.split("|").map((p) => p.trim()).filter(Boolean);
+          if (parts.length > 1) {
+            // First part belongs to the original POS
+            expanded.push({ pos: form.pos || "", details: parts[0] });
+            // Subsequent parts may have their own POS prefix (e.g., "n.複數：aims")
+            for (let i = 1; i < parts.length; i++) {
+              const part = parts[i];
+              // Check if part starts with POS prefix (e.g., "n.", "v.", "adj.")
+              const posMatch = part.match(/^([a-z]+\.)\s*(.+)$/i);
+              if (posMatch) {
+                expanded.push({ pos: posMatch[1], details: posMatch[2] });
+              } else {
+                // No POS prefix, keep as-is under previous POS or general
+                expanded.push({ pos: "", details: part });
+              }
+            }
+          } else {
+            expanded.push({ pos: form.pos || "", details: form.details });
+          }
+        } else if (typeof form === "string") {
+          expanded.push({ pos: "", details: form });
+        }
+      });
+      return expanded;
     }
 
     // If it's a string, split by newline (legacy format)
@@ -286,6 +360,32 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
       (word.antonyms && word.antonyms.length > 0) ||
       (word.confusables && word.confusables.length > 0)
     );
+  };
+
+  // Helper function to check if synonyms/antonyms are in new format (grouped)
+  const isGroupedFormat = (
+    items: string[] | Array<{ pos?: string; meaning: string; words: string[] }> | undefined,
+  ): items is Array<{ pos?: string; meaning: string; words: string[] }> => {
+    if (!items || items.length === 0) return false;
+    return typeof items[0] === "object" && "words" in items[0];
+  };
+
+  // Helper function to normalize synonyms/antonyms to grouped format
+  const normalizeToGroups = (
+    items: string[] | Array<{ pos?: string; meaning: string; words: string[] }> | undefined,
+  ): Array<{ pos?: string; meaning: string; words: string[] }> => {
+    if (!items || items.length === 0) return [];
+    if (isGroupedFormat(items)) {
+      return items;
+    }
+    // Old format: convert string array to grouped format
+    return [
+      {
+        pos: "",
+        meaning: "",
+        words: items as string[],
+      },
+    ];
   };
 
   const wordFormsList = getWordFormsList();
@@ -329,7 +429,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             <h1 className="text-4xl font-bold text-gray-900">
               {word.english_word}
             </h1>
-            <SpeakerButton onClick={() => speak(word.english_word)} />
+            <SpeakerButton onClick={() => speak(word.english_word, 'word')} />
             {word.kk_phonetic && (
               <div className="text-xl font-medium text-indigo-600">
                 {word.kk_phonetic}
@@ -341,6 +441,11 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
           <div className="mb-4">
             <p className="text-lg text-gray-900 whitespace-pre-wrap">
               {word.chinese_definition || "—"}
+              {word.posOriginal && (
+                <span className="text-gray-500 font-medium ml-2">
+                  {word.posOriginal}
+                </span>
+              )}
             </p>
           </div>
 
@@ -349,7 +454,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             {/* Stage */}
             {word.stage && (
               <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-50 text-slate-700">
-                {word.stage === "高中" || word.stage === "senior"
+                {word.stage === "高中" || word.stage === "senior" || word.stage === "high"
                   ? "高中"
                   : word.stage === "國中" || word.stage === "junior"
                     ? "國中"
@@ -362,7 +467,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             {/* Level - only show for senior high */}
             {shouldShowLevel && word.level && (
               <span className="px-3 py-1 rounded-full text-sm font-medium bg-amber-50 text-amber-700">
-                Level {word.level}
+                Level {word.level.replace(/^L/i, "")}
               </span>
             )}
 
@@ -502,35 +607,53 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             {/* Original example 1 */}
             {word.example_sentence && (
               <div className="pl-4 border-l-4 border-indigo-400">
-                <div className="text-xl font-bold text-gray-800 leading-snug">
-                  {word.example_sentence}
-                </div>
-                {word.example_translation && (
-                  <div className="text-sm text-gray-400 mt-2">
-                    {word.example_translation}
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <div className="text-xl font-bold text-gray-800 leading-snug">
+                      {word.example_sentence}
+                    </div>
+                    {word.example_translation && (
+                      <div className="text-sm text-gray-400 mt-2">
+                        {word.example_translation}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-400 mt-1 text-right">基礎例句</div>
                   </div>
-                )}
-                <div className="text-xs text-gray-400 mt-1 text-right">基礎例句</div>
+                  <SpeakerButton
+                    onClick={() => speak(word.example_sentence!, 'example1')}
+                    label="播放例句 1 發音"
+                    className="mt-0.5"
+                  />
+                </div>
               </div>
             )}
 
             {/* Original example 2 */}
             {word.example_sentence_2 && (
               <div className="pl-4 border-l-4 border-indigo-400">
-                <div className="text-xl font-bold text-gray-800 leading-snug">
-                  {word.example_sentence_2}
-                </div>
-                {word.example_translation_2 && (
-                  <div className="text-sm text-gray-400 mt-2">
-                    {word.example_translation_2}
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <div className="text-xl font-bold text-gray-800 leading-snug">
+                      {word.example_sentence_2}
+                    </div>
+                    {word.example_translation_2 && (
+                      <div className="text-sm text-gray-400 mt-2">
+                        {word.example_translation_2}
+                      </div>
+                    )}
+                    {(() => {
+                      const source = formatExampleSource(word);
+                      return source ? (
+                        <div className="text-xs text-gray-400 mt-1 text-right">{source}</div>
+                      ) : null;
+                    })()}
                   </div>
-                )}
-                {(() => {
-                  const source = formatExampleSource(word);
-                  return source ? (
-                    <div className="text-xs text-gray-400 mt-1 text-right">{source}</div>
-                  ) : null;
-                })()}
+                  <SpeakerButton
+                    onClick={() => speak(word.example_sentence_2!, 'example2')}
+                    label="播放例句 2 發音"
+                    className="mt-0.5"
+                  />
+                </div>
               </div>
             )}
 
@@ -554,25 +677,34 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                     )}
                     <div className="text-xs text-purple-500 mt-1">自訂例句</div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteExample(idx)}
-                    className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition flex-shrink-0"
-                    title="刪除例句"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
+                  <div className="flex items-center gap-2">
+                    {example.sentence && (
+                      <SpeakerButton
+                        onClick={() => speak(example.sentence!, 'example1')}
+                        label={`播放自訂例句 ${idx + 1} 發音`}
+                        className="mt-0.5"
                       />
-                    </svg>
-                  </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteExample(idx)}
+                      className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition flex-shrink-0"
+                      title="刪除例句"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -590,7 +722,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
 
         {/* Word forms and relations card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">詞性與關聯字</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">詞形變化與搭配詞</h2>
 
           <div className="space-y-6">
             {/* Word forms */}
@@ -599,36 +731,22 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
                 <div className="text-sm font-semibold text-gray-500 mb-2">
                   詞形變化
                 </div>
-                <div className="px-4 py-3 rounded-lg bg-indigo-50 border border-indigo-200 grid gap-4 md:grid-cols-2">
+                <div className="space-y-1">
                   {wordFormsList.map((form, idx) => {
                     // Check if it's structured format (object with pos and details)
-                    if (typeof form === "object" && form.pos && form.details) {
-                      // Parse details into separate lines for better readability
-                      const detailLines = form.details
-                        .split(/[；\n]/) // Split by semicolon or newline
-                        .map((line) => line.trim())
-                        .filter((line) => line.length > 0);
-
+                    if (typeof form === "object" && (form.pos || form.details)) {
+                      const displayText = form.pos
+                        ? `${form.pos}${form.details || ""}`
+                        : form.details || "";
                       return (
-                        <div
-                          key={idx}
-                          className="pl-3 border-l-4 border-indigo-400 text-sm text-indigo-900"
-                        >
-                          <div className="font-bold mb-1">{form.pos}</div>
-                          <div className="space-y-0.5 ml-2">
-                            {detailLines.map((line, lineIdx) => (
-                              <div key={lineIdx}>{line}</div>
-                            ))}
-                          </div>
+                        <div key={idx} className="text-sm text-gray-700">
+                          {displayText}
                         </div>
                       );
                     }
                     // Legacy format: just a string
                     return (
-                      <div
-                        key={idx}
-                        className="pl-3 border-l-4 border-indigo-400 text-sm text-indigo-900"
-                      >
+                      <div key={idx} className="text-sm text-gray-700">
                         {typeof form === "string" ? form.trim() : String(form)}
                       </div>
                     );
@@ -641,7 +759,7 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             {word.phrases && word.phrases.length > 0 && (
               <div>
                 <div className="text-sm font-semibold text-gray-500 mb-2">
-                  片語
+                  搭配詞
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {word.phrases.map((phrase, idx) => (
@@ -668,50 +786,125 @@ export const WordDetailPage: React.FC<WordDetailPageProps> = ({
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               同義／反義／易混淆
             </h2>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-6">
+              {/* Synonyms - Single column, form-like layout */}
               {word.synonyms && word.synonyms.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400 mb-2">
+                  <div className="text-sm font-semibold text-gray-500 mb-4">
                     同義字
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {word.synonyms.map((syn, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          window.location.hash = `#/word/${syn}`;
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium border border-blue-200 hover:bg-blue-100 transition cursor-pointer"
-                      >
-                        {syn}
-                      </button>
+                  <div className="space-y-6">
+                    {normalizeToGroups(word.synonyms).map((group, groupIdx) => (
+                      <div key={groupIdx} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
+                        {/* Title row: POS + Chinese meaning (not clickable, form-like) */}
+                        {group.meaning && (
+                          <div className="mb-3">
+                            <div className="text-base font-semibold text-gray-700">
+                              {group.pos && (
+                                <span className="text-gray-500 font-medium">{group.pos}</span>
+                              )}
+                              {group.meaning}
+                            </div>
+                          </div>
+                        )}
+                        {/* Words row: English words (clickable buttons) */}
+                        {group.words.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {group.words.map((wordText, wordIdx) => {
+                              const exists = wordExists(wordText);
+                              return (
+                                <button
+                                  key={wordIdx}
+                                  onClick={() => {
+                                    if (exists) {
+                                      window.location.hash = `#/word/${wordText}`;
+                                    }
+                                  }}
+                                  disabled={!exists}
+                                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
+                                    exists
+                                      ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 cursor-pointer"
+                                      : "bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed"
+                                  }`}
+                                  title={
+                                    exists
+                                      ? `查看「${wordText}」的詳細資訊`
+                                      : "資料建置中"
+                                  }
+                                >
+                                  {wordText}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Antonyms - Below synonyms, single column, form-like layout */}
               {word.antonyms && word.antonyms.length > 0 && (
-                <div>
-                  <div className="text-xs font-semibold text-gray-400 mb-2">
+                <div className="mt-6">
+                  <div className="text-sm font-semibold text-gray-500 mb-4">
                     反義字
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {word.antonyms.map((ant, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          window.location.hash = `#/word/${ant}`;
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 text-sm font-medium border border-rose-200 hover:bg-rose-100 transition cursor-pointer"
-                      >
-                        {ant}
-                      </button>
+                  <div className="space-y-6">
+                    {normalizeToGroups(word.antonyms).map((group, groupIdx) => (
+                      <div key={groupIdx} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
+                        {/* Title row: POS + Chinese meaning (not clickable, form-like) */}
+                        {group.meaning && (
+                          <div className="mb-3">
+                            <div className="text-base font-semibold text-gray-700">
+                              {group.pos && (
+                                <span className="text-gray-500 font-medium">{group.pos}</span>
+                              )}
+                              {group.meaning}
+                            </div>
+                          </div>
+                        )}
+                        {/* Words row: English words (clickable buttons) */}
+                        {group.words.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {group.words.map((wordText, wordIdx) => {
+                              const exists = wordExists(wordText);
+                              return (
+                                <button
+                                  key={wordIdx}
+                                  onClick={() => {
+                                    if (exists) {
+                                      window.location.hash = `#/word/${wordText}`;
+                                    }
+                                  }}
+                                  disabled={!exists}
+                                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
+                                    exists
+                                      ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 cursor-pointer"
+                                      : "bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed"
+                                  }`}
+                                  title={
+                                    exists
+                                      ? `查看「${wordText}」的詳細資訊`
+                                      : "資料建置中"
+                                  }
+                                >
+                                  {wordText}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Confusables - Keep original layout */}
               {word.confusables && word.confusables.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400 mb-2">
+                  <div className="text-sm font-semibold text-gray-500 mb-3">
                     易混淆字
                   </div>
                   <div className="flex flex-wrap gap-2">

@@ -11,18 +11,26 @@ interface TextbookFiltersProps {
   };
   updateFilter: (key: "vol" | "lesson", value: string | string[]) => void;
   dataset: { textbook_index: TextbookIndexItem[] };
+  userSettings?: { version?: string; stage?: string } | null; // Add userSettings prop
 }
 
 export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   filters,
   updateFilter,
   dataset,
+  userSettings: userSettingsProp,
 }) => {
-  const { userSettings } = useUserSettings();
+  // Use prop if provided, otherwise fall back to hook
+  // This ensures we use the same userSettings instance as HomePage
+  const { userSettings: userSettingsFromHook } = useUserSettings();
+  const userSettings = userSettingsProp ?? userSettingsFromHook;
   const prevVolRef = useRef<string | undefined>(filters.vol);
+  const prevAvailableVolsRef = useRef<string[]>([]);
 
   const availableVols = useMemo(() => {
-    if (!userSettings?.version || !userSettings.stage) return [];
+    if (!userSettings?.version || !userSettings.stage) {
+      return [];
+    }
 
     // Strict version matching with VersionService
     const filtered = dataset.textbook_index.filter((item) => {
@@ -36,7 +44,7 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
     });
 
     const vols = Array.from(
-      new Set(filtered.map((item) => item.vol).filter(Boolean)),
+      new Set(filtered.map((item) => item.vol).filter((vol): vol is string => Boolean(vol))),
     ).sort();
 
     return vols;
@@ -76,19 +84,44 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
   ]);
 
   // Sync default vol selection when availableVols changes
+  // This effect runs when:
+  // 1. availableVols changes from empty to having values (data loaded)
+  // 2. availableVols changes and current vol is invalid
+  // 3. User just selected a version (availableVols becomes available)
+  // CRITICAL: This must run immediately when availableVols becomes available
   useEffect(() => {
     if (availableVols.length > 0 && availableVols[0]) {
       // If no vol selected OR current vol is not in available vols, set to first available
+      // This ensures vol is set immediately when version is selected
       if (!filters.vol || !availableVols.includes(filters.vol)) {
         updateFilter("vol", availableVols[0]);
       }
     }
   }, [availableVols, filters.vol, updateFilter]);
+  
+  // Track previous availableVols to detect when version is first selected
+  // This is critical for first-time users: when they select a version in WelcomeModal,
+  // availableVols changes from [] to [B1, B2, ...], and we need to set vol immediately
+  useEffect(() => {
+    const wasEmpty = prevAvailableVolsRef.current.length === 0;
+    const nowHasValues = availableVols.length > 0;
+    
+    // When version is first selected (availableVols goes from empty to having values)
+    // AND no vol is currently selected, set it immediately
+    if (wasEmpty && nowHasValues && !filters.vol && availableVols[0]) {
+      // This is the critical moment: user just selected a version in WelcomeModal
+      // We must set vol immediately so the menu appears right away
+      updateFilter("vol", availableVols[0]);
+    }
+    
+    prevAvailableVolsRef.current = availableVols;
+  }, [availableVols, filters.vol, updateFilter]);
 
   // Reset lesson selection when vol changes - fixes Issue #70
   useEffect(() => {
     // When vol changes and availableLessons are loaded, ALWAYS reset to first lesson
-    if (filters.vol && availableLessons.length > 0 && availableLessons[0]) {
+    const firstLesson = availableLessons[0];
+    if (filters.vol && availableLessons.length > 0 && firstLesson) {
       const volActuallyChanged =
         prevVolRef.current !== undefined && prevVolRef.current !== filters.vol;
       const currentLessons = Array.isArray(filters.lesson)
@@ -107,7 +140,7 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
         hasInvalidLesson ||
         currentLessons.length === 0
       ) {
-        updateFilter("lesson", [availableLessons[0]]);
+        updateFilter("lesson", [firstLesson]);
       }
 
       // Update the ref for next comparison
@@ -115,8 +148,22 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
     }
   }, [filters.vol, availableLessons, updateFilter]);
 
-  // Show message if no data available
-  if (availableVols.length === 0) {
+  // Show message only if:
+  // 1. User has selected a version (not first time entering)
+  // 2. Dataset has been loaded (textbook_index is not empty)
+  // 3. But no matching data for the selected version
+  const hasDatasetData = dataset.textbook_index.length > 0;
+  const hasUserVersion = !!userSettings?.version && !!userSettings?.stage;
+  const shouldShowMessage = availableVols.length === 0 && hasUserVersion && hasDatasetData;
+
+  // If no version selected, don't show filters
+  // (HomePage will handle the "請先選擇您的學程和課本版本" message)
+  if (!hasUserVersion) {
+    return null;
+  }
+
+  // Show message if version selected but no matching data
+  if (shouldShowMessage) {
     return (
       <div className="mb-6 rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-800 font-medium">
@@ -128,6 +175,9 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
       </div>
     );
   }
+
+  // Always show filters UI (even if data is loading or availableVols is empty)
+  // This fixes the bug where filters don't appear on first load
 
   const selectedLessons: string[] =
     filters.lesson ||
@@ -178,25 +228,28 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
         <CustomSelect
           value={filters.vol || availableVols[0] || ""}
           onChange={(value) => updateFilter("vol", value)}
-          options={availableVols
-            .filter((vol): vol is string => vol !== undefined)
-            .map((vol) => {
-              // 冊次中文標註映射
-              const volLabelMap: Record<string, string> = {
-                B1: "第一冊",
-                B2: "第二冊",
-                B3: "第三冊",
-                B4: "第四冊",
-                B5: "第五冊",
-                B6: "第六冊",
-              };
-              const chineseLabel = volLabelMap[vol] || "";
-              return {
-                value: vol,
-                label: chineseLabel ? `${vol}(${chineseLabel})` : vol,
-              };
-            })}
+          options={availableVols.length > 0
+            ? availableVols
+                .filter((vol): vol is string => vol !== undefined)
+                .map((vol) => {
+                  // 冊次中文標註映射
+                  const volLabelMap: Record<string, string> = {
+                    B1: "第一冊",
+                    B2: "第二冊",
+                    B3: "第三冊",
+                    B4: "第四冊",
+                    B5: "第五冊",
+                    B6: "第六冊",
+                  };
+                  const chineseLabel = volLabelMap[vol] || "";
+                  return {
+                    value: vol,
+                    label: chineseLabel ? `${vol}(${chineseLabel})` : vol,
+                  };
+                })
+            : [{ value: "", label: hasDatasetData ? "請選擇版本" : "資料載入中..." }]}
           className="w-full"
+          disabled={availableVols.length === 0}
         />
       </div>
 
@@ -223,7 +276,9 @@ export const TextbookFilters: React.FC<TextbookFiltersProps> = ({
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 p-3 border border-gray-300 rounded-lg bg-white max-h-40 overflow-y-auto min-h-[120px] flex-1">
           {availableLessons.length === 0 ? (
             <div className="col-span-3 sm:col-span-5 flex items-center justify-center text-gray-400 text-sm min-h-[96px]">
-              {filters.vol ? "載入中..." : "請選擇冊次"}
+              {filters.vol 
+                ? (hasDatasetData ? "載入中..." : "資料載入中...") 
+                : (availableVols.length > 0 ? "請選擇冊次" : "資料載入中...")}
             </div>
           ) : (
             availableLessons

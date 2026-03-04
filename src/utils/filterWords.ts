@@ -92,6 +92,10 @@ export function filterWords(
         const normalizedStageForTheme = VersionService.normalizeStage(
           userSettings.stage || "",
         );
+        const normalizedWordStage = VersionService.normalizeStage(word.stage || "");
+
+        // Stage filter for theme tab - ensure data matches user's stage
+        if (normalizedWordStage !== normalizedStageForTheme) return false;
 
         if (normalizedStageForTheme === "junior") {
           // Junior: Use theme_index
@@ -104,14 +108,11 @@ export function filterWords(
           );
           if (!themeMatch) return false;
         } else {
-          // Senior: Use level and themes
+          // Senior (high): Use level
           if (filters.theme?.range) {
-            // Check level match - normalize both sides (Level 4 -> L4)
-            const normalizedFilterRange = String(filters.theme.range)
-              .replace("Level ", "L")
-              .trim();
+            // Check level match - direct comparison (L1, L2, etc.)
             const normalizedWordLevel = String(word.level || "").trim();
-            if (normalizedWordLevel !== normalizedFilterRange) {
+            if (normalizedWordLevel !== filters.theme.range) {
               return false;
             }
           }
@@ -154,15 +155,50 @@ export function filterWords(
       }
     }
 
-    // Search term filter
+    // Search term filter - improved precision
+    // Priority order: Exact match > Starts with > Word boundary match > Chinese/Example match
     if (searchTerm) {
-      const searchTermLower = searchTerm.toLowerCase();
-      const wordMatches =
-        word.english_word.toLowerCase().includes(searchTermLower) ||
-        word.chinese_definition?.toLowerCase().includes(searchTermLower) ||
-        word.example_sentence?.toLowerCase().includes(searchTermLower);
-
-      if (!wordMatches) return false;
+      const searchTermLower = searchTerm.toLowerCase().trim();
+      if (!searchTermLower) return true; // Empty search term, don't filter
+      
+      const englishWordLower = word.english_word.toLowerCase();
+      
+      // Priority 1: Exact match (完全匹配)
+      // Example: search "present" matches "present" exactly
+      if (englishWordLower === searchTermLower) {
+        return true;
+      }
+      
+      // Priority 2: Word starts with search term (開頭匹配)
+      // Example: search "pres" matches "present", "president", "preserve"
+      // But NOT "represent" or "impressive" (not at the start)
+      if (englishWordLower.startsWith(searchTermLower)) {
+        return true;
+      }
+      
+      // Priority 3: Word contains search term as a complete word (完整單字匹配)
+      // Use word boundary to ensure it's a complete word, not a substring
+      // Example: search "present" matches "present" (already matched by exact/start)
+      // But also matches compound words like "present-day" or "present-tense"
+      // This prevents "present" from matching "represent" (no word boundary)
+      const escapedSearchTerm = searchTermLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wordBoundaryRegex = new RegExp(`\\b${escapedSearchTerm}\\b`, 'i');
+      if (wordBoundaryRegex.test(englishWordLower)) {
+        return true;
+      }
+      
+      // Priority 4: Chinese definition or example sentence match (次要搜尋)
+      // Only search in Chinese/example if English word doesn't match
+      // This prevents unrelated words from appearing when there are English matches
+      const chineseMatch = word.chinese_definition?.toLowerCase().includes(searchTermLower);
+      const exampleMatch = word.example_sentence?.toLowerCase().includes(searchTermLower);
+      
+      if (chineseMatch || exampleMatch) {
+        return true;
+      }
+      
+      // No match found
+      return false;
     }
 
     return true;
