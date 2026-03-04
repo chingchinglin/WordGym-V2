@@ -7,6 +7,7 @@ import QuizCompletionScreen from "./QuizCompletionScreen";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useQuizHistory } from "../../hooks/useQuizHistory";
 import { useHashRoute } from "../../hooks/useHashRoute";
+import quizOptionsData from "../../data/quiz-options.json";
 
 // Clean word by removing brackets and extra info: "he (him; his)" -> "he"
 const cleanWord = (word: string): string => {
@@ -140,12 +141,66 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   const [startTime] = useState(() => Date.now());
   const [isFinished, setIsFinished] = useState(shouldShowCompletion);
 
+  // 預生成選項查找表（以 word.id 為 key）
+  const quizOptionsMap = useMemo(() => {
+    const map = new Map<number, { correctAnswer: string; distractors: { word: string; type: string; reason: string }[] }>();
+    for (const entry of quizOptionsData) {
+      map.set(entry.id, {
+        correctAnswer: entry.correctAnswer,
+        distractors: entry.distractors,
+      });
+    }
+    return map;
+  }, []);
+
   const question = useMemo(() => {
     if (shuffledPool.length === 0 || idx >= shuffledPool.length) return null;
 
     const currentWord = shuffledPool[idx];
-    const correctAnswer = cleanWord(currentWord.english_word);
     const correctPosition = correctAnswerPositions[idx];
+
+    // 從預生成選項查找表取得選項
+    const pregenOptions = quizOptionsMap.get(currentWord.id);
+    if (pregenOptions && pregenOptions.correctAnswer && pregenOptions.distractors.length >= 3) {
+      const correctAnswer = pregenOptions.correctAnswer;
+
+      // 統一大小寫：所有選項的首字母格式與正確答案一致，避免洩露答案
+      const firstChar = correctAnswer.charAt(0);
+      const correctIsUpper = firstChar !== firstChar.toLowerCase();
+      const distractorWords = pregenOptions.distractors.map(d => {
+        const dFirst = d.word.charAt(0);
+        const dIsUpper = dFirst !== dFirst.toLowerCase();
+        if (correctIsUpper && !dIsUpper) {
+          // 正確答案大寫，干擾小寫 → 干擾改大寫
+          return dFirst.toUpperCase() + d.word.slice(1);
+        }
+        if (!correctIsUpper && dIsUpper) {
+          // 正確答案小寫，干擾大寫 → 干擾改小寫
+          return dFirst.toLowerCase() + d.word.slice(1);
+        }
+        return d.word;
+      });
+
+      const finalOptions: string[] = [...distractorWords.slice(0, 3)];
+      const adjustedPosition = Math.min(correctPosition, 3);
+      finalOptions.splice(adjustedPosition, 0, correctAnswer);
+
+      const clozedSentence = makeCloze(
+        currentWord.example_sentence || "",
+        correctAnswer,
+      );
+
+      return {
+        word: currentWord,
+        sentence: clozedSentence,
+        translation: currentWord.example_translation,
+        correctAnswer,
+        options: finalOptions,
+      };
+    }
+
+    // Fallback: 隨機同詞性單字（理論上不會觸發，因為 quiz-options.json 覆蓋率 100%）
+    const correctAnswer = cleanWord(currentWord.english_word);
 
     // Get current word's POS
     const currentPOS =
@@ -296,6 +351,8 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       correctAnswer,
     );
 
+    console.log(`[Fallback] 題目 ${idx}: wordId=${currentWord.id} 無預生成選項`);
+
     return {
       word: currentWord,
       sentence: clozedSentence,
@@ -303,7 +360,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       correctAnswer,
       options: finalOptions,
     };
-  }, [shuffledPool, idx, correctAnswerPositions, data]);
+  }, [shuffledPool, idx, correctAnswerPositions, data, quizOptionsMap]);
 
   const handleSelect = (option: string) => {
     if (showResult) return;
@@ -516,6 +573,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
           </p>
         )}
 
+        {/* 選項 */}
         <div className="mb-3 md:mb-4">
           <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-3">
             {question.options.map((option, i) => {
@@ -570,27 +628,27 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
                   )}
                 </span>
               </div>
+              <button
+                onClick={() => speak(question.correctAnswer, 'word')}
+                className="hidden md:inline-flex px-3 py-2 rounded-lg border border-gray-300 hover:bg-white/50 transition text-sm"
+                title="發音"
+              >
+                🔊 聽發音
+              </button>
             </div>
           </div>
         )}
 
-        {/* Desktop buttons - hidden on mobile */}
-        <div className="hidden md:flex gap-3 mt-4">
+        {/* Desktop action button — right-aligned, switches between submit and next */}
+        <div className="hidden md:flex justify-end mt-4">
           {!showResult ? (
             <Button onClick={handleSubmit} disabled={!selectedAnswer}>
               提交答案
             </Button>
           ) : (
-            <>
-              <Button onClick={handleNext}>下一題</Button>
-              <button
-                onClick={() => speak(question.correctAnswer, 'word')}
-                className="px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 transition"
-                title="發音"
-              >
-                聽發音
-              </button>
-            </>
+            <Button onClick={handleNext} className="px-6">
+              下一題 →
+            </Button>
           )}
         </div>
       </div>
