@@ -259,11 +259,12 @@ async function synthesizeToBlob(text: string, options: SynthesizeOptions = {}): 
   console.log('[TTS] Cache miss, synthesizing:', cacheKey.substring(0, 50));
   emitTtsLoading(true);
   const speechConfig = await getSpeechConfig();
-  if (!speechConfig) return null;
+  if (!speechConfig) { emitTtsLoading(false); return null; }
 
   const SpeechSDK = window.SpeechSDK;
   if (!SpeechSDK) {
     console.error('[TTS] SpeechSDK is not loaded');
+    emitTtsLoading(false);
     return null;
   }
 
