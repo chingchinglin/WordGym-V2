@@ -5,10 +5,11 @@ const escapeForRegex = (str: string): string => {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
-// Get base word (remove brackets and clean up)
+// Get base word (remove brackets, trailing punctuation, and clean up)
 const getBaseWord = (word: string): string => {
   // Remove anything in parentheses: "he (him; his)" -> "he"
-  return word.split("(")[0].trim();
+  // Then strip trailing punctuation: "Nice to meet you." -> "Nice to meet you"
+  return word.split("(")[0].trim().replace(/[.!?]+$/, "");
 };
 
 // Common irregular verb forms mapping
