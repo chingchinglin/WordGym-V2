@@ -15,7 +15,6 @@
 // TypeScript 型別定義
 declare global {
   interface Window {
-    SpeechSDK: any;
     JutorTTS?: {
       speakText: typeof speakText;
       synthesizeToBlob: typeof synthesizeToBlob;
@@ -33,6 +32,7 @@ declare global {
 // 配置
 // ============================================================================
 
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ttsConfig, shouldUseAzureTTS } from '../config/tts';
 
 /** 後端 API URL（jutor.ai 專案共用） */
@@ -125,11 +125,6 @@ async function getSpeechConfig(): Promise<any | null> {
   if (!tokenData) return null;
 
   try {
-    const SpeechSDK = window.SpeechSDK;
-    if (!SpeechSDK) {
-      console.error('[TTS] SpeechSDK is not loaded');
-      return null;
-    }
     return SpeechSDK.SpeechConfig.fromAuthorizationToken(
       tokenData.token,
       tokenData.region
@@ -261,13 +256,6 @@ async function synthesizeToBlob(text: string, options: SynthesizeOptions = {}): 
   const speechConfig = await getSpeechConfig();
   if (!speechConfig) { emitTtsLoading(false); return null; }
 
-  const SpeechSDK = window.SpeechSDK;
-  if (!SpeechSDK) {
-    console.error('[TTS] SpeechSDK is not loaded');
-    emitTtsLoading(false);
-    return null;
-  }
-
   speechConfig.speechSynthesisVoiceName = voice;
   const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
 
@@ -383,9 +371,9 @@ function getCacheSize(): number {
   return audioCache.size;
 }
 
-/** 檢查 SDK 是否載入 */
+/** 檢查 SDK 是否載入（npm 打包後永遠可用） */
 function isSDKLoaded(): boolean {
-  return typeof window !== 'undefined' && typeof window.SpeechSDK !== 'undefined';
+  return true;
 }
 
 /** 檢查是否正在播放 */
