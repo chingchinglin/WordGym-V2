@@ -183,20 +183,29 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         return d.word;
       });
 
-      const finalOptions: string[] = [...distractorWords.slice(0, 3)];
-      const adjustedPosition = Math.min(correctPosition, 3);
-      finalOptions.splice(adjustedPosition, 0, correctAnswer);
-
       const clozedSentence = makeCloze(
         currentWord.example_sentence || "",
         correctAnswer,
       );
 
+      // 偵測空格是否在句首：若是，所有選項首字母大寫
+      const blankAtStart = /^\s*_____/.test(clozedSentence);
+      const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+      const finalCorrect = blankAtStart ? capitalize(correctAnswer) : correctAnswer;
+      const finalDistractors = blankAtStart
+        ? distractorWords.slice(0, 3).map(capitalize)
+        : distractorWords.slice(0, 3);
+
+      const finalOptions: string[] = [...finalDistractors];
+      const adjustedPosition = Math.min(correctPosition, 3);
+      finalOptions.splice(adjustedPosition, 0, finalCorrect);
+
       return {
         word: currentWord,
         sentence: clozedSentence,
         translation: currentWord.example_translation,
-        correctAnswer,
+        correctAnswer: finalCorrect,
         options: finalOptions,
       };
     }
@@ -341,17 +350,26 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       }
     }
 
-    // Build final options: ALWAYS exactly 4 options (3 distractors + 1 correct)
-    const finalOptions: string[] = [...uniqueDistractors.slice(0, 3)];
-
-    // Insert correct answer at the predetermined position
-    const adjustedPosition = Math.min(correctPosition, 3); // Position must be 0-3
-    finalOptions.splice(adjustedPosition, 0, correctAnswer);
-
     const clozedSentence = makeCloze(
       currentWord.example_sentence || "",
       correctAnswer,
     );
+
+    // 偵測空格是否在句首：若是，所有選項首字母大寫
+    const blankAtStartFb = /^\s*_____/.test(clozedSentence);
+    const capitalizeFb = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    const finalCorrectFb = blankAtStartFb ? capitalizeFb(correctAnswer) : correctAnswer;
+    const finalDistractorsFb = blankAtStartFb
+      ? uniqueDistractors.slice(0, 3).map(capitalizeFb)
+      : uniqueDistractors.slice(0, 3);
+
+    // Build final options: ALWAYS exactly 4 options (3 distractors + 1 correct)
+    const finalOptions: string[] = [...finalDistractorsFb];
+
+    // Insert correct answer at the predetermined position
+    const adjustedPosition = Math.min(correctPosition, 3); // Position must be 0-3
+    finalOptions.splice(adjustedPosition, 0, finalCorrectFb);
 
     console.log(`[Fallback] 題目 ${idx}: wordId=${currentWord.id} 無預生成選項`);
 
@@ -359,7 +377,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       word: currentWord,
       sentence: clozedSentence,
       translation: currentWord.example_translation,
-      correctAnswer,
+      correctAnswer: finalCorrectFb,
       options: finalOptions,
     };
   }, [shuffledPool, idx, correctAnswerPositions, data, quizOptionsMap]);
