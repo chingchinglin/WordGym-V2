@@ -1,0 +1,11 @@
+﻿題號,單字,例句（含空格）,選項A,選項B,選項C,選項D,正確答案字母,正確答案單字,干擾1（類型）,干擾2（類型）,干擾3（類型）
+1,family,My ___ goes hiking every Sunday.,familiar,families,famine,family,D,family,families（類型A）,familiar（類型B）,famine（類型D）
+2,husband,Tina's ___ is a kind man.,husbandry,wife,husband,husbands,C,husband,husbands（類型A）,wife（類型C）,husbandry（類型D）
+3,wife,Mr. Chen always cooks dinner for his ___.,wives,life,knife,wife,D,wife,wives（類型A）,knife（類型D）,life（類型E）
+4,uncle,My ___ has a farm in the mountains.,uncles,ankle,uncle,jungle,C,uncle,uncles（類型A）,ankle（類型D）,jungle（類型E）
+5,aunt,We visited my ___ during the summer vacation.,aunts,ant,taunt,aunt,D,aunt,aunts（類型A）,ant（類型D）,taunt（類型E）
+6,cousin,My ___ and I are in the same junior high school.,cushion,cosine,dozen,cousin,D,cousin,cushion（類型D）,dozen（類型E）,cosine（類型D）
+7,son,Their ___ plays the violin very well.,sun,sons,son,sown,C,son,sons（類型A）,sun（類型E）,sown（類型D）
+8,daughter,My ___ loves painting and dancing.,daughters,laughter,daughter,daughterly,C,daughter,daughters（類型A）,daughterly（類型B）,laughter（類型D）
+9,parent,Every ___ wants the best for their child.,parent,parental,parents,apparent,A,parent,parents（類型A）,parental（類型B）,apparent（類型D）
+10,child,The ___ is reading a storybook quietly.,childhood,wild,child,children,C,child,children（類型A）,childhood（類型B）,wild（類型D）

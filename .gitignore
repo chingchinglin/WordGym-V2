@@ -9,3 +9,6 @@ test-results/*
 playwright-report/*
 .gcs-deploy.config.json
 .gcs-credentials-temp.json
+.npm-cache/
+.playwright-mcp/
+__pycache__/
